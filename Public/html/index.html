@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaFlow SV — Monitoreo Hídrico</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">💧</div>
+        <div class="brand-text">
+          <h1>AquaFlow SV</h1>
+          <span>Monitoreo Hídrico</span>
+        </div>
+      </div>
+      <div class="topbar-center">
+        <h2 id="page-title">Dashboard</h2>
+        <p id="page-subtitle">Resumen general del sistema</p>
+      </div>
+      <div class="topbar-clock">
+        <div class="clock-dot"></div>
+        <span id="clock">--:--:-- --</span>
+      </div>
+      <div class="topbar-user">
+        <span id="user-display">👤 Cargando...</span>
+        
+        <form action="/auth/logout" method="POST" style="display: inline;">
+          <button type="submit" class="logout-button">Salir</button>
+        </form>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="nav-group-label">Principal</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/><path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A7.988 7.988 0 0 1 0 10zm8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3z"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="mapa" onclick="navigate('mapa', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"/></svg>
+        Mapa de zonas
+      </div>
+      <div class="nav-item" data-page="sensores" onclick="navigate('sensores', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M14.763.075A.5.5 0 0 1 15 .5v15a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5V14h-1v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V10a.5.5 0 0 1 .342-.474L6 7.64V4.5a.5.5 0 0 1 .276-.447l8-4a.5.5 0 0 1 .487.022zM6 8.694 1 10.36V15h5V8.694zM7 15h2v-1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5V15h2V1.309l-7 3.5V15z"/></svg>
+        Sensores IoT
+      </div>
+
+      <div class="nav-group-label">Ciudadano</div>
+      <div class="nav-item" data-page="reportes" onclick="navigate('reportes', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
+        Reportes ciudadanos
+      </div>
+      <div class="nav-item" data-page="alertas" onclick="navigate('alertas', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/></svg>
+        Alertas
+        <span class="nav-badge">3</span>
+      </div>
+
+      <div id="admin-section" style="display: none;">
+        <div class="nav-group-label">Administración</div>
+        <div class="nav-item" data-page="usuarios" onclick="navigate('usuarios', this)">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>
+          Usuarios
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="page-dashboard" class="page active">
+        <div class="banner">
+          <h2>💧 Bienvenido a AquaFlow SV</h2>
+          <p>Sistema de monitoreo de agua potable · Gran San Salvador</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>📊 Presión en Tiempo Real</h3></div>
+          <div id="bars-wrapper" class="bars-container">
+            </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>📍 Estado por Zonas</h3></div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ZONA</th>
+                  <th>SECTOR</th>
+                  <th>PRESIÓN</th>
+                  <th>FLUJO</th>
+                  <th>ESTADO</th>
+                  <th>ACTUALIZACIÓN</th>
+                </tr>
+              </thead>
+              <tbody id="zone-tbody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-sensores" class="page">
+        <div class="panel">
+          <div class="panel-header"><h3>📡 Monitoreo de Dispositivos</h3></div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID SENSOR</th>
+                  <th>UBICACIÓN</th>
+                  <th>LECTURA</th>
+                  <th>ESTADO</th>
+                  <th>BATERÍA</th>
+                  <th>ÚLTIMA SEÑAL</th>
+                  <th>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody id="sensors-tbody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-reportes" class="page">
+        <div class="panel">
+          <div class="panel-header"><h3>📋 Historial de Reportes</h3></div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>USUARIO</th>
+                  <th>ZONA</th>
+                  <th>COMENTARIO</th>
+                  <th>ESTADO</th>
+                </tr>
+              </thead>
+              <tbody id="reportes-tbody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-mapa" class="page"><div class="panel"><h3>Mapa Próximamente</h3></div></section>
+      <section id="page-alertas" class="page"><div class="panel"><h3>Alertas Críticas</h3></div></section>
+      <section id="page-usuarios" class="page"><div class="panel"><h3>Gestión de Usuarios</h3></div></section>
+
+    </main>
+  </div>
+
+  <script src="/JS/script.js"></script>
+</body>
+</html>
