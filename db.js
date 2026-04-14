@@ -1,25 +1,27 @@
 const mysql = require('mysql2');
 
-// Configuración de la BD (Lo que tenías en los define)
+// Configuración de la BD
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: '', 
+    password: '',
     database: 'aquaflow_sv',
-    charset: 'utf8mb4'
+    charset: 'utf8mb4',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 };
 
-// Crear la conexión (similar a new mysqli)
-const connection = mysql.createConnection(dbConfig);
+// Usar pool para mantener conexiones estables y evitar errores por conexión cerrada
+const pool = mysql.createPool(dbConfig);
 
-// Verificar conexión
-connection.connect((err) => {
+pool.getConnection((err, connection) => {
     if (err) {
         console.error('❌ Error de conexión: ' + err.stack);
         return;
     }
-    console.log('✅ Conectado a la base de datos MySQL como ID ' + connection.threadId);
+    console.log('✅ Conectado a la base de datos MySQL con pool');
+    connection.release();
 });
 
-// Exportar para usarlo en index.js
-module.exports = connection;
+module.exports = pool;

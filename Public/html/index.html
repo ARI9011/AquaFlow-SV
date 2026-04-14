@@ -56,6 +56,10 @@
         <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/></svg>
         Reportes ciudadanos
       </div>
+      <div class="nav-item" data-page="configuracion" onclick="navigate('configuracion', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M9.405 1.05c-.413-1.4-2.428-1.4-2.841 0l-.083.28a1.58 1.58 0 0 1-1.516 1.16l-.293.005c-1.45.03-2.076 1.967-1.06 2.904l.213.203a1.58 1.58 0 0 1 .396 1.546l-.107.284c-.5 1.316.141 2.757 1.47 3.172l.237.075a1.58 1.58 0 0 1 1.033 1.092l.093.298c.406 1.34 1.977 1.675 2.855.6l.202-.22a1.58 1.58 0 0 1 1.637-.403l.281.11c1.234.49 2.62-.37 2.72-1.742l.019-.293a1.58 1.58 0 0 1 1.052-1.394l.264-.092c1.305-.438 1.833-2.015 1.01-3.047l-.156-.2a1.58 1.58 0 0 1-.399-1.51l.1-.28c.48-1.3-.321-2.727-1.622-3.177l-.284-.102a1.58 1.58 0 0 1-1.167-.998l-.095-.281ZM8 10.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
+        Configuración
+      </div>
       <div class="nav-item" data-page="alertas" onclick="navigate('alertas', this)">
         <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/></svg>
         Alertas
@@ -78,29 +82,147 @@
           <p>Sistema de monitoreo de agua potable · Gran San Salvador</p>
         </div>
 
-        <div class="panel">
-          <div class="panel-header"><h3>📊 Presión en Tiempo Real</h3></div>
-          <div id="bars-wrapper" class="bars-container">
+        <div class="stats-grid">
+          <div class="stat-card" style="--accent: var(--cyan);">
+            <div class="stat-icon">💧</div>
+            <div class="stat-content">
+              <div class="stat-value">3</div>
+              <div class="stat-label">Zonas Activas</div>
+              <div class="stat-sub">1 de 6 totales</div>
             </div>
+          </div>
+          <div class="stat-card" style="--accent: var(--blue-primary);">
+            <div class="stat-icon">📡</div>
+            <div class="stat-content">
+              <div class="stat-value">5</div>
+              <div class="stat-label">Sensores en Línea</div>
+              <div class="stat-sub">de 6 instalados</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent: var(--purple);">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+              <div class="stat-value">8</div>
+              <div class="stat-label">Reportes Totales</div>
+              <div class="stat-sub">3 pendientes</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent: var(--red);">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-content">
+              <div class="stat-value">3</div>
+              <div class="stat-label">Alertas Activas</div>
+              <div class="stat-sub">Requieren atención</div>
+            </div>
+          </div>
         </div>
 
-        <div class="panel">
-          <div class="panel-header"><h3>📍 Estado por Zonas</h3></div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>ZONA</th>
-                  <th>SECTOR</th>
-                  <th>PRESIÓN</th>
-                  <th>FLUJO</th>
-                  <th>ESTADO</th>
-                  <th>ACTUALIZACIÓN</th>
-                </tr>
-              </thead>
-              <tbody id="zone-tbody">
-                </tbody>
-            </table>
+        <div class="bottom-grid">
+          <div class="panel">
+            <div class="panel-header"><h3>📍 Estado por Zonas</h3></div>
+            <div class="table-responsive">
+              <table class="zone-table">
+                <thead>
+                  <tr>
+                    <th>ZONA</th>
+                    <th>SECTOR</th>
+                    <th>PRESIÓN</th>
+                    <th>FLUJO</th>
+                    <th>ESTADO</th>
+                    <th>ACTUALIZACIÓN</th>
+                  </tr>
+                </thead>
+                <tbody id="zone-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel summary-panel">
+            <div class="panel-header"><h3>Distribución por Zona</h3></div>
+            <div class="summary-body">
+              <div class="summary-item">
+                <span>Colonia Escalón</span>
+                <div class="summary-bar" style="--pct:88; --accent: var(--green);"></div>
+                <span class="summary-percentage">88%</span>
+              </div>
+              <div class="summary-item">
+                <span>Soyapango Centro</span>
+                <div class="summary-bar" style="--pct:78; --accent: var(--amber);"></div>
+                <span class="summary-percentage">78%</span>
+              </div>
+              <div class="summary-item">
+                <span>Mejicanos Norte</span>
+                <div class="summary-bar" style="--pct:48; --accent: var(--red);"></div>
+                <span class="summary-percentage">48%</span>
+              </div>
+              <div class="summary-item">
+                <span>Apopa Residencial</span>
+                <div class="summary-bar" style="--pct:85; --accent: var(--green);"></div>
+                <span class="summary-percentage">85%</span>
+              </div>
+              <div class="summary-item">
+                <span>Ilopango Sur</span>
+                <div class="summary-bar" style="--pct:62; --accent: var(--amber);"></div>
+                <span class="summary-percentage">62%</span>
+              </div>
+              <div class="summary-item">
+                <span>San Marcos Centro</span>
+                <div class="summary-bar" style="--pct:94; --accent: var(--green);"></div>
+                <span class="summary-percentage">94%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-configuracion" class="page">
+        <div class="panel settings-panel">
+          <div class="panel-header"><h3>⚙️ Configuración</h3></div>
+          <div class="settings-body">
+            <div class="settings-group">
+              <div class="settings-group-title">General</div>
+              <div class="settings-field">
+                <label for="language-select">Idioma</label>
+                <select id="language-select">
+                  <option selected>Español</option>
+                  <option>Inglés</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-group-title">Sensores IoT</div>
+              <div class="settings-field full-width">
+                <div class="range-label">
+                  <span>Intervalo de Actualización</span>
+                  <span id="update-interval-value">8s</span>
+                </div>
+                <input id="interval-slider" type="range" min="5" max="60" value="8" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-group-title">Umbrales de Presión</div>
+              <div class="settings-row">
+                <div class="settings-field">
+                  <label for="low-threshold">Umbral Presión Baja (Psi)</label>
+                  <input id="low-threshold" type="number" value="35" min="0" />
+                </div>
+                <div class="settings-field">
+                  <label for="critical-threshold">Umbral Presión Crítica (Psi)</label>
+                  <input id="critical-threshold" type="number" value="20" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <div class="settings-group-title">Notificaciones</div>
+              <label class="toggle-switch">
+                <input id="notifications-toggle" type="checkbox" checked />
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Notificaciones habilitadas</span>
+              </label>
+            </div>
           </div>
         </div>
       </section>
@@ -109,7 +231,7 @@
         <div class="panel">
           <div class="panel-header"><h3>📡 Monitoreo de Dispositivos</h3></div>
           <div class="table-responsive">
-            <table>
+            <table class="zone-table">
               <thead>
                 <tr>
                   <th>ID SENSOR</th>
@@ -132,7 +254,7 @@
         <div class="panel">
           <div class="panel-header"><h3>📋 Historial de Reportes</h3></div>
           <div class="table-responsive">
-            <table>
+            <table class="zone-table">
               <thead>
                 <tr>
                   <th>USUARIO</th>

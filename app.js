@@ -37,7 +37,10 @@ app.post('/auth/login', (req, res) => {
     // Usamos Correo y Contra según tu estructura SQL
     const sql = 'SELECT * FROM usuarios WHERE Correo = ? AND Contra = ?';
     db.query(sql, [email, password], (err, results) => {
-        if (err) return res.status(500).send('Error en servidor');
+        if (err) {
+            console.error('Login query error:', err);
+            return res.status(500).send('Error en servidor');
+        }
 
         if (results.length > 0) {
             req.session.user = results[0];
@@ -59,7 +62,7 @@ app.post('/auth/register', (req, res) => {
     
     db.query(sql, [nombre, email, password, rol], (err, result) => {
         if (err) {
-            console.log(err);
+            console.error('Register query error:', err);
             return res.send('Error al registrar. <a href="/login">Volver</a>');
         }
         res.redirect('/login?registro=exitoso');

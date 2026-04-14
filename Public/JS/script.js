@@ -96,6 +96,53 @@ async function buildReportesTable(tbodyId) {
     } catch (err) { console.error("Error reportes:", err); }
 }
 
+function navigate(page, element) {
+    document.querySelectorAll('.page').forEach(section => {
+        section.classList.toggle('active', section.id === `page-${page}`);
+    });
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.page === page);
+    });
+
+    const titles = {
+        dashboard: 'Dashboard',
+        mapa: 'Mapa de Zonas',
+        sensores: 'Sensores IoT',
+        reportes: 'Reportes Ciudadanos',
+        alertas: 'Alertas',
+        usuarios: 'Usuarios',
+        configuracion: 'Configuración'
+    };
+
+    const subtitles = {
+        dashboard: 'Resumen general del sistema',
+        mapa: 'Vista y estado de las zonas',
+        sensores: 'Estado de los dispositivos IoT',
+        reportes: 'Reporte de incidencias y solicitudes',
+        alertas: 'Alertas activas y notificaciones',
+        usuarios: 'Gestión de usuarios del sistema',
+        configuracion: 'Ajustes y parámetros del sistema'
+    };
+
+    const titleEl = document.getElementById('page-title');
+    const subtitleEl = document.getElementById('page-subtitle');
+    if (titleEl) titleEl.textContent = titles[page] || 'Dashboard';
+    if (subtitleEl) subtitleEl.textContent = subtitles[page] || 'Resumen general del sistema';
+}
+
+function initConfigControls() {
+    const slider = document.getElementById('interval-slider');
+    const intervalValue = document.getElementById('update-interval-value');
+
+    if (slider && intervalValue) {
+        intervalValue.textContent = `${slider.value}s`;
+        slider.addEventListener('input', () => {
+            intervalValue.textContent = `${slider.value}s`;
+        });
+    }
+}
+
 /* ── INICIO ── */
 document.addEventListener('DOMContentLoaded', () => {
     updateClock();
@@ -104,5 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
     buildZoneTable('zone-tbody');
     buildBars();
     buildReportesTable('reportes-tbody');
+    initConfigControls();
     setTimeout(animateBars, 500);
 });
