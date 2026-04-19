@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-aqua-dark: #060b0d;
+  --color-aqua-card: #0a1215;
+  --color-aqua-cyan: #00f2ea;
+  --color-aqua-emerald: #00d1b2;
+}
+
+/* El @apply debe ir después de la definición del tema */
+body {
+  @apply bg-aqua-dark text-white antialiased;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
