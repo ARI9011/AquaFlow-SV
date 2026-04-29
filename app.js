@@ -58,19 +58,24 @@ app.get('/login', (req, res) => {
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
     
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email y contraseña requeridos' });
+    }
+
     // Usamos Correo y Contra según tu estructura SQL
     const sql = 'SELECT * FROM usuarios WHERE Correo = ? AND Contra = ?';
     db.query(sql, [email, password], (err, results) => {
         if (err) {
             console.error('Login query error:', err);
-            return res.status(500).send('Error en servidor');
+            return res.status(500).json({ error: 'Error en servidor' });
         }
 
         if (results.length > 0) {
             req.session.user = results[0];
-            res.redirect('/');
+            console.log('✅ Login exitoso:', email, '| Rol:', results[0].rol);
+            return res.json({ success: true, user: results[0] });
         } else {
-            res.send('Credenciales incorrectas. <a href="/login">Volver a intentar</a>');
+            return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
     });
 });
@@ -79,7 +84,15 @@ app.post('/auth/login', (req, res) => {
 app.post('/auth/register', (req, res) => {
     const { nombre, email, password, adminCode } = req.body;
     
-    const rol = (adminCode === 'CREA2026') ? 'admin' : 'user';
+    if (!nombre || !email || !password) {
+        return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    // Validar que sea email @flowcdb.com o que tenga el código admin
+    const isFlowcdbEmail = email.toLowerCase().endsWith('@flowcdb.com');
+    const rol = (isFlowcdbEmail || adminCode === 'FLOWCDB2026') ? 'admin' : 'user';
+
+    console.log(`📝 Registrando usuario: ${email} | Rol: ${rol} | FlowCDB: ${isFlowcdbEmail}`);
 
     // Usamos Usuario, Correo, Contra y rol según tu estructura SQL
     const sql = 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
@@ -87,9 +100,14 @@ app.post('/auth/register', (req, res) => {
     db.query(sql, [nombre, email, password, rol], (err, result) => {
         if (err) {
             console.error('Register query error:', err);
-            return res.send('Error al registrar. <a href="/login">Volver</a>');
+            return res.status(500).json({ error: 'Error al registrar. El email puede estar duplicado.' });
         }
-        res.redirect('/login?registro=exitoso');
+        console.log('✅ Registro exitoso:', email, '| Nuevo ID:', result.insertId);
+        return res.json({ 
+            success: true, 
+            message: 'Usuario registrado exitosamente',
+            isAdmin: rol === 'admin'
+        });
     });
 });
 

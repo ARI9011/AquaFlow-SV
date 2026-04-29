@@ -4,6 +4,8 @@ import Dashboard from './Pages/Dashboard';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Usuarios from './Pages/Usuarios';
+import Mapa from './Pages/Mapa';
+import Sensores from './Pages/Sensores';
 
 // Este componente envuelve las páginas privadas para mostrar siempre el Sidebar y Topbar
 const AdminLayout = ({ children }: { children: React.ReactNode }) => (
@@ -11,9 +13,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => (
     {/* Sidebar con acceso de Admin activado */}
     <Sidebar isAdmin={true} />
 
-    <div className="flex-1 flex flex-col h-screen overflow-hidden">
+    <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
       <Topbar />
-      <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
+      <main className="flex-1 p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar">
         {children}
       </main>
     </div>
@@ -42,6 +44,24 @@ export default function App() {
           element={
             <AdminLayout>
               <Usuarios />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/mapa"
+          element={
+            <AdminLayout>
+              <Mapa />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/sensores"
+          element={
+            <AdminLayout>
+              <Sensores />
             </AdminLayout>
           }
         />
