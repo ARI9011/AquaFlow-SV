@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import BubbleBackground from '../components/BubbleBackground';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -88,7 +89,8 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-aqua-dark flex items-center justify-center p-6 font-sans selection:bg-aqua-cyan/30 text-white">
-      <div className="w-full max-w-[420px] animate-in fade-in zoom-in duration-500">
+      <BubbleBackground />
+      <div className="w-full max-w-[420px] animate-in fade-in zoom-in duration-500 relative" style={{ zIndex: 1 }}>
 
         {/* HEADER / LOGO */}
         <div className="flex items-center justify-center gap-4 mb-10 group">

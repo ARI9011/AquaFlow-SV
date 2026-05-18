@@ -126,9 +126,28 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
             <p className="text-[10px] uppercase font-black text-gray-600 tracking-[0.2em] mb-3 px-4">Ciudadano</p>
           )}
           <div className="space-y-1">
-            <NavItem icon={FileText} label="Reportes ciudadanos" collapsed={collapsed} />
-            <NavItem icon={Settings} label="Configuración" collapsed={collapsed} />
-            <NavItem icon={Bell} label="Alertas" badge={3} collapsed={collapsed} />
+            <NavItem
+              icon={FileText}
+              label="Reportes ciudadanos"
+              active={location.pathname === '/reportes'}
+              onClick={() => navigate('/reportes')}
+              collapsed={collapsed}
+            />
+            <NavItem
+              icon={Settings}
+              label="Configuración"
+              active={location.pathname === '/configuracion'}
+              onClick={() => navigate('/configuracion')}
+              collapsed={collapsed}
+            />
+            <NavItem
+              icon={Bell}
+              label="Alertas"
+              badge={3}
+              active={location.pathname === '/alertas'}
+              onClick={() => navigate('/alertas')}
+              collapsed={collapsed}
+            />
           </div>
         </div>
 

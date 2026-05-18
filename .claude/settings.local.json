@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version)",
+      "Bash(node app.js)",
+      "Bash(npm run *)"
+    ]
+  }
+}

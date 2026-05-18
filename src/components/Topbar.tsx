@@ -1,11 +1,25 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Droplets, User, ChevronDown, LogOut } from 'lucide-react';
+
+const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
+  '/dashboard':    { title: 'Dashboard',             sub: 'Resumen general del sistema'       },
+  '/mapa':         { title: 'Mapa de Zonas',         sub: 'Gran San Salvador'                 },
+  '/sensores':     { title: 'Sensores IoT',           sub: 'Dispositivos de medición'          },
+  '/usuarios':     { title: 'Gestión de Usuarios',   sub: 'Control de acceso'                 },
+  '/reportes':     { title: 'Reportes Ciudadanos',   sub: 'Incidencias reportadas'            },
+  '/alertas':      { title: 'Alertas del Sistema',   sub: '3 alertas activas'                 },
+  '/configuracion':{ title: 'Configuración',         sub: 'Preferencias del sistema'          },
+};
 
 export default function Topbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const location = useLocation();
+  const page = PAGE_TITLES[location.pathname] ?? { title: 'AquaFlow SV', sub: 'Monitoreo Hídrico' };
 
   return (
-    <header className="h-20 bg-aqua-card border-b border-white/5 flex items-center justify-between px-4 md:px-8 shadow-lg flex-shrink-0">
+    // z-[800] supera el z-index máximo de Leaflet (700) para que el dropdown siempre quede encima del mapa
+    <header className="h-20 bg-aqua-card border-b border-white/5 flex items-center justify-between px-4 md:px-8 shadow-lg flex-shrink-0 relative z-[800]">
 
       {/* BRAND / LOGO - RESPONSIVE */}
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -22,8 +36,8 @@ export default function Topbar() {
 
       {/* TITULO CENTRAL - OCULTO EN MOBILE */}
       <div className="hidden md:block text-center flex-1">
-        <h2 className="text-white font-bold text-lg">Dashboard</h2>
-        <p className="text-gray-500 text-xs">Resumen general del sistema</p>
+        <h2 className="text-white font-bold text-lg">{page.title}</h2>
+        <p className="text-gray-500 text-xs">{page.sub}</p>
       </div>
 
       {/* USUARIO & DROPDOWN */}

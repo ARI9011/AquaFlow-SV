@@ -173,51 +173,6 @@ function checkAdmin(req, res, next) {
     next();
 }
 
-// --- RUTAS DE NAVEGACIÓN ---
-app.get('/', (req, res) => {
-    if (req.session.user) {
-        res.sendFile(path.join(__dirname, 'Public/html/index.html'));
-    } else {
-        res.redirect('/login');
-    }
-});
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public/html/login.html'));
-});
-
-// --- API PARA REACT 
-app.get('/api/usuarios', (req, res) => {
-    const sql = 'SELECT ID, Usuario, Correo, rol FROM usuarios';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error SQL:', err);
-            return res.status(500).json({ error: 'Error al obtener usuarios' });
-        }
-        res.json(results);
-    });
-});
-
-// --- LÓGICA DE AUTH ---
-app.post('/auth/login', (req, res) => {
-    const { email, password } = req.body;
-    const sql = 'SELECT * FROM usuarios WHERE Correo = ? AND Contra = ?';
-    db.query(sql, [email, password], (err, results) => {
-        if (err) return res.status(500).send('Error en servidor');
-        if (results.length > 0) {
-            req.session.user = results[0];
-            res.redirect('/');
-        } else {
-            res.send('Credenciales incorrectas. <a href="/login">Volver</a>');
-        }
-    });
-});
-
-app.post('/auth/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/login');
-});
-
 // --- CRUD (Acciones que sí requieren ser Admin) ---
 app.post('/api/usuarios', (req, res) => {
     const { Usuario, Correo, Contra, rol } = req.body;

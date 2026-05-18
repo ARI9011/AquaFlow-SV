@@ -13,3 +13,115 @@ body {
   margin: 0;
   font-family: 'Inter', sans-serif;
 }
+
+/* ── Loading screen animations ─────────────────────────────────── */
+
+/* Wave horizontal scroll — one full period per cycle */
+.aqua-wave {
+  animation: waveFlow 1.8s linear infinite;
+}
+@keyframes waveFlow {
+  from { transform: translateX(0px);   }
+  to   { transform: translateX(-28px); }
+}
+
+/* Bubbles rising through the water */
+@keyframes bubbleA {
+  0%   { transform: translateY(0px);    opacity: 0;    }
+  6%   { opacity: 0.55; }
+  80%  { opacity: 0.3;  }
+  100% { transform: translateY(-118px); opacity: 0;    }
+}
+@keyframes bubbleB {
+  0%   { transform: translateY(0px);    opacity: 0;    }
+  6%   { opacity: 0.4;  }
+  80%  { opacity: 0.22; }
+  100% { transform: translateY(-118px); opacity: 0;    }
+}
+@keyframes bubbleC {
+  0%   { transform: translateY(0px);    opacity: 0;    }
+  6%   { opacity: 0.48; }
+  80%  { opacity: 0.28; }
+  100% { transform: translateY(-118px); opacity: 0;    }
+}
+
+.bubble-a { animation: bubbleA 2.5s ease-in 0.6s  infinite; }
+.bubble-b { animation: bubbleB 1.9s ease-in 1.35s infinite; }
+.bubble-c { animation: bubbleC 3.2s ease-in 0.1s  infinite; }
+
+/* ── Leaflet dark theme overrides ──────────────────────────────── */
+
+/* Popup wrapper */
+.leaflet-popup-content-wrapper {
+  background: #0a1215 !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 242, 234, 0.07) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 14px 18px !important;
+  line-height: 1 !important;
+}
+.leaflet-popup-tip {
+  background: #0a1215 !important;
+  box-shadow: none !important;
+}
+.leaflet-popup-close-button {
+  color: rgba(255, 255, 255, 0.3) !important;
+  font-size: 18px !important;
+  top: 6px !important;
+  right: 8px !important;
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+.leaflet-popup-close-button:hover {
+  color: #00f2ea !important;
+  background: none !important;
+}
+
+/* Zoom controls */
+.leaflet-bar {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+}
+.leaflet-control-zoom a {
+  background: #0a1215 !important;
+  color: #00f2ea !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  font-size: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+.leaflet-control-zoom a:hover {
+  background: rgba(0, 242, 234, 0.1) !important;
+  color: #00f2ea !important;
+}
+.leaflet-bar a:first-child {
+  border-radius: 0.65rem 0.65rem 0 0 !important;
+}
+.leaflet-bar a:last-child {
+  border-radius: 0 0 0.65rem 0.65rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Attribution */
+.leaflet-control-attribution {
+  background: rgba(6, 11, 13, 0.82) !important;
+  color: rgba(255, 255, 255, 0.22) !important;
+  font-size: 9px !important;
+  border-radius: 8px 0 0 0 !important;
+  padding: 3px 10px !important;
+  backdrop-filter: blur(4px);
+}
+.leaflet-control-attribution a {
+  color: rgba(0, 242, 234, 0.45) !important;
+}
+.leaflet-control-attribution a:hover {
+  color: #00f2ea !important;
+}
