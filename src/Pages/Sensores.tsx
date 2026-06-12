@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Droplets, Zap, Wifi, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Droplets, Wifi, AlertTriangle, CheckCircle } from 'lucide-react';
 
 // Datos de sensores IoT
 const sensoresData = [

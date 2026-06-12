@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { UserPlus, Trash2, Edit2, User, X } from 'lucide-react';
-
-// Configuración global para enviar cookies de sesión (importante para el rol Admin)
-axios.defaults.withCredentials = true;
+import { UserPlus, Trash2, Edit2, User, X, ShieldCheck, UserCheck } from 'lucide-react';
 
 export default function Usuarios() {
     const [users, setUsers] = useState([]);
@@ -129,8 +126,10 @@ export default function Usuarios() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.rol === 'admin' ? 'bg-aqua-cyan/20 text-aqua-cyan' : 'bg-white/5 text-gray-400'}`}>
-                                                {user.rol}
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.rol === 'admin' ? 'bg-aqua-cyan/20 text-aqua-cyan' : 'bg-white/5 text-gray-400'}`}>
+                                                {user.rol === 'admin'
+                                                  ? <><ShieldCheck size={11} /> Administrador</>
+                                                  : <><UserCheck size={11} /> Técnico</>}
                                             </span>
                                         </td>
                                         <td className="px-8 py-6 text-right">
@@ -193,13 +192,16 @@ export default function Usuarios() {
                                 required={!editingId}
                             />
                             <select
-                                className="w-full bg-aqua-dark border border-white/10 rounded-xl px-4 py-3 text-white outline-none"
+                                className="w-full bg-aqua-dark border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-aqua-cyan"
                                 value={formData.rol}
                                 onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
                             >
                                 <option value="user">Técnico / Usuario</option>
                                 <option value="admin">Administrador</option>
                             </select>
+                            <p className="text-[10px] text-gray-500 ml-1">
+                              El rol determina los permisos de acceso dentro del sistema.
+                            </p>
 
                             <button type="submit" className="w-full bg-aqua-cyan text-aqua-dark font-black py-4 rounded-2xl mt-4 hover:scale-[1.02] transition-transform">
                                 {editingId ? 'GUARDAR CAMBIOS' : 'GUARDAR EN MYSQL'}

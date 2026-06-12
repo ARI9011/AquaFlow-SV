@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+
+const Icon = ({ id, size = 20, className = '', style = {} }: {
+  id: string; size?: number; className?: string; style?: React.CSSProperties;
+}) => (
+  <svg width={size} height={size} className={className} style={style} aria-hidden="true">
+    <use href={`/icons.svg#${id}`} />
+  </svg>
+);
 import 'leaflet/dist/leaflet.css';
 
 const zonasData = [
@@ -80,7 +87,7 @@ export default function Mapa() {
 
       {/* BANNER INFORMATIVO */}
       <div className="bg-aqua-cyan/10 border border-aqua-cyan/30 rounded-2xl p-6 flex items-start gap-4">
-        <MapPin className="text-aqua-cyan flex-shrink-0 mt-1" size={20} />
+        <Icon id="social-icon" size={22} className="flex-shrink-0 mt-0.5" />
         <div>
           <h3 className="font-black text-aqua-cyan mb-1">Zonas Activas</h3>
           <p className="text-sm text-gray-300">
@@ -177,6 +184,10 @@ export default function Mapa() {
       </div>
 
       {/* CARDS DE ZONAS */}
+      <div className="flex items-center gap-2 mb-1">
+        <Icon id="social-icon" size={18} />
+        <h3 className="font-bold text-white text-base">Zonas Monitoreadas</h3>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {zonasData.map((zona) => (
           <ZonaCard key={zona.id} zona={zona} />
@@ -185,7 +196,8 @@ export default function Mapa() {
 
       {/* TABLA DETALLADA */}
       <div className="bg-aqua-card rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
-        <div className="p-8 border-b border-white/5 bg-white/[0.01]">
+        <div className="p-8 border-b border-white/5 bg-white/[0.01] flex items-center gap-3">
+          <Icon id="documentation-icon" size={22} />
           <h3 className="font-bold text-xl">Detalles de Ubicaciones</h3>
         </div>
         <div className="overflow-x-auto">
@@ -226,6 +238,22 @@ export default function Mapa() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* ENLACES SOCIALES */}
+      <div className="flex items-center justify-center gap-6 pt-2 pb-1">
+        <a href="#" aria-label="GitHub" className="opacity-40 hover:opacity-100 transition-opacity">
+          <Icon id="github-icon" size={20} style={{ filter: 'invert(1) brightness(2)' }} />
+        </a>
+        <a href="#" aria-label="Discord" className="opacity-40 hover:opacity-100 transition-opacity">
+          <Icon id="discord-icon" size={20} style={{ filter: 'invert(1) brightness(2)' }} />
+        </a>
+        <a href="#" aria-label="Bluesky" className="opacity-40 hover:opacity-100 transition-opacity">
+          <Icon id="bluesky-icon" size={20} style={{ filter: 'invert(1) brightness(2)' }} />
+        </a>
+        <a href="#" aria-label="X / Twitter" className="opacity-40 hover:opacity-100 transition-opacity">
+          <Icon id="x-icon" size={20} style={{ filter: 'invert(1) brightness(2)' }} />
+        </a>
       </div>
 
     </div>

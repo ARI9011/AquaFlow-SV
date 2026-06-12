@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface NavItemProps {
   icon: any;
@@ -58,10 +59,12 @@ const NavItem = ({ icon: Icon, label, active = false, badge, onClick, collapsed 
 export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
-  const handleLogout = () => {
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (

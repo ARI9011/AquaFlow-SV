@@ -13,8 +13,10 @@
     "@types/leaflet": "^1.9.21",
     "axios": "^1.15.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "groq-sdk": "^1.2.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
     "mysql2": "^3.22.0",
@@ -25,7 +27,10 @@
     "recharts": "^2.15.4"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@swc/core", "esbuild"]
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "esbuild"
+    ]
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",

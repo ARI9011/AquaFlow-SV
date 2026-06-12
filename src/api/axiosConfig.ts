@@ -10,8 +10,12 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Si es no autorizado, redirigir a login
-      window.location.href = '/login';
+      const isOnLogin    = window.location.pathname === '/login';
+      const isAuthCheck  = error.config?.url?.includes('/api/user-info');
+      // Solo redirigir si no estamos ya en login y no es la verificación inicial de sesión
+      if (!isOnLogin && !isAuthCheck) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
