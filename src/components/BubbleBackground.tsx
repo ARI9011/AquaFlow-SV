@@ -13,19 +13,19 @@ interface Bubble {
   wobbleAmplitude: number;
 }
 
-const COLORS = ['#00f2ea', '#00d1b2'];
-const BUBBLE_COUNT = 22;
+const COLORS = ['#00f2ea', '#00d1b2', '#00c8e0'];
+const BUBBLE_COUNT = 35;
 const REPULSE_RADIUS = 90;
 
 function spawnBubble(w: number, h: number, spreadY = false): Bubble {
-  const radius = 3 + Math.random() * 14;
+  const radius = 4 + Math.random() * 18;
   return {
     x: Math.random() * w,
     y: spreadY ? Math.random() * h : h + radius + Math.random() * 300,
     radius,
     speedY: 0.25 + Math.random() * 0.55,
     speedX: 0,
-    opacity: 0.04 + Math.random() * 0.11,
+    opacity: 0.15 + Math.random() * 0.20,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     wobbleOffset: Math.random() * Math.PI * 2,
     wobbleSpeed: 0.008 + Math.random() * 0.014,
@@ -97,7 +97,7 @@ export default function BubbleBackground() {
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
         ctx.strokeStyle = b.color;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         const grad = ctx.createRadialGradient(
@@ -108,7 +108,7 @@ export default function BubbleBackground() {
           b.y,
           b.radius
         );
-        grad.addColorStop(0, b.color + '2a');
+        grad.addColorStop(0, b.color + '55');
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.fill();
