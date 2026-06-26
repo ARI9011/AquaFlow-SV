@@ -1,215 +1,274 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { UserPlus, Trash2, Edit2, User, X, ShieldCheck, UserCheck } from 'lucide-react';
+import { UserPlus, Trash2, Edit2, User, X, ShieldCheck, UserCheck, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
+
+interface UsuarioRow {
+  ID: number;
+  Usuario: string;
+  Correo: string;
+  rol: string;
+}
+
+interface Toast {
+  type: 'success' | 'error';
+  msg: string;
+}
 
 export default function Usuarios() {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
+  const [users, setUsers]           = useState<UsuarioRow[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId]   = useState<number | null>(null);
+  const [toast, setToast]           = useState<Toast | null>(null);
 
-    const [formData, setFormData] = useState({
-        Usuario: '',
-        Correo: '',
-        Contra: '',
-        rol: 'user'
-    });
+  const [formData, setFormData] = useState({
+    Usuario: '',
+    Correo: '',
+    Contra: '',
+    rol: 'user',
+  });
 
-    // 1. Cargar usuarios (GET)
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('http://localhost:3000/api/usuarios');
-            setUsers(response.data);
-        } catch (error) {
-            console.error("Error al obtener usuarios:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const showToast = (type: Toast['type'], msg: string) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3000);
+  };
 
-    useEffect(() => { fetchUsers(); }, []);
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/usuarios');
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error al obtener usuarios:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // 2. Preparar el modal para EDITAR
-    const abrirEditar = (user: any) => {
-        setEditingId(user.ID);
-        setFormData({
-            Usuario: user.Usuario,
-            Correo: user.Correo,
-            Contra: '', // La contra se deja vacía por seguridad al editar
-            rol: user.rol
-        });
-        setIsModalOpen(true);
-    };
+  useEffect(() => { fetchUsers(); }, []);
 
-    const cerrarModal = () => {
-        setIsModalOpen(false);
-        setEditingId(null);
-        setFormData({ Usuario: '', Correo: '', Contra: '', rol: 'user' });
-    };
+  const abrirEditar = (user: UsuarioRow) => {
+    setEditingId(user.ID);
+    setFormData({ Usuario: user.Usuario, Correo: user.Correo, Contra: '', rol: user.rol });
+    setIsModalOpen(true);
+  };
 
-    // 3. Crear o Actualizar (POST / PUT)
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if (editingId) {
-                // Si hay un ID, actualizamos el usuario existente
-                await axios.put(`http://localhost:3000/api/usuarios/${editingId}`, formData);
-                alert("¡Usuario actualizado con éxito!");
-            } else {
-                // Si no hay ID, creamos uno nuevo
-                await axios.post(`http://localhost:3000/api/usuarios`, formData);
-                alert("¡Usuario registrado en MySQL!");
-            }
-            cerrarModal();
-            fetchUsers();
-        } catch (error: any) {
-            alert(error.response?.data?.error || "Error en la operación");
-        }
-    };
+  const cerrarModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setFormData({ Usuario: '', Correo: '', Contra: '', rol: 'user' });
+  };
 
-    // 4. Eliminar (DELETE)
-    const handleEliminar = async (id: number) => {
-        if (!window.confirm("¿Estás seguro de eliminar este usuario?")) return;
-        try {
-            // Enviamos la petición de borrado al servidor
-            await axios.delete(`http://localhost:3000/api/usuarios/${id}`);
-            fetchUsers(); // Refrescar la tabla
-        } catch (error: any) {
-            // Manejo del error si intentas borrarte a ti mismo
-            alert(error.response?.data?.error || "No se pudo eliminar el usuario");
-        }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await axios.put(`/api/usuarios/${editingId}`, formData);
+        showToast('success', 'Usuario actualizado con éxito');
+      } else {
+        await axios.post('/api/usuarios', formData);
+        showToast('success', 'Usuario registrado correctamente');
+      }
+      cerrarModal();
+      fetchUsers();
+    } catch (error: any) {
+      showToast('error', error.response?.data?.error || 'Error en la operación');
+    }
+  };
 
-    return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Encabezado */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <h2 className="text-3xl font-black tracking-tighter text-white">Gestión de <span className="text-aqua-cyan">Usuarios</span></h2>
-                    <p className="text-gray-500 text-sm">Control de acceso para AquaFlow SV</p>
-                </div>
-                <button
-                    onClick={() => { setEditingId(null); setIsModalOpen(true); }}
-                    className="bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-6 py-3 rounded-2xl transition-all flex items-center gap-2"
-                >
-                    <UserPlus size={18} /> NUEVO USUARIO
-                </button>
-            </div>
+  const handleEliminar = async (id: number) => {
+    if (!window.confirm('¿Estás seguro de eliminar este usuario?')) return;
+    try {
+      await axios.delete(`/api/usuarios/${id}`);
+      fetchUsers();
+      showToast('success', 'Usuario eliminado');
+    } catch (error: any) {
+      showToast('error', error.response?.data?.error || 'No se pudo eliminar el usuario');
+    }
+  };
 
-            {/* Tabla de Usuarios */}
-            <div className="bg-aqua-card rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
-                {loading ? (
-                    <div className="p-20 text-center text-aqua-cyan font-bold animate-pulse text-xs tracking-widest">CONECTANDO CON MYSQL...</div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-white/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
-                                <tr>
-                                    <th className="px-8 py-5">Usuario</th>
-                                    <th className="px-8 py-5">Rol</th>
-                                    <th className="px-8 py-5 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/[0.03]">
-                                {users.map((user: any) => (
-                                    <tr key={user.ID} className="hover:bg-white/[0.02] transition-colors group">
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-aqua-cyan/10 flex items-center justify-center text-aqua-cyan">
-                                                    <User size={20} />
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-white text-sm">{user.Usuario}</div>
-                                                    <div className="text-[10px] text-gray-400">{user.Correo}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.rol === 'admin' ? 'bg-aqua-cyan/20 text-aqua-cyan' : 'bg-white/5 text-gray-400'}`}>
-                                                {user.rol === 'admin'
-                                                  ? <><ShieldCheck size={11} /> Administrador</>
-                                                  : <><UserCheck size={11} /> Técnico</>}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                                <button
-                                                    onClick={() => abrirEditar(user)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-aqua-cyan transition-colors"
-                                                    title="Editar usuario"
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleEliminar(user.ID)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
-                                                    title="Eliminar usuario"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="space-y-5 page-enter portal-grid-bg min-h-full pb-2">
 
-            {/* Modal de Registro/Edición */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-aqua-dark/80 backdrop-blur-sm p-4">
-                    <div className="bg-aqua-card border border-aqua-cyan/20 w-full max-w-md rounded-[2.5rem] p-8 relative animate-in zoom-in-95 duration-200">
-                        <button onClick={cerrarModal} className="absolute top-6 right-6 text-gray-500 hover:text-white"><X size={24} /></button>
-
-                        <h3 className="text-2xl font-black text-white mb-6 tracking-tighter">
-                            {editingId ? 'Editar' : 'Registrar'} <span className="text-aqua-cyan">Técnico</span>
-                        </h3>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <input
-                                required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-aqua-cyan"
-                                placeholder="Nombre de Usuario"
-                                value={formData.Usuario}
-                                onChange={(e) => setFormData({ ...formData, Usuario: e.target.value })}
-                            />
-                            <input
-                                required
-                                type="email"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-aqua-cyan"
-                                placeholder="Correo"
-                                value={formData.Correo}
-                                onChange={(e) => setFormData({ ...formData, Correo: e.target.value })}
-                            />
-                            <input
-                                type="password"
-                                placeholder={editingId ? "Nueva contraseña (opcional)" : "Contraseña"}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-aqua-cyan"
-                                onChange={(e) => setFormData({ ...formData, Contra: e.target.value })}
-                                required={!editingId}
-                            />
-                            <select
-                                className="w-full bg-aqua-dark border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-aqua-cyan"
-                                value={formData.rol}
-                                onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
-                            >
-                                <option value="user">Técnico / Usuario</option>
-                                <option value="admin">Administrador</option>
-                            </select>
-                            <p className="text-[10px] text-gray-500 ml-1">
-                              El rol determina los permisos de acceso dentro del sistema.
-                            </p>
-
-                            <button type="submit" className="w-full bg-aqua-cyan text-aqua-dark font-black py-4 rounded-2xl mt-4 hover:scale-[1.02] transition-transform">
-                                {editingId ? 'GUARDAR CAMBIOS' : 'GUARDAR EN MYSQL'}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
+      {/* TOAST */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[9999] flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border transition-all ${
+          toast.type === 'success'
+            ? 'bg-green-500/15 border-green-500/30 text-green-400'
+            : 'bg-red-500/15 border-red-500/30 text-red-400'
+        }`}>
+          {toast.type === 'success'
+            ? <CheckCircle2 size={16} />
+            : <AlertTriangle size={16} />}
+          <span className="text-sm font-bold">{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100 transition-opacity">
+            <X size={14} />
+          </button>
         </div>
-    );
+      )}
+
+      {/* ENCABEZADO */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Administración</p>
+          <h2 className="text-3xl font-black tracking-tighter gradient-text">Gestión de Usuarios</h2>
+          <p className="text-sm text-gray-500 mt-1">Control de acceso para AquaFlow SV</p>
+        </div>
+        <button
+          onClick={() => { setEditingId(null); setIsModalOpen(true); }}
+          className="flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-5 py-2.5 rounded-2xl transition-all text-sm"
+        >
+          <UserPlus size={16} /> Nuevo usuario
+        </button>
+      </div>
+
+      {/* TABLA */}
+      <div className="portal-card card-top-cyan overflow-hidden">
+        <div className="p-5 border-b border-white/5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
+            <Users size={16} className="text-aqua-cyan" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base text-white">Directorio de usuarios</h3>
+            <p className="text-[10px] text-gray-500 mt-0.5">
+              {loading ? 'Cargando...' : `${users.length} usuario${users.length !== 1 ? 's' : ''} registrado${users.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-16 flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-aqua-cyan/30 border-t-aqua-cyan rounded-full animate-spin" />
+            <p className="text-xs text-gray-500 font-medium">Conectando con la base de datos...</p>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-16 flex flex-col items-center gap-3">
+            <Users size={32} className="text-gray-600 opacity-40" />
+            <p className="text-sm font-bold text-gray-500">No hay usuarios registrados</p>
+            <p className="text-xs text-gray-600">Crea el primer usuario con el botón "Nuevo usuario"</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-white/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
+                <tr>
+                  <th className="px-6 py-4">Usuario</th>
+                  <th className="px-6 py-4">Rol</th>
+                  <th className="px-6 py-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.03]">
+                {users.map((user) => (
+                  <tr key={user.ID} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-aqua-cyan/10 border border-aqua-cyan/20 flex items-center justify-center text-aqua-cyan flex-shrink-0">
+                          <User size={16} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-white text-sm">{user.Usuario}</p>
+                          <p className="text-[10px] text-gray-500">{user.Correo}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${
+                        user.rol === 'admin'
+                          ? 'bg-aqua-cyan/15 text-aqua-cyan border border-aqua-cyan/20'
+                          : 'bg-white/5 text-gray-400 border border-white/10'
+                      }`}>
+                        {user.rol === 'admin'
+                          ? <><ShieldCheck size={11} /> Administrador</>
+                          : <><UserCheck size={11} /> Técnico</>}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        <button onClick={() => abrirEditar(user)} title="Editar usuario"
+                          className="p-2 hover:bg-aqua-cyan/10 rounded-xl text-gray-500 hover:text-aqua-cyan transition-colors border border-transparent hover:border-aqua-cyan/20">
+                          <Edit2 size={15} />
+                        </button>
+                        <button onClick={() => handleEliminar(user.ID)} title="Eliminar usuario"
+                          className="p-2 hover:bg-red-500/10 rounded-xl text-gray-500 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/20">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-aqua-dark/80 backdrop-blur-sm p-4">
+          <div className="bg-[#0d1c21] border border-aqua-cyan/20 w-full max-w-md rounded-3xl p-7 relative animate-in zoom-in-95 duration-200 shadow-2xl">
+            <button onClick={cerrarModal}
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all">
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-9 h-9 rounded-xl bg-aqua-cyan/10 border border-aqua-cyan/20 flex items-center justify-center">
+                {editingId ? <Edit2 size={16} className="text-aqua-cyan" /> : <UserPlus size={16} className="text-aqua-cyan" />}
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white tracking-tight">
+                  {editingId ? 'Editar usuario' : 'Nuevo usuario'}
+                </h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  {editingId ? 'Modifica los datos del técnico' : 'Agrega un nuevo técnico o administrador'}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <input
+                required
+                placeholder="Nombre de usuario"
+                value={formData.Usuario}
+                onChange={(e) => setFormData({ ...formData, Usuario: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
+              />
+              <input
+                required
+                type="email"
+                placeholder="Correo electrónico"
+                value={formData.Correo}
+                onChange={(e) => setFormData({ ...formData, Correo: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
+              />
+              <input
+                type="password"
+                placeholder={editingId ? 'Nueva contraseña (opcional)' : 'Contraseña'}
+                onChange={(e) => setFormData({ ...formData, Contra: e.target.value })}
+                required={!editingId}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
+              />
+              <div>
+                <select
+                  value={formData.rol}
+                  onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
+                  className="w-full bg-[#060b0d] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 transition-colors"
+                >
+                  <option value="user">Técnico / Usuario</option>
+                  <option value="admin">Administrador</option>
+                </select>
+                <p className="text-[10px] text-gray-600 mt-1.5 ml-1">El rol determina los permisos de acceso dentro del sistema.</p>
+              </div>
+
+              <button type="submit"
+                className="w-full bg-aqua-cyan text-aqua-dark font-black py-3.5 rounded-2xl mt-2 hover:bg-aqua-cyan/80 transition-all active:scale-[0.98]">
+                {editingId ? 'GUARDAR CAMBIOS' : 'CREAR USUARIO'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
 }

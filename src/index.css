@@ -1,18 +1,68 @@
 @import "tailwindcss";
 
 @theme {
-  --color-aqua-dark: #060b0d;
-  --color-aqua-card: #0a1215;
-  --color-aqua-cyan: #00f2ea;
+  --color-aqua-dark:    #060b0d;
+  --color-aqua-card:    #0a1215;
+  --color-aqua-panel:   #0d1c21;
+  --color-aqua-cyan:    #00f2ea;
   --color-aqua-emerald: #00d1b2;
 }
 
-/* El @apply debe ir después de la definición del tema */
 body {
   @apply bg-aqua-dark text-white antialiased;
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
+
+/* ── Scrollbar personalizado ───────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar        { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track  { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb  { background: rgba(0,242,234,0.18); border-radius: 99px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,242,234,0.35); }
+
+/* ── Tarjeta portal (glassmorphism leve) ───────────────────────────── */
+.portal-card {
+  background: #0d1c21;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.portal-card:hover { border-color: rgba(0,242,234,0.12); }
+
+/* ── Fondo con cuadrícula sutil ────────────────────────────────────── */
+.portal-grid-bg {
+  background-image:
+    linear-gradient(rgba(0,242,234,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,242,234,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── Texto con gradiente ───────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #00f2ea 60%, #00d1b2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Borde superior coloreado en tarjetas ──────────────────────────── */
+.card-top-cyan   { border-top: 2px solid #00f2ea; }
+.card-top-green  { border-top: 2px solid #22c55e; }
+.card-top-amber  { border-top: 2px solid #f59e0b; }
+.card-top-red    { border-top: 2px solid #ef4444; }
+.card-top-blue   { border-top: 2px solid #3b82f6; }
+
+/* ── Borde izquierdo de prioridad ──────────────────────────────────── */
+.priority-high   { border-left: 3px solid #ef4444; }
+.priority-medium { border-left: 3px solid #f59e0b; }
+.priority-low    { border-left: 3px solid #22c55e; }
+
+/* ── Fade-in de páginas ────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.page-enter { animation: fadeSlideUp 0.4s ease forwards; }
 
 /* ── Loading screen animations ─────────────────────────────────── */
 
