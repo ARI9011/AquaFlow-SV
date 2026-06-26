@@ -42,7 +42,13 @@
       "Bash(curl -s -b /tmp/ck5.txt -X POST http://localhost:3000/auth/logout)",
       "Bash(curl -s -b /tmp/ck5.txt http://localhost:3000/api/user-info)",
       "Bash(taskkill /F /IM node.exe)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }')",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,5173 -State Listen -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess\")",
+      "Bash(git check-ignore *)",
+      "Bash(xxd .gitignore)"
     ]
   }
 }

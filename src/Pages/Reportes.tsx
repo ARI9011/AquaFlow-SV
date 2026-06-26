@@ -350,7 +350,7 @@ export default function Reportes() {
           descripcion: data.descripcion!,
           estado: 'pendiente',
           prioridad: data.prioridad ?? 'media',
-          usuario_id: (user as any).id ?? (user as any).ID ?? 0,
+          usuario_id: user!.id,
           usuario: user!.Usuario,
           creado_en: new Date().toISOString(),
           total_comentarios: 0,
@@ -485,9 +485,8 @@ export default function Reportes() {
             const p          = P_STYLE[r.prioridad] ?? P_STYLE.media;
             const e          = E_STYLE[r.estado]    ?? E_STYLE.pendiente;
             const isExpanded = expandedId === r.id;
-            const myId      = (user as any)?.id ?? (user as any)?.ID;
             const canEdit   = isAdmin;
-            const canDelete = isAdmin || r.usuario_id === myId;
+            const canDelete = isAdmin || r.usuario_id === user?.id;
 
             return (
               <div key={r.id} className={`portal-card ${p.leftBorder} overflow-hidden transition-all duration-200`}>
@@ -573,7 +572,7 @@ export default function Reportes() {
                     {isExpanded && user && (
                       <ComentariosSection
                         reporteId={r.id}
-                        userId={(user as any).id ?? (user as any).ID ?? 0}
+                        userId={user!.id}
                         userRol={user.rol}
                         onCountChange={delta => updateCount(r.id, delta)}
                       />

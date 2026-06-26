@@ -7,7 +7,9 @@
       "Bash(taskkill /F /PID 2956 /T)",
       "Bash(powershell -Command \"Stop-Process -Id 2956 -Force\")",
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"prueba23456@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"Prueba2134!\\\\\"}\" -c /tmp/test_cookies.txt)",
-      "Bash(curl -s -X POST http://localhost:3000/api/reportes -H \"Content-Type: application/json\" -b /tmp/test_cookies.txt -d \"{\\\\\"tipo\\\\\":\\\\\"Fuga de agua\\\\\",\\\\\"zona\\\\\":\\\\\"Colonia Escalon\\\\\",\\\\\"sector\\\\\":\\\\\"San Salvador\\\\\",\\\\\"descripcion\\\\\":\\\\\"Test reporte\\\\\",\\\\\"prioridad\\\\\":\\\\\"alta\\\\\"}\")"
+      "Bash(curl -s -X POST http://localhost:3000/api/reportes -H \"Content-Type: application/json\" -b /tmp/test_cookies.txt -d \"{\\\\\"tipo\\\\\":\\\\\"Fuga de agua\\\\\",\\\\\"zona\\\\\":\\\\\"Colonia Escalon\\\\\",\\\\\"sector\\\\\":\\\\\"San Salvador\\\\\",\\\\\"descripcion\\\\\":\\\\\"Test reporte\\\\\",\\\\\"prioridad\\\\\":\\\\\"alta\\\\\"}\")",
+      "Bash(pnpm tsc *)",
+      "Bash(pnpm install *)"
     ]
   }
 }

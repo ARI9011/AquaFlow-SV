@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import axios from 'axios';
 
 interface User {
-  ID: number;
+  id: number;
   Usuario: string;
   Correo: string;
   rol: string;

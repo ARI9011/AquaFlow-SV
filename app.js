@@ -1,4 +1,4 @@
-require('dotenv').config();
+try { require('dotenv').config(); } catch { /* dotenvx maneja las variables en producción */ }
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
