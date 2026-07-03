@@ -22,7 +22,6 @@ function ChatBotGuard() {
   return <ChatBot />;
 }
 
-// Ruta exclusiva para administradores
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, authLoading } = useAuth();
   if (authLoading) return null;
@@ -31,7 +30,6 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Layout que lee el rol real del contexto de autenticación
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   return (
