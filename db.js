@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 // Configuración de la BD
 const dbConfig = {
     host: 'localhost',
+    port: 3308,
     user: 'root',
     password: '',
     database: 'aquaflow_sv',
