@@ -1,22 +1,66 @@
 @import "tailwindcss";
 
 @theme {
-  --color-aqua-dark: #060b0d;
-  --color-aqua-card: #0a1215;
-  --color-aqua-cyan: #00f2ea;
+  --color-aqua-dark:    #060b0d;
+  --color-aqua-card:    #0a1215;
+  --color-aqua-panel:   #0d1c21;
+  --color-aqua-cyan:    #00f2ea;
   --color-aqua-emerald: #00d1b2;
 }
 
-/* El @apply debe ir después de la definición del tema */
 body {
   @apply bg-aqua-dark text-white antialiased;
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* ── Loading screen animations ─────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
 
-/* Wave horizontal scroll — one full period per cycle */
+.custom-scrollbar::-webkit-scrollbar        { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track  { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb  { background: rgba(0,242,234,0.18); border-radius: 99px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,242,234,0.35); }
+
+.portal-card {
+  background: #0d1c21;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.portal-card:hover { border-color: rgba(0,242,234,0.12); }
+
+.portal-grid-bg {
+  background-image:
+    linear-gradient(rgba(0,242,234,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,242,234,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #00f2ea 60%, #00d1b2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-top-cyan   { border-top: 2px solid #00f2ea; }
+.card-top-green  { border-top: 2px solid #22c55e; }
+.card-top-amber  { border-top: 2px solid #f59e0b; }
+.card-top-red    { border-top: 2px solid #ef4444; }
+.card-top-blue   { border-top: 2px solid #3b82f6; }
+
+.priority-high   { border-left: 3px solid #ef4444; }
+.priority-medium { border-left: 3px solid #f59e0b; }
+.priority-low    { border-left: 3px solid #22c55e; }
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.page-enter { animation: fadeSlideUp 0.4s ease forwards; }
+
 .aqua-wave {
   animation: waveFlow 1.8s linear infinite;
 }
@@ -25,7 +69,6 @@ body {
   to   { transform: translateX(-28px); }
 }
 
-/* Bubbles rising through the water */
 @keyframes bubbleA {
   0%   { transform: translateY(0px);    opacity: 0;    }
   6%   { opacity: 0.55; }
@@ -49,9 +92,6 @@ body {
 .bubble-b { animation: bubbleB 1.9s ease-in 1.35s infinite; }
 .bubble-c { animation: bubbleC 3.2s ease-in 0.1s  infinite; }
 
-/* ── Leaflet dark theme overrides ──────────────────────────────── */
-
-/* Popup wrapper */
 .leaflet-popup-content-wrapper {
   background: #0a1215 !important;
   color: white !important;
@@ -82,7 +122,6 @@ body {
   background: none !important;
 }
 
-/* Zoom controls */
 .leaflet-bar {
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45) !important;
@@ -110,7 +149,6 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Attribution */
 .leaflet-control-attribution {
   background: rgba(6, 11, 13, 0.82) !important;
   color: rgba(255, 255, 255, 0.22) !important;

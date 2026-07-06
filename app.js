@@ -1,4 +1,4 @@
-require('dotenv').config();
+try { require('dotenv').config(); } catch { /* dotenvx maneja las variables en producción */ }
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -124,14 +124,19 @@ app.post('/auth/register', (req, res) => {
 
     const isFlowcdbEmail = email.toLowerCase().endsWith('@flowcdb.com');
     const rol = (isFlowcdbEmail || adminCode === 'FLOWCDB2026') ? 'admin' : 'user';
-    const sql = 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
-    
-    db.query(sql, [nombre, email, password, rol], (err, result) => {
-        if (err) {
-            console.error('Register query error:', err);
-            return res.status(500).json({ error: 'Error al registrar. El email puede estar duplicado.' });
-        }
-        return res.json({ success: true, message: 'Usuario registrado exitosamente', isAdmin: rol === 'admin' });
+
+    db.query('SELECT id FROM usuarios WHERE Correo = ?', [email], (errCheck, rows) => {
+        if (errCheck) return res.status(500).json({ error: 'Error en servidor' });
+        if (rows.length > 0) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo electrónico.' });
+
+        const sql = 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
+        db.query(sql, [nombre, email, password, rol], (err, result) => {
+            if (err) {
+                console.error('Register query error:', err);
+                return res.status(500).json({ error: 'Error al registrar. Intenta de nuevo.' });
+            }
+            return res.json({ success: true, message: 'Usuario registrado exitosamente', isAdmin: rol === 'admin' });
+        });
     });
 });
 
@@ -156,6 +161,35 @@ app.listen(PORT, () => {
     db.query(sqlTable, (err) => {
         if (err) console.error('Error creando tabla comentarios:', err.message);
         else console.log('✅ Tabla comentarios_alertas lista');
+    });
+
+    db.query(`CREATE TABLE IF NOT EXISTS reportes (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        tipo        VARCHAR(100) NOT NULL,
+        zona        VARCHAR(100) NOT NULL,
+        sector      VARCHAR(100) NOT NULL,
+        descripcion TEXT NOT NULL,
+        estado      ENUM('pendiente','en proceso','resuelto') DEFAULT 'pendiente',
+        prioridad   ENUM('alta','media','baja') DEFAULT 'media',
+        usuario_id  INT NOT NULL,
+        usuario     VARCHAR(100) NOT NULL,
+        creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
+        if (err) console.error('Error creando tabla reportes:', err.message);
+        else console.log('✅ Tabla reportes lista');
+    });
+
+    db.query(`CREATE TABLE IF NOT EXISTS comentarios_reportes (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        reporte_id  INT NOT NULL,
+        usuario_id  INT NOT NULL,
+        usuario     VARCHAR(100) NOT NULL,
+        rol         VARCHAR(20)  NOT NULL DEFAULT 'user',
+        contenido   TEXT NOT NULL,
+        creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
+        if (err) console.error('Error creando tabla comentarios_reportes:', err.message);
+        else console.log('✅ Tabla comentarios_reportes lista');
     });
 });
 
@@ -267,13 +301,13 @@ app.post('/api/comentarios', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: 'No autenticado' });
     const { contenido } = req.body;
     if (!contenido?.trim()) return res.status(400).json({ error: 'El comentario no puede estar vacío' });
-    const { ID, Usuario, rol } = req.session.user;
+    const { id, Usuario, rol } = req.session.user;
     db.query(
         'INSERT INTO comentarios_alertas (usuario_id, usuario, rol, contenido) VALUES (?, ?, ?, ?)',
-        [ID, Usuario, rol, contenido.trim()],
+        [id, Usuario, rol, contenido.trim()],
         (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: result.insertId, usuario_id: ID, usuario: Usuario, rol, contenido: contenido.trim(), creado_en: new Date() });
+            res.json({ id: result.insertId, usuario_id: id, usuario: Usuario, rol, contenido: contenido.trim(), creado_en: new Date() });
         }
     );
 });
@@ -304,9 +338,128 @@ app.delete('/api/comentarios/:id', (req, res) => {
 
 app.delete('/api/usuarios/:id', requireAdmin, (req, res) => {
     const { id } = req.params;
-    if (req.session.user.ID == id) return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
+    if (req.session.user.id == id) return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
     db.query('DELETE FROM usuarios WHERE ID = ?', [id], (err) => {
         if (err) return res.status(500).json({ error: 'Error al eliminar' });
         res.json({ mensaje: 'Eliminado' });
+    });
+});
+
+// ── REPORTES ──────────────────────────────────────────────────────────
+
+app.get('/api/reportes', requireAuth, (req, res) => {
+    const sql = `
+        SELECT r.id, r.tipo, r.zona, r.sector, r.descripcion, r.estado, r.prioridad,
+               r.usuario_id, r.usuario, r.creado_en,
+               (SELECT COUNT(*) FROM comentarios_reportes cr WHERE cr.reporte_id = r.id) AS total_comentarios
+        FROM reportes r
+        ORDER BY r.creado_en DESC
+    `;
+    db.query(sql, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/reportes', requireAuth, (req, res) => {
+    const { tipo, zona, sector, descripcion, prioridad } = req.body;
+    if (!tipo || !zona || !sector || !descripcion)
+        return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    const userId  = req.session.user.id || req.session.user.ID;
+    const usuario = req.session.user.Usuario;
+    const validPrioridad = ['alta', 'media', 'baja'].includes(prioridad) ? prioridad : 'media';
+    db.query(
+        'INSERT INTO reportes (tipo, zona, sector, descripcion, prioridad, usuario_id, usuario) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [tipo, zona, sector, descripcion, validPrioridad, userId, usuario],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: result.insertId });
+        }
+    );
+});
+
+app.put('/api/reportes/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const { tipo, zona, sector, descripcion, estado, prioridad } = req.body;
+    const userId = req.session.user.id || req.session.user.ID;
+    const { rol } = req.session.user;
+    db.query('SELECT * FROM reportes WHERE id = ?', [id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rows.length) return res.status(404).json({ error: 'Reporte no encontrado' });
+        const r = rows[0];
+        if (rol !== 'admin')
+            return res.status(403).json({ error: 'Solo los administradores pueden editar reportes' });
+        const validEstado    = ['pendiente', 'en proceso', 'resuelto'].includes(estado) ? estado : r.estado;
+        const validPrioridad = ['alta', 'media', 'baja'].includes(prioridad) ? prioridad : r.prioridad;
+        const estadoFinal    = rol === 'admin' ? validEstado : r.estado;
+        db.query(
+            'UPDATE reportes SET tipo=?, zona=?, sector=?, descripcion=?, estado=?, prioridad=? WHERE id=?',
+            [tipo || r.tipo, zona || r.zona, sector || r.sector, descripcion || r.descripcion, estadoFinal, validPrioridad, id],
+            (err2) => {
+                if (err2) return res.status(500).json({ error: err2.message });
+                res.json({ ok: true });
+            }
+        );
+    });
+});
+
+app.delete('/api/reportes/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const userId = req.session.user.id || req.session.user.ID;
+    const { rol } = req.session.user;
+    db.query('SELECT * FROM reportes WHERE id = ?', [id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rows.length) return res.status(404).json({ error: 'Reporte no encontrado' });
+        if (rows[0].usuario_id !== Number(userId) && rol !== 'admin')
+            return res.status(403).json({ error: 'Sin permiso para eliminar este reporte' });
+        db.query('DELETE FROM comentarios_reportes WHERE reporte_id = ?', [id], () => {
+            db.query('DELETE FROM reportes WHERE id = ?', [id], (err2) => {
+                if (err2) return res.status(500).json({ error: err2.message });
+                res.json({ ok: true });
+            });
+        });
+    });
+});
+
+app.get('/api/reportes/:id/comentarios', requireAuth, (req, res) => {
+    db.query(
+        'SELECT * FROM comentarios_reportes WHERE reporte_id = ? ORDER BY creado_en ASC',
+        [req.params.id],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        }
+    );
+});
+
+app.post('/api/reportes/:id/comentarios', requireAuth, (req, res) => {
+    const { contenido } = req.body;
+    if (!contenido?.trim()) return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+    const userId  = req.session.user.id || req.session.user.ID;
+    const usuario = req.session.user.Usuario;
+    const { rol } = req.session.user;
+    db.query(
+        'INSERT INTO comentarios_reportes (reporte_id, usuario_id, usuario, rol, contenido) VALUES (?, ?, ?, ?, ?)',
+        [req.params.id, userId, usuario, rol, contenido.trim()],
+        (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: result.insertId, reporte_id: Number(req.params.id), usuario_id: userId, usuario, rol, contenido: contenido.trim(), creado_en: new Date() });
+        }
+    );
+});
+
+app.delete('/api/reportes/:id/comentarios/:cid', requireAuth, (req, res) => {
+    const { cid } = req.params;
+    const userId = req.session.user.id || req.session.user.ID;
+    const { rol } = req.session.user;
+    db.query('SELECT * FROM comentarios_reportes WHERE id = ?', [cid], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rows.length) return res.status(404).json({ error: 'Comentario no encontrado' });
+        if (rows[0].usuario_id !== Number(userId) && rol !== 'admin')
+            return res.status(403).json({ error: 'Sin permiso para eliminar este comentario' });
+        db.query('DELETE FROM comentarios_reportes WHERE id = ?', [cid], (err2) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.json({ ok: true });
+        });
     });
 });

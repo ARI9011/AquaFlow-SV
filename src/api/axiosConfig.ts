@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 // Configuración global de Axios
-axios.defaults.baseURL = 'http://localhost:3000';
 axios.defaults.withCredentials = true; // Enviar cookies de sesión
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
