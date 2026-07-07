@@ -5,6 +5,9 @@ const path = require('path');
 const db = require('./db');
 const cors = require('cors');
 const Groq = require('groq-sdk');
+const bcrypt = require('bcryptjs');
+
+const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -79,15 +82,22 @@ app.post('/auth/login', (req, res) => {
         });
     }
 
-    const sql = 'SELECT * FROM usuarios WHERE Correo = ? AND Contra = ?';
-    db.query(sql, [email, password], (err, results) => {
+    const sql = 'SELECT * FROM usuarios WHERE Correo = ?';
+    db.query(sql, [email], (err, results) => {
         if (err) return res.status(500).json({ error: 'Error en servidor' });
 
-        if (results.length > 0) {
+        const usuario = results[0];
+        const passwordOk = usuario && (
+            isBcryptHash(usuario.Contra)
+                ? bcrypt.compareSync(password, usuario.Contra)
+                : usuario.Contra === password
+        );
+
+        if (passwordOk) {
             loginAttempts.delete(email); // Limpiar intentos al ingresar correctamente
-            req.session.user = results[0];
-            console.log('✅ Login exitoso:', email, '| Rol:', results[0].rol);
-            return res.json({ success: true, user: results[0] });
+            req.session.user = usuario;
+            console.log('✅ Login exitoso:', email, '| Rol:', usuario.rol);
+            return res.json({ success: true, user: usuario });
         }
 
         // Credenciales incorrectas: registrar intento fallido
@@ -129,8 +139,9 @@ app.post('/auth/register', (req, res) => {
         if (errCheck) return res.status(500).json({ error: 'Error en servidor' });
         if (rows.length > 0) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo electrónico.' });
 
+        const hashedPassword = bcrypt.hashSync(password, 10);
         const sql = 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
-        db.query(sql, [nombre, email, password, rol], (err, result) => {
+        db.query(sql, [nombre, email, hashedPassword, rol], (err, result) => {
             if (err) {
                 console.error('Register query error:', err);
                 return res.status(500).json({ error: 'Error al registrar. Intenta de nuevo.' });
@@ -213,8 +224,9 @@ app.post('/api/usuarios', requireAdmin, (req, res) => {
     if (!Usuario || !Correo || !Contra) return res.status(400).json({ error: 'Todos los campos son requeridos' });
     const validRoles = ['admin', 'user'];
     const userRol = validRoles.includes(rol) ? rol : 'user';
+    const hashedContra = bcrypt.hashSync(Contra, 10);
     const insertSql = 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
-    db.query(insertSql, [Usuario, Correo, Contra, userRol], (err, result) => {
+    db.query(insertSql, [Usuario, Correo, hashedContra, userRol], (err, result) => {
         if (err) return res.status(500).json({ error: 'Error al crear. El correo puede estar duplicado.' });
         res.json({ mensaje: 'Creado', ID: result.insertId });
     });
@@ -228,8 +240,9 @@ app.put('/api/usuarios/:id', requireAdmin, (req, res) => {
     const userRol = validRoles.includes(rol) ? rol : 'user';
     // Si no se envía contraseña, no la actualizar
     if (Contra && Contra.trim() !== '') {
+        const hashedContra = bcrypt.hashSync(Contra, 10);
         const sql = 'UPDATE usuarios SET Usuario=?, Correo=?, Contra=?, rol=? WHERE ID=?';
-        db.query(sql, [Usuario, Correo, Contra, userRol, id], (err) => {
+        db.query(sql, [Usuario, Correo, hashedContra, userRol, id], (err) => {
             if (err) return res.status(500).json({ error: 'Error al actualizar' });
             res.json({ mensaje: 'Actualizado' });
         });
