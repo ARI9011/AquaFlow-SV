@@ -95,7 +95,7 @@ export default function Mapa() {
       </div>
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {KPIS.map(k => (
           <div key={k.label} className={`portal-card ${k.top} p-5 flex items-center gap-4`}>
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}>

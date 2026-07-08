@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, ChevronDown, LogOut, ShieldCheck } from 'lucide-react';
+import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
@@ -15,7 +15,7 @@ const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
 
 const ALERTS_COUNT = 3;
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bellOpen, setBellOpen]         = useState(false);
   const location = useLocation();
@@ -32,11 +32,20 @@ export default function Topbar() {
   const closeAll = () => { setDropdownOpen(false); setBellOpen(false); };
 
   return (
-    <header className="h-16 bg-[#080f12] border-b border-white/[0.05] flex items-center justify-between px-4 md:px-6 shadow-lg flex-shrink-0 relative z-[800]"
+    <header className="h-16 bg-[#080f12] border-b border-white/[0.05] flex items-center justify-between px-3 md:px-6 shadow-lg flex-shrink-0 relative z-[800] gap-2"
       onClick={(e) => { if (e.target === e.currentTarget) closeAll(); }}>
 
+      {/* BOTÓN MENÚ MÓVIL */}
+      <button
+        onClick={onMenuClick}
+        className="lg:hidden w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/15 transition-all text-gray-400 hover:text-white"
+        aria-label="Abrir menú"
+      >
+        <Menu size={17} />
+      </button>
+
       {/* TÍTULO DE PÁGINA */}
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <h2 className="text-white font-black text-base leading-none truncate">{page.title}</h2>
           {/* Indicador live en dashboard */}

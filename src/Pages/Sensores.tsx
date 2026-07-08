@@ -114,7 +114,7 @@ export default function Sensores() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {KPIS.map((k) => (
           <div key={k.label} className={`portal-card ${k.border} p-5 flex items-center gap-4`}>
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}>
@@ -130,7 +130,7 @@ export default function Sensores() {
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {FILTERS.map(({ key, label }) => (
           <button
             key={key}

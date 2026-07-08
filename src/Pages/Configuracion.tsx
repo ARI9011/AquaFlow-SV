@@ -15,8 +15,8 @@ const Toggle = ({ value, onChange, disabled = false }: {
 );
 
 const SettingRow = ({ label, sub, children }: { label: string; sub?: string; children: React.ReactNode }) => (
-  <div className="flex items-center justify-between py-4 border-b border-white/5 last:border-0">
-    <div className="mr-4">
+  <div className="flex items-center justify-between flex-wrap gap-3 py-4 border-b border-white/5 last:border-0">
+    <div className="mr-4 min-w-0">
       <p className="text-sm font-bold text-white">{label}</p>
       {sub && <p className="text-[11px] text-gray-500 mt-0.5">{sub}</p>}
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useConfirm } from '../components/ConfirmDialog';
 import {
   FileText, AlertTriangle, CheckCircle, Clock, MapPin,
   Droplets, Zap, Plus, Edit2, Trash2, MessageSquare,
@@ -266,7 +267,7 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
                     <span className="text-[10px] text-gray-600 hidden sm:block">{fmtDate(c.creado_en)}</span>
                     {(c.usuario_id === userId || userRol === 'admin') && (
                       <button onClick={() => deleteComentario(c.id)}
-                        className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-all"
+                        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-all"
                         title="Eliminar comentario">
                         <Trash2 size={11} />
                       </button>
@@ -303,6 +304,7 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
 export default function Reportes() {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
+  const confirmDialog = useConfirm();
 
   const [reportes,   setReportes]   = useState<Reporte[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -366,7 +368,11 @@ export default function Reportes() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar este reporte y todos sus comentarios?')) return;
+    const ok = await confirmDialog({
+      message: '¿Eliminar este reporte y todos sus comentarios? Esta acción no se puede deshacer.',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await axios.delete(`/api/reportes/${id}`);
       setReportes(prev => prev.filter(r => r.id !== id));
@@ -410,14 +416,14 @@ export default function Reportes() {
       )}
 
       {/* Cabecera */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Gran San Salvador</p>
           <h2 className="text-3xl font-black tracking-tighter gradient-text">Reportes Ciudadanos</h2>
           <p className="text-sm text-gray-500 mt-1">Incidencias reportadas por la comunidad</p>
         </div>
         <button onClick={openCreate}
-          className="flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-aqua-cyan/10 active:scale-[0.97] flex-shrink-0 mt-1">
+          className="flex items-center justify-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-aqua-cyan/10 active:scale-[0.97] flex-shrink-0 sm:mt-1 w-full sm:w-auto">
           <Plus size={14} />
           Nuevo Reporte
         </button>
@@ -432,7 +438,7 @@ export default function Reportes() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {KPIS.map(k => (
           <div key={k.label} className={`portal-card ${k.top} p-5 flex items-center gap-4`}>
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}>
@@ -448,7 +454,7 @@ export default function Reportes() {
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap overflow-x-auto custom-scrollbar pb-1">
         {FILTERS.map(({ key, label }) => (
           <button key={key} onClick={() => setFiltro(key)}
             className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${

@@ -15,6 +15,7 @@ import Configuracion from './Pages/Configuracion';
 import ChatBot from './components/ChatBot';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ConfirmProvider } from './components/ConfirmDialog';
 
 function ChatBotGuard() {
   const location = useLocation();
@@ -32,12 +33,17 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
     <div className="flex min-h-screen bg-aqua-dark text-white font-sans">
       <BubbleBackground />
-      <Sidebar isAdmin={user?.rol === 'admin'} />
+      <Sidebar
+        isAdmin={user?.rol === 'admin'}
+        mobileOpen={mobileNavOpen}
+        onCloseMobile={() => setMobileNavOpen(false)}
+      />
       <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0" style={{ position: 'relative', zIndex: 1 }}>
-        <Topbar />
+        <Topbar onMenuClick={() => setMobileNavOpen(true)} />
         <main className="flex-1 p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar">
           {children}
         </main>
@@ -51,6 +57,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <ConfirmProvider>
       {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
       <Router>
         <ChatBotGuard />
@@ -85,6 +92,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
+      </ConfirmProvider>
     </AuthProvider>
   );
 }

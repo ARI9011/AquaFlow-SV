@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, AlertTriangle, CheckCircle, Clock, Droplets, Zap, X, MessageSquare, Send, Pencil, Trash2, ShieldCheck, History } from 'lucide-react';
 import axios from 'axios';
+import { useConfirm } from '../components/ConfirmDialog';
 
 const alertasIniciales = [
   { id: 1, tipo: 'Presión Crítica',  zona: 'Mejicanos Norte',  sector: 'Mejicanos',  descripcion: 'La presión ha caído a 18.4 PSI, por debajo del umbral mínimo de 25 PSI. Revisar red de distribución.', severidad: 'critica', icono: AlertTriangle, timestamp: 'hace 12 min' },
@@ -67,6 +68,7 @@ export default function Alertas() {
   const [editTexto, setEditTexto]     = useState('');
   const [guardando, setGuardando]     = useState(false);
   const [error, setError]             = useState('');
+  const confirmDialog = useConfirm();
 
   useEffect(() => {
     axios.get('/api/user-info', { withCredentials: true })
@@ -111,7 +113,8 @@ export default function Alertas() {
   };
 
   const eliminar = async (id: number) => {
-    if (!confirm('¿Eliminar este comentario?')) return;
+    const ok = await confirmDialog({ message: '¿Eliminar este comentario? Esta acción no se puede deshacer.', danger: true });
+    if (!ok) return;
     try {
       await axios.delete(`/api/comentarios/${id}`, { withCredentials: true });
       setComentarios(prev => prev.filter(c => c.id !== id));
@@ -148,7 +151,7 @@ export default function Alertas() {
       </div>
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {SEV_KPIS.map(k => (
           <div key={k.key} className={`portal-card ${k.top} p-5 flex items-center gap-4`}>
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}>
@@ -312,7 +315,7 @@ export default function Alertas() {
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between pl-11">
+            <div className="flex items-center justify-between flex-wrap gap-2 pl-11">
               {error && <p className="text-xs text-red-400">{error}</p>}
               <div className="ml-auto">
                 <button onClick={enviar} disabled={!nuevoTexto.trim() || enviando}
@@ -368,7 +371,7 @@ export default function Alertas() {
                     )}
                   </div>
                   {isAdmin && editandoId !== c.id && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1">
+                    <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1">
                       <button onClick={() => { setEditandoId(c.id); setEditTexto(c.contenido); }} title="Editar"
                         className="p-1.5 rounded-lg text-gray-500 hover:text-aqua-cyan hover:bg-aqua-cyan/10 transition-all">
                         <Pencil size={14} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { UserPlus, Trash2, Edit2, User, X, ShieldCheck, UserCheck, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useConfirm } from '../components/ConfirmDialog';
 
 interface UsuarioRow {
   ID: number;
@@ -20,6 +21,7 @@ export default function Usuarios() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId]   = useState<number | null>(null);
   const [toast, setToast]           = useState<Toast | null>(null);
+  const confirmDialog = useConfirm();
 
   const [formData, setFormData] = useState({
     Usuario: '',
@@ -77,7 +79,8 @@ export default function Usuarios() {
   };
 
   const handleEliminar = async (id: number) => {
-    if (!window.confirm('¿Estás seguro de eliminar este usuario?')) return;
+    const ok = await confirmDialog({ message: '¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.', danger: true });
+    if (!ok) return;
     try {
       await axios.delete(`/api/usuarios/${id}`);
       fetchUsers();
@@ -108,7 +111,7 @@ export default function Usuarios() {
       )}
 
       {/* ENCABEZADO */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Administración</p>
           <h2 className="text-3xl font-black tracking-tighter gradient-text">Gestión de Usuarios</h2>
@@ -116,7 +119,7 @@ export default function Usuarios() {
         </div>
         <button
           onClick={() => { setEditingId(null); setIsModalOpen(true); }}
-          className="flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-5 py-2.5 rounded-2xl transition-all text-sm"
+          className="flex items-center justify-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-5 py-2.5 rounded-2xl transition-all text-sm w-full sm:w-auto"
         >
           <UserPlus size={16} /> Nuevo usuario
         </button>
@@ -183,7 +186,7 @@ export default function Usuarios() {
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200">
                         <button onClick={() => abrirEditar(user)} title="Editar usuario"
                           className="p-2 hover:bg-aqua-cyan/10 rounded-xl text-gray-500 hover:text-aqua-cyan transition-colors border border-transparent hover:border-aqua-cyan/20">
                           <Edit2 size={15} />
