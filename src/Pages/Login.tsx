@@ -2,11 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BubbleBackground from '../components/BubbleBackground';
+import ParticleFlowHero from '../components/ParticleFlowHero';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Clock } from 'lucide-react';
+import { ShieldAlert, Clock, Github } from 'lucide-react';
 
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_SECONDS = 60;
+
+function GoogleIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48">
+      <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+      <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+      <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+      <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+    </svg>
+  );
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,6 +34,7 @@ export default function Login() {
   const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [socialNotice, setSocialNotice] = useState('');
 
   /* ── Login ── */
   const [loginEmail,    setLoginEmail]    = useState('');
@@ -58,6 +71,11 @@ export default function Login() {
     setLoginEmail(''); setLoginPassword('');
     setRegisterName(''); setRegisterEmail('');
     setRegisterPassword(''); setRegisterConfirmPassword('');
+  };
+
+  const handleSocialClick = (provider: string) => {
+    setSocialNotice(`Inicio con ${provider} disponible próximamente`);
+    setTimeout(() => setSocialNotice(''), 2500);
   };
 
   /* ── Handlers ── */
@@ -143,211 +161,294 @@ export default function Login() {
 
   /* ── UI ── */
   return (
-    <div className="min-h-screen bg-aqua-dark flex items-center justify-center p-6 font-sans selection:bg-aqua-cyan/30 text-white">
-      <BubbleBackground />
-      <div className="w-full max-w-[420px] animate-in fade-in zoom-in duration-500 relative" style={{ zIndex: 1 }}>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 sm:p-8 font-sans selection:bg-aqua-cyan/30 text-white relative overflow-hidden">
+      {/* Halo ambiental detrás del marco */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="w-[70vw] h-[70vw] max-w-[900px] max-h-[900px] bg-aqua-cyan/[0.05] rounded-full blur-[130px]" />
+      </div>
 
-        {/* LOGO */}
-        <div className="flex items-center justify-center gap-4 mb-10 group">
-          <div className="w-14 h-14 bg-aqua-card border border-white/10 rounded-2xl flex items-center justify-center text-3xl shadow-2xl group-hover:border-aqua-cyan/50 transition-all duration-500">
-            💧
+      <div className="w-full max-w-6xl h-[94vh] max-h-[860px] rounded-[2rem] sm:rounded-[2.75rem] border border-white/10 shadow-2xl shadow-black/80 relative overflow-hidden z-10 page-enter bg-gradient-to-br from-[#031213] via-[#04191b] to-[#020707]">
+
+        {/* ── FORMULARIO: se desliza al lado opuesto del panel diagonal ── */}
+        <div
+          className={`absolute top-0 left-0 w-full md:w-[42%] h-full flex flex-col justify-center px-6 sm:px-8 py-10 overflow-y-auto custom-scrollbar transition-[left] duration-700 ease-in-out ${
+            isLogin ? 'md:left-0' : 'md:left-[58%]'
+          }`}
+        >
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <BubbleBackground count={22} variant="absolute" />
           </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tighter text-white">AquaFlow <span className="text-aqua-cyan">SV</span></h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500">Monitoreo Hídrico</p>
+          <div className="absolute -top-24 -right-24 w-56 h-56 bg-aqua-cyan/[0.06] rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 w-full max-w-[360px] mx-auto">
+
+            {/* LOGO */}
+            <div className="flex items-center gap-3 mb-10 group">
+              <div className="w-12 h-12 bg-white/[0.03] border border-aqua-cyan/20 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-aqua-cyan/10 group-hover:border-aqua-cyan/50 transition-all duration-500">
+                💧
+              </div>
+              <div>
+                <h1 className="text-2xl font-black tracking-tighter text-white leading-none">AquaFlow <span className="text-aqua-cyan">SV</span></h1>
+                <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-1">Monitoreo Hídrico</p>
+              </div>
+            </div>
+
+            <div key={isLogin ? 'login' : 'register'} className="auth-form-transition">
+              {/* ── FORMULARIO LOGIN ── */}
+              {isLogin ? (
+                <div className="space-y-6">
+                  <div className="text-center mb-2">
+                    <h2 className="text-2xl font-black text-white tracking-tight">Bienvenido</h2>
+                    <p className="text-gray-500 text-sm mt-1 font-medium">Ingresa tu email y contraseña</p>
+                  </div>
+
+                  {/* Login social */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSocialClick('Google')}
+                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    >
+                      <GoogleIcon /> Google
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSocialClick('GitHub')}
+                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    >
+                      <Github size={16} /> GitHub
+                    </button>
+                  </div>
+                  {socialNotice && (
+                    <p className="text-center text-[11px] text-aqua-cyan/80 font-semibold -mt-3 animate-pulse">{socialNotice}</p>
+                  )}
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
+                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                      <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">o con tu email</span>
+                    </div>
+                  </div>
+
+                  {/* Bloqueo de cuenta */}
+                  {isLocked && (
+                    <div className="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-4 py-4 rounded-2xl text-sm font-semibold flex flex-col items-center gap-2 transition-all duration-300">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert size={16} />
+                        <span>Cuenta bloqueada temporalmente</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-orange-300 text-lg font-black">
+                        <Clock size={18} />
+                        <span>{secondsLeft}s</span>
+                      </div>
+                      <p className="text-[11px] text-orange-400/70 text-center">
+                        Demasiados intentos fallidos. Espera antes de intentar de nuevo.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Error normal */}
+                  {error && !isLocked && (
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300">
+                      ⚠ {error}
+                    </div>
+                  )}
+
+                  {/* Indicador de intentos */}
+                  {attempts > 0 && !isLocked && (
+                    <div className="flex justify-center gap-1.5">
+                      {Array.from({ length: MAX_ATTEMPTS }).map((_, i) => (
+                        <div key={i} className={`w-2 h-2 rounded-full transition-colors duration-300 ${i < attempts ? 'bg-red-500' : 'bg-white/10'}`} />
+                      ))}
+                    </div>
+                  )}
+
+                  <form className="space-y-4" onSubmit={handleLogin}>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Email</label>
+                      <input
+                        type="email" required
+                        placeholder="tu@email.com"
+                        value={loginEmail}
+                        onChange={e => setLoginEmail(e.target.value)}
+                        disabled={isLocked || loading}
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 focus:bg-white/[0.05] transition-all duration-300 disabled:opacity-40"
+                      />
+                      {isAdminEmail(loginEmail) && loginEmail && (
+                        <p className="text-[10px] text-aqua-cyan font-bold mt-1">🔑 Acceso Admin detectado</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Contraseña</label>
+                      <input
+                        type="password" required
+                        placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={e => setLoginPassword(e.target.value)}
+                        disabled={isLocked || loading}
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 focus:bg-white/[0.05] transition-all duration-300 disabled:opacity-40"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLocked || loading}
+                      className="w-full bg-aqua-cyan hover:bg-aqua-cyan/80 disabled:bg-gray-600 text-aqua-dark font-black py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-aqua-cyan/10 active:scale-[0.98] mt-4"
+                    >
+                      {isLocked
+                        ? `Bloqueado (${secondsLeft}s)`
+                        : loading ? 'Verificando...' : 'INICIAR SESIÓN'}
+                    </button>
+                  </form>
+                </div>
+
+              ) : (
+                /* ── FORMULARIO REGISTRO ── */
+                <div className="space-y-6">
+                  <div className="text-center mb-2">
+                    <h2 className="text-2xl font-black text-white tracking-tight">Crear Cuenta</h2>
+                    <p className="text-gray-500 text-sm mt-1 font-medium">Regístrate para acceder al sistema</p>
+                  </div>
+
+                  {/* Registro social */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSocialClick('Google')}
+                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    >
+                      <GoogleIcon /> Google
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSocialClick('GitHub')}
+                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    >
+                      <Github size={16} /> GitHub
+                    </button>
+                  </div>
+                  {socialNotice && (
+                    <p className="text-center text-[11px] text-aqua-cyan/80 font-semibold -mt-3 animate-pulse">{socialNotice}</p>
+                  )}
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
+                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                      <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">o con tu email</span>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300">
+                      ⚠ {error}
+                    </div>
+                  )}
+                  {success && (
+                    <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300">
+                      ✓ {success}
+                    </div>
+                  )}
+
+                  <form className="space-y-4 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar" onSubmit={handleRegister}>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Nombre Completo</label>
+                      <input
+                        type="text" required
+                        placeholder="Tu nombre"
+                        value={registerName}
+                        onChange={e => setRegisterName(e.target.value)}
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Email</label>
+                      <input
+                        type="email" required
+                        placeholder="tu@email.com"
+                        value={registerEmail}
+                        onChange={e => setRegisterEmail(e.target.value)}
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
+                      />
+                      {isAdminEmail(registerEmail) && registerEmail && (
+                        <p className="text-[10px] text-aqua-cyan font-bold">🔑 Se registrará como ADMINISTRADOR</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Contraseña</label>
+                      <input
+                        type="password" required
+                        placeholder="Mínimo 6 caracteres"
+                        value={registerPassword}
+                        onChange={e => setRegisterPassword(e.target.value)}
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Confirmar Contraseña</label>
+                      <input
+                        type="password" required
+                        placeholder="Repite tu contraseña"
+                        value={registerConfirmPassword}
+                        onChange={e => setRegisterConfirmPassword(e.target.value)}
+                        className={`w-full bg-white/[0.03] border rounded-2xl px-5 py-3 text-sm text-white focus:outline-none transition-all duration-300 ${
+                          registerConfirmPassword && registerPassword !== registerConfirmPassword
+                            ? 'border-red-500/50 focus:border-red-500'
+                            : registerConfirmPassword && registerPassword === registerConfirmPassword
+                              ? 'border-green-500/50 focus:border-green-500'
+                              : 'border-white/10 focus:border-aqua-cyan/50'
+                        }`}
+                      />
+                      {registerConfirmPassword && registerPassword !== registerConfirmPassword && (
+                        <p className="text-[10px] text-red-400 font-bold ml-1">Las contraseñas no coinciden</p>
+                      )}
+                      {registerConfirmPassword && registerPassword === registerConfirmPassword && (
+                        <p className="text-[10px] text-green-400 font-bold ml-1">✓ Las contraseñas coinciden</p>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || (!!registerConfirmPassword && registerPassword !== registerConfirmPassword)}
+                      className="w-full bg-white hover:bg-gray-200 disabled:bg-gray-400 disabled:cursor-not-allowed text-black font-black py-4 rounded-2xl transition-all duration-300 active:scale-[0.98] mt-4"
+                    >
+                      {loading ? 'Registrando...' : 'CREAR CUENTA'}
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/5" />
+              </div>
+              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-600">O</span>
+              </div>
+            </div>
+
+            <button
+              onClick={toggleForm}
+              className="w-full text-[11px] font-bold text-gray-400 hover:text-aqua-cyan transition-colors duration-300 uppercase tracking-widest"
+            >
+              {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
+            </button>
           </div>
         </div>
 
-        {/* CARD */}
-        <div className="bg-aqua-card border border-white/5 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-aqua-cyan/5 rounded-full blur-3xl pointer-events-none" />
-
-          {/* ── FORMULARIO LOGIN ── */}
-          {isLogin ? (
-            <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-black text-white tracking-tight">Bienvenido</h2>
-                <p className="text-gray-500 text-sm mt-1 font-medium">Ingresa tu email y contraseña</p>
-              </div>
-
-              {/* Bloqueo de cuenta */}
-              {isLocked && (
-                <div className="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-4 py-4 rounded-2xl text-sm font-semibold flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <ShieldAlert size={16} />
-                    <span>Cuenta bloqueada temporalmente</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-orange-300 text-lg font-black">
-                    <Clock size={18} />
-                    <span>{secondsLeft}s</span>
-                  </div>
-                  <p className="text-[11px] text-orange-400/70 text-center">
-                    Demasiados intentos fallidos. Espera antes de intentar de nuevo.
-                  </p>
-                </div>
-              )}
-
-              {/* Error normal */}
-              {error && !isLocked && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl text-sm font-semibold">
-                  ⚠ {error}
-                </div>
-              )}
-
-              {/* Indicador de intentos */}
-              {attempts > 0 && !isLocked && (
-                <div className="flex justify-center gap-1.5">
-                  {Array.from({ length: MAX_ATTEMPTS }).map((_, i) => (
-                    <div key={i} className={`w-2 h-2 rounded-full transition-colors ${i < attempts ? 'bg-red-500' : 'bg-white/10'}`} />
-                  ))}
-                </div>
-              )}
-
-              <form className="space-y-4" onSubmit={handleLogin}>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Email</label>
-                  <input
-                    type="email" required
-                    placeholder="tu@email.com"
-                    value={loginEmail}
-                    onChange={e => setLoginEmail(e.target.value)}
-                    disabled={isLocked || loading}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 focus:bg-white/[0.05] transition-all disabled:opacity-40"
-                  />
-                  {isAdminEmail(loginEmail) && loginEmail && (
-                    <p className="text-[10px] text-aqua-cyan font-bold mt-1">🔑 Acceso Admin detectado</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Contraseña</label>
-                  <input
-                    type="password" required
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={e => setLoginPassword(e.target.value)}
-                    disabled={isLocked || loading}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 focus:bg-white/[0.05] transition-all disabled:opacity-40"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLocked || loading}
-                  className="w-full bg-aqua-cyan hover:bg-aqua-cyan/80 disabled:bg-gray-600 text-aqua-dark font-black py-4 rounded-2xl transition-all shadow-lg shadow-aqua-cyan/10 active:scale-[0.98] mt-4"
-                >
-                  {isLocked
-                    ? `Bloqueado (${secondsLeft}s)`
-                    : loading ? 'Verificando...' : 'INICIAR SESIÓN'}
-                </button>
-              </form>
-            </div>
-
-          ) : (
-            /* ── FORMULARIO REGISTRO ── */
-            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-black text-white tracking-tight">Crear Cuenta</h2>
-                <p className="text-gray-500 text-sm mt-1 font-medium">Regístrate para acceder al sistema</p>
-              </div>
-
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl text-sm font-semibold">
-                  ⚠ {error}
-                </div>
-              )}
-              {success && (
-                <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-2xl text-sm font-semibold">
-                  ✓ {success}
-                </div>
-              )}
-
-              <form className="space-y-4 max-h-[460px] overflow-y-auto pr-2 custom-scrollbar" onSubmit={handleRegister}>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Nombre Completo</label>
-                  <input
-                    type="text" required
-                    placeholder="Tu nombre"
-                    value={registerName}
-                    onChange={e => setRegisterName(e.target.value)}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Email</label>
-                  <input
-                    type="email" required
-                    placeholder="tu@email.com"
-                    value={registerEmail}
-                    onChange={e => setRegisterEmail(e.target.value)}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all"
-                  />
-                  {isAdminEmail(registerEmail) && registerEmail && (
-                    <p className="text-[10px] text-aqua-cyan font-bold">🔑 Se registrará como ADMINISTRADOR</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Contraseña</label>
-                  <input
-                    type="password" required
-                    placeholder="Mínimo 6 caracteres"
-                    value={registerPassword}
-                    onChange={e => setRegisterPassword(e.target.value)}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Confirmar Contraseña</label>
-                  <input
-                    type="password" required
-                    placeholder="Repite tu contraseña"
-                    value={registerConfirmPassword}
-                    onChange={e => setRegisterConfirmPassword(e.target.value)}
-                    className={`w-full bg-white/[0.03] border rounded-2xl px-5 py-3 text-sm text-white focus:outline-none transition-all ${
-                      registerConfirmPassword && registerPassword !== registerConfirmPassword
-                        ? 'border-red-500/50 focus:border-red-500'
-                        : registerConfirmPassword && registerPassword === registerConfirmPassword
-                          ? 'border-green-500/50 focus:border-green-500'
-                          : 'border-white/10 focus:border-aqua-cyan/50'
-                    }`}
-                  />
-                  {registerConfirmPassword && registerPassword !== registerConfirmPassword && (
-                    <p className="text-[10px] text-red-400 font-bold ml-1">Las contraseñas no coinciden</p>
-                  )}
-                  {registerConfirmPassword && registerPassword === registerConfirmPassword && (
-                    <p className="text-[10px] text-green-400 font-bold ml-1">✓ Las contraseñas coinciden</p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || (!!registerConfirmPassword && registerPassword !== registerConfirmPassword)}
-                  className="w-full bg-white hover:bg-gray-200 disabled:bg-gray-400 disabled:cursor-not-allowed text-black font-black py-4 rounded-2xl transition-all active:scale-[0.98] mt-4"
-                >
-                  {loading ? 'Registrando...' : 'CREAR CUENTA'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/5" />
-            </div>
-            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-              <span className="bg-aqua-card px-4 text-gray-600">O</span>
-            </div>
-          </div>
-
-          <button
-            onClick={toggleForm}
-            className="w-full text-[11px] font-bold text-gray-400 hover:text-aqua-cyan transition-colors uppercase tracking-widest"
-          >
-            {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
-          </button>
+        {/* ── PANEL DIAGONAL: flujo de partículas, cambia de lado entre login/registro ── */}
+        <div
+          className={`hidden md:block absolute top-0 h-full md:w-[58%] bg-black transition-[left] duration-700 ease-in-out z-10 overflow-hidden ${
+            isLogin
+              ? 'md:left-[42%] [clip-path:polygon(38%_0,100%_0,100%_100%,0_100%)]'
+              : 'md:left-0 [clip-path:polygon(0_0,100%_0,62%_100%,0_100%)]'
+          }`}
+        >
+          <ParticleFlowHero />
         </div>
       </div>
     </div>

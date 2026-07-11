@@ -9,7 +9,13 @@
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"prueba23456@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"Prueba2134!\\\\\"}\" -c /tmp/test_cookies.txt)",
       "Bash(curl -s -X POST http://localhost:3000/api/reportes -H \"Content-Type: application/json\" -b /tmp/test_cookies.txt -d \"{\\\\\"tipo\\\\\":\\\\\"Fuga de agua\\\\\",\\\\\"zona\\\\\":\\\\\"Colonia Escalon\\\\\",\\\\\"sector\\\\\":\\\\\"San Salvador\\\\\",\\\\\"descripcion\\\\\":\\\\\"Test reporte\\\\\",\\\\\"prioridad\\\\\":\\\\\"alta\\\\\"}\")",
       "Bash(pnpm tsc *)",
-      "Bash(pnpm install *)"
+      "Bash(pnpm install *)",
+      "Bash(curl -s http://localhost:5173/src/Pages/Login.tsx -o /dev/null -w \"port 5173 Login.tsx HTTP %{http_code}\\\\n\")",
+      "Bash(npx eslint *)",
+      "Bash(curl -s http://localhost:5173/src/components/WaterDropHero.tsx -o /dev/null -w \"WaterDropHero.tsx HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5173/src/Pages/Login.tsx -o /dev/null -w \"Login.tsx HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5173/src/index.css -o /dev/null -w \"index.css HTTP %{http_code}\\\\n\")",
+      "Bash(npm install *)"
     ]
   }
 }
