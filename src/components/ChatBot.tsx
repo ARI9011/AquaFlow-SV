@@ -101,16 +101,16 @@ export default function ChatBot() {
       `}</style>
 
       {/* ── Botón flotante profesional ── */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 select-none">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2 select-none">
         {!open && (
-          <span className="text-[10px] font-bold tracking-widest text-aqua-cyan/70 uppercase">
+          <span className="hidden sm:block text-[10px] font-bold tracking-widest text-aqua-cyan/70 uppercase">
             AquaBot
           </span>
         )}
         <button
           onClick={() => setOpen(v => !v)}
           aria-label={open ? 'Cerrar AquaBot' : 'Abrir AquaBot'}
-          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-aqua-cyan to-teal-600 text-white flex items-center justify-center shadow-xl hover:shadow-aqua-cyan/30 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-aqua-cyan to-teal-600 text-white flex items-center justify-center shadow-xl hover:shadow-aqua-cyan/30 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan"
         >
           {open ? <CloseIcon /> : <ChatBubbleIcon />}
         </button>
@@ -118,7 +118,7 @@ export default function ChatBot() {
 
       {/* ── Panel de chat ── */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[360px] max-h-[540px] flex flex-col rounded-2xl border border-white/10 bg-[#071012] shadow-2xl shadow-black/70 overflow-hidden"
+        <div className="fixed bottom-[4.5rem] right-4 left-4 sm:left-auto sm:bottom-24 sm:right-6 z-50 w-auto sm:w-[360px] max-h-[70vh] sm:max-h-[540px] flex flex-col rounded-2xl border border-white/10 bg-[#071012] shadow-2xl shadow-black/70 overflow-hidden"
           style={{ animation: 'slide-up-panel .22s ease' }}>
 
           {/* Header */}

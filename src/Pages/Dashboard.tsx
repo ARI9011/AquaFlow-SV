@@ -232,39 +232,41 @@ export default function Dashboard() {
               <span className="text-[10px] text-aqua-cyan font-bold">4 zonas</span>
             </div>
           </div>
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-white/[0.04] bg-white/[0.015]">
-                {['Zona', 'Presión', 'Flujo', 'Estado'].map(h => (
-                  <th key={h} className="px-5 py-2.5 text-[10px] uppercase font-black tracking-widest text-gray-600">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {ZONAS.map((z, i) => (
-                <tr key={z.nombre}
-                  className={`hover:bg-white/[0.02] transition-colors ${i < ZONAS.length - 1 ? 'border-b border-white/[0.03]' : ''}`}>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
-                      <span className="text-sm font-bold text-white">{z.nombre}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-sm font-black" style={{ color: z.color }}>{z.presion}</span>
-                    <span className="text-xs text-gray-600 ml-1">PSI</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="text-sm font-bold text-gray-300">{z.flujo}</span>
-                    <span className="text-xs text-gray-600 ml-1">L/min</span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${z.pill}`}>{z.estado}</span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-white/[0.04] bg-white/[0.015]">
+                  {['Zona', 'Presión', 'Flujo', 'Estado'].map(h => (
+                    <th key={h} className="px-5 py-2.5 text-[10px] uppercase font-black tracking-widest text-gray-600 whitespace-nowrap">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {ZONAS.map((z, i) => (
+                  <tr key={z.nombre}
+                    className={`hover:bg-white/[0.02] transition-colors ${i < ZONAS.length - 1 ? 'border-b border-white/[0.03]' : ''}`}>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
+                        <span className="text-sm font-bold text-white whitespace-nowrap">{z.nombre}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <span className="text-sm font-black" style={{ color: z.color }}>{z.presion}</span>
+                      <span className="text-xs text-gray-600 ml-1">PSI</span>
+                    </td>
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <span className="text-sm font-bold text-gray-300">{z.flujo}</span>
+                      <span className="text-xs text-gray-600 ml-1">L/min</span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${z.pill}`}>{z.estado}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
