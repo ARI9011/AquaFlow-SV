@@ -14,7 +14,7 @@ interface Bubble {
 }
 
 const COLORS = ['#00f2ea', '#00d1b2', '#00c8e0'];
-const BUBBLE_COUNT = 35;
+const DEFAULT_BUBBLE_COUNT = 35;
 const REPULSE_RADIUS = 90;
 
 function spawnBubble(w: number, h: number, spreadY = false): Bubble {
@@ -25,7 +25,7 @@ function spawnBubble(w: number, h: number, spreadY = false): Bubble {
     radius,
     speedY: 0.25 + Math.random() * 0.55,
     speedX: 0,
-    opacity: 0.15 + Math.random() * 0.20,
+    opacity: 0.22 + Math.random() * 0.28,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     wobbleOffset: Math.random() * Math.PI * 2,
     wobbleSpeed: 0.008 + Math.random() * 0.014,
@@ -33,7 +33,12 @@ function spawnBubble(w: number, h: number, spreadY = false): Bubble {
   };
 }
 
-export default function BubbleBackground() {
+interface BubbleBackgroundProps {
+  count?: number;
+  variant?: 'fixed' | 'absolute';
+}
+
+export default function BubbleBackground({ count = DEFAULT_BUBBLE_COUNT, variant = 'fixed' }: BubbleBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouse = useRef({ x: -9999, y: -9999 });
 
@@ -46,17 +51,30 @@ export default function BubbleBackground() {
     let raf: number;
     let bubbles: Bubble[] = [];
 
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    const applySize = (width: number, height: number) => {
+      if (width <= 0 || height <= 0) return;
+      const hadNoSize = canvas.width === 0 || canvas.height === 0;
+      canvas.width = width;
+      canvas.height = height;
+      if (hadNoSize || bubbles.length === 0) {
+        bubbles = Array.from({ length: count }, () => spawnBubble(width, height, true));
+      }
     };
 
-    const init = () => {
-      resize();
-      bubbles = Array.from({ length: BUBBLE_COUNT }, () =>
-        spawnBubble(canvas.width, canvas.height, true)
-      );
-    };
+    // Lectura síncrona inmediata al montar (no depender solo del primer
+    // callback, asíncrono, de ResizeObserver: dentro de contenedores con
+    // clip-path/overflow-hidden puede no llegar a tiempo y dejar el canvas
+    // en 0x0, sin dibujar nada).
+    const rect = canvas.getBoundingClientRect();
+    applySize(rect.width, rect.height);
+
+    // ResizeObserver cubre cambios posteriores de tamaño (resize, breakpoints).
+    const ro = new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (!entry) return;
+      applySize(entry.contentRect.width, entry.contentRect.height);
+    });
+    ro.observe(canvas);
 
     const onMouseMove = (e: MouseEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY };
@@ -66,6 +84,10 @@ export default function BubbleBackground() {
     };
 
     const draw = () => {
+      if (canvas.width === 0 || canvas.height === 0) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (let i = 0; i < bubbles.length; i++) {
@@ -118,24 +140,22 @@ export default function BubbleBackground() {
       raf = requestAnimationFrame(draw);
     };
 
-    init();
-    window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseleave', onMouseLeave);
     draw();
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
       window.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseleave', onMouseLeave);
     };
-  }, []);
+  }, [count]);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+      style={{ position: variant, inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}
     />
   );
 }

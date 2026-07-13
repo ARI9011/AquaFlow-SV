@@ -10,7 +10,14 @@
       "Bash(curl -s -X POST http://localhost:3000/api/reportes -H \"Content-Type: application/json\" -b /tmp/test_cookies.txt -d \"{\\\\\"tipo\\\\\":\\\\\"Fuga de agua\\\\\",\\\\\"zona\\\\\":\\\\\"Colonia Escalon\\\\\",\\\\\"sector\\\\\":\\\\\"San Salvador\\\\\",\\\\\"descripcion\\\\\":\\\\\"Test reporte\\\\\",\\\\\"prioridad\\\\\":\\\\\"alta\\\\\"}\")",
       "Bash(pnpm tsc *)",
       "Bash(pnpm install *)",
-      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -u root aquaflow_sv -e \"SELECT id,tipo,zona,estado,total_reportes,usuario FROM alertas; SELECT tipo,zona,estado,COUNT\\(*\\) FROM reportes GROUP BY tipo,zona,estado;\")"
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -u root aquaflow_sv -e \"SELECT id,tipo,zona,estado,total_reportes,usuario FROM alertas; SELECT tipo,zona,estado,COUNT\\(*\\) FROM reportes GROUP BY tipo,zona,estado;\")",
+      "Bash(curl -s http://localhost:5173/src/Pages/Login.tsx -o /dev/null -w \"port 5173 Login.tsx HTTP %{http_code}\\\\n\")",
+      "Bash(npx eslint *)",
+      "Bash(curl -s http://localhost:5173/src/components/WaterDropHero.tsx -o /dev/null -w \"WaterDropHero.tsx HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5173/src/Pages/Login.tsx -o /dev/null -w \"Login.tsx HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:5173/src/index.css -o /dev/null -w \"index.css HTTP %{http_code}\\\\n\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('.claude/settings.json','utf8'\\)\\); console.log\\('JSON válido'\\)\")"
     ]
   }
 }
