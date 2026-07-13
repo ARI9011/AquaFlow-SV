@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BubbleBackground from '../components/BubbleBackground';
 import ParticleFlowHero from '../components/ParticleFlowHero';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Clock, Github } from 'lucide-react';
+import { ShieldAlert, Clock } from 'lucide-react';
 
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_SECONDS = 60;
@@ -63,6 +63,23 @@ export default function Login() {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
   const isAdminEmail = (email: string) => email.toLowerCase().endsWith('@flowcdb.com');
+
+  /* ── Suaviza el cruce del panel diagonal: en vez de solo deslizarse, se
+     desvanece levemente a mitad de camino para que no se sienta como un
+     bloque opaco "girando" de golpe sobre el formulario. ── */
+  const diagonalPanelRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    diagonalPanelRef.current?.animate(
+      [
+        { opacity: 1 },
+        { opacity: 0.45, offset: 0.5 },
+        { opacity: 1 },
+      ],
+      { duration: 900, easing: 'cubic-bezier(0.4,0,0.2,1)' }
+    );
+  }, [isLogin]);
 
   const toggleForm = () => {
     setIsLogin(v => !v);
@@ -161,25 +178,35 @@ export default function Login() {
 
   /* ── UI ── */
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 sm:p-8 font-sans selection:bg-aqua-cyan/30 text-white relative overflow-hidden">
-      {/* Halo ambiental detrás del marco */}
+    <div className="h-screen w-screen bg-black font-sans selection:bg-aqua-cyan/30 text-white relative overflow-hidden">
+      {/* Halo ambiental de fondo */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="w-[70vw] h-[70vw] max-w-[900px] max-h-[900px] bg-aqua-cyan/[0.05] rounded-full blur-[130px]" />
       </div>
 
-      <div className="w-full max-w-6xl h-[94vh] max-h-[860px] rounded-[2rem] sm:rounded-[2.75rem] border border-white/10 shadow-2xl shadow-black/80 relative overflow-hidden z-10 page-enter bg-gradient-to-br from-[#031213] via-[#04191b] to-[#020707]">
+      <div className="w-full h-full relative overflow-hidden z-10 page-enter bg-gradient-to-br from-[#031213] via-[#04191b] to-[#020707]">
+
+        {/* Resplandor ambiental de la tarjeta: fuera del panel con scroll para que el
+            blur se desvanezca contra la esquina redondeada de la tarjeta en vez de
+            cortarse en un borde recto (el panel de abajo recorta en X por tener
+            overflow-y-auto, lo que dejaba un "cuadro" visible pegado a la forma diagonal). */}
+        <div className="pointer-events-none absolute -top-20 left-[14%] w-64 h-64 bg-aqua-cyan/[0.06] rounded-full blur-3xl z-0" />
+
+        {/* Burbujas a lo ancho de TODA la tarjeta (no solo del panel de 42%): antes
+            el canvas terminaba justo donde termina el formulario, dejando la franja
+            entre ese borde y el corte diagonal completamente vacía ("espacio muerto"
+            sin burbujas). El panel diagonal (z-10) las tapa donde corresponde. */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <BubbleBackground count={42} variant="absolute" />
+        </div>
 
         {/* ── FORMULARIO: se desliza al lado opuesto del panel diagonal ── */}
         <div
-          className={`absolute top-0 left-0 w-full md:w-[42%] h-full flex flex-col justify-center px-6 sm:px-8 py-10 overflow-y-auto custom-scrollbar transition-[left] duration-700 ease-in-out ${
+          className={`absolute top-0 left-0 w-full md:w-[42%] h-full flex flex-col justify-center px-6 sm:px-8 py-10 overflow-y-auto custom-scrollbar ${
             isLogin ? 'md:left-0' : 'md:left-[58%]'
           }`}
+          style={{ transition: 'left 0.9s cubic-bezier(0.4,0,0.2,1)', willChange: 'left' }}
         >
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <BubbleBackground count={22} variant="absolute" />
-          </div>
-          <div className="absolute -top-24 -right-24 w-56 h-56 bg-aqua-cyan/[0.06] rounded-full blur-3xl pointer-events-none" />
-
           <div className="relative z-10 w-full max-w-[360px] mx-auto">
 
             {/* LOGO */}
@@ -203,22 +230,13 @@ export default function Login() {
                   </div>
 
                   {/* Login social */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSocialClick('Google')}
-                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
-                    >
-                      <GoogleIcon /> Google
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSocialClick('GitHub')}
-                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
-                    >
-                      <Github size={16} /> GitHub
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSocialClick('Google')}
+                    className="w-full flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                  >
+                    <GoogleIcon /> Continuar con Google
+                  </button>
                   {socialNotice && (
                     <p className="text-center text-[11px] text-aqua-cyan/80 font-semibold -mt-3 animate-pulse">{socialNotice}</p>
                   )}
@@ -312,22 +330,13 @@ export default function Login() {
                   </div>
 
                   {/* Registro social */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSocialClick('Google')}
-                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
-                    >
-                      <GoogleIcon /> Google
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSocialClick('GitHub')}
-                      className="flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
-                    >
-                      <Github size={16} /> GitHub
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSocialClick('Google')}
+                    className="w-full flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                  >
+                    <GoogleIcon /> Continuar con Google
+                  </button>
                   {socialNotice && (
                     <p className="text-center text-[11px] text-aqua-cyan/80 font-semibold -mt-3 animate-pulse">{socialNotice}</p>
                   )}
@@ -442,11 +451,16 @@ export default function Login() {
 
         {/* ── PANEL DIAGONAL: flujo de partículas, cambia de lado entre login/registro ── */}
         <div
-          className={`hidden md:block absolute top-0 h-full md:w-[58%] bg-black transition-[left] duration-700 ease-in-out z-10 overflow-hidden ${
+          ref={diagonalPanelRef}
+          className={`hidden md:block absolute top-0 h-full md:w-[58%] bg-black z-10 overflow-hidden ${
             isLogin
               ? 'md:left-[42%] [clip-path:polygon(38%_0,100%_0,100%_100%,0_100%)]'
               : 'md:left-0 [clip-path:polygon(0_0,100%_0,62%_100%,0_100%)]'
           }`}
+          style={{
+            transition: 'left 0.9s cubic-bezier(0.4,0,0.2,1), clip-path 0.9s cubic-bezier(0.4,0,0.2,1)',
+            willChange: 'left, clip-path, opacity',
+          }}
         >
           <ParticleFlowHero />
         </div>

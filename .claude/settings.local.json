@@ -78,7 +78,8 @@
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"Fernando@gmail.com\",\"password\":\"incorrecta\"}')",
       "Bash(curl -s -X POST http://localhost:3000/auth/register -H \"Content-Type: application/json\" -d '{\"nombre\":\"Test QA\",\"email\":\"testqa_temp@example.com\",\"password\":\"ClaveSegura123\"}')",
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"testqa_temp@example.com\",\"password\":\"ClaveSegura123\"}')",
-      "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"testqa_temp@example.com\",\"password\":\"otra\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"testqa_temp@example.com\",\"password\":\"otra\"}')",
+      "Bash(node check-login-anim.js)"
     ]
   }
 }
