@@ -9,7 +9,8 @@
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"prueba23456@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"Prueba2134!\\\\\"}\" -c /tmp/test_cookies.txt)",
       "Bash(curl -s -X POST http://localhost:3000/api/reportes -H \"Content-Type: application/json\" -b /tmp/test_cookies.txt -d \"{\\\\\"tipo\\\\\":\\\\\"Fuga de agua\\\\\",\\\\\"zona\\\\\":\\\\\"Colonia Escalon\\\\\",\\\\\"sector\\\\\":\\\\\"San Salvador\\\\\",\\\\\"descripcion\\\\\":\\\\\"Test reporte\\\\\",\\\\\"prioridad\\\\\":\\\\\"alta\\\\\"}\")",
       "Bash(pnpm tsc *)",
-      "Bash(pnpm install *)"
+      "Bash(pnpm install *)",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -u root aquaflow_sv -e \"SELECT id,tipo,zona,estado,total_reportes,usuario FROM alertas; SELECT tipo,zona,estado,COUNT\\(*\\) FROM reportes GROUP BY tipo,zona,estado;\")"
     ]
   }
 }

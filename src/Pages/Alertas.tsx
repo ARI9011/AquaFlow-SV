@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, AlertTriangle, CheckCircle, Clock, Droplets, Zap, X, MessageSquare, Send, Pencil, Trash2, ShieldCheck, History } from 'lucide-react';
+import {
+  Bell, AlertTriangle, CheckCircle, Clock, Droplets, Zap, MessageSquare, Send,
+  Pencil, Trash2, ShieldCheck, History, PauseCircle, PlayCircle, MapPin, Users, X,
+} from 'lucide-react';
 import axios from 'axios';
 import { useConfirm } from '../components/ConfirmDialog';
-
-const alertasIniciales = [
-  { id: 1, tipo: 'Presión Crítica',  zona: 'Mejicanos Norte',  sector: 'Mejicanos',  descripcion: 'La presión ha caído a 18.4 PSI, por debajo del umbral mínimo de 25 PSI. Revisar red de distribución.', severidad: 'critica', icono: AlertTriangle, timestamp: 'hace 12 min' },
-  { id: 2, tipo: 'Sensor Inactivo',  zona: 'Soyapango Centro', sector: 'Soyapango',  descripcion: 'Sensor F-002 sin respuesta desde hace 45 minutos. Batería al 15%, posible falla de conexión.',           severidad: 'alta',    icono: Zap,           timestamp: 'hace 45 min' },
-  { id: 3, tipo: 'Flujo Bajo',       zona: 'Ilopango Sur',     sector: 'Ilopango',   descripcion: 'Flujo reducido a 10 L/min en el sector sur. Posible obstrucción o fuga en la red secundaria.',             severidad: 'media',   icono: Droplets,      timestamp: 'hace 1 h'  },
-];
-
-const historial = [
-  { label: 'Sensor T-001 reconectado',  zona: 'Colonia Escalón',  tiempo: 'hace 3 h' },
-  { label: 'Presión normalizada',        zona: 'Soyapango Centro', tiempo: 'hace 5 h' },
-  { label: 'Fuga detectada y reparada', zona: 'Mejicanos Norte',  tiempo: 'hace 8 h' },
-];
 
 const SEV_STYLE: Record<string, { text: string; bg: string; label: string; cardTop: string }> = {
   critica: { text: '#ef4444', bg: 'rgba(239,68,68,0.08)',  label: 'Crítica', cardTop: 'card-top-red'   },
@@ -26,6 +17,34 @@ const SEV_KPIS = [
   { key: 'alta',    label: 'Alta',      sub: 'Atención prioritaria',   color: 'text-amber-400', bg: 'bg-amber-500/10', top: 'card-top-amber', icon: Zap           },
   { key: 'media',   label: 'Media',     sub: 'Monitorear de cerca',    color: 'text-aqua-cyan', bg: 'bg-aqua-cyan/10', top: 'card-top-cyan',  icon: Bell          },
 ];
+
+const ESTADO_STYLE: Record<string, { text: string; bg: string; label: string }> = {
+  activa:     { text: 'text-red-400',   bg: 'bg-red-500/10',   label: 'Activa'     },
+  suspendida: { text: 'text-gray-400',  bg: 'bg-gray-500/10',  label: 'Suspendida' },
+  resuelta:   { text: 'text-green-400', bg: 'bg-green-500/10', label: 'Resuelta'   },
+};
+
+const TIPO_ICON: Record<string, React.ElementType> = {
+  'Fuga de agua':      Droplets,
+  'Presión baja':      Zap,
+  'Corte de servicio': AlertTriangle,
+  'Agua turbia':       Droplets,
+};
+
+interface Alerta {
+  id: number;
+  tipo: string;
+  zona: string;
+  sector: string;
+  descripcion: string;
+  severidad: 'critica' | 'alta' | 'media';
+  estado: 'activa' | 'suspendida' | 'resuelta';
+  total_reportes: number;
+  usuario: string;
+  creado_en: string;
+  actualizado_en: string;
+  resuelta_en: string | null;
+}
 
 interface Comentario {
   id: number;
@@ -43,9 +62,23 @@ interface UsuarioActual {
   rol: string;
 }
 
+function toDate(iso: string) {
+  return new Date(iso.replace(' ', 'T'));
+}
+
 function formatFecha(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString('es-SV', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return toDate(iso).toLocaleString('es-SV', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function timeAgo(iso: string) {
+  const diffMs = Date.now() - toDate(iso).getTime();
+  const min = Math.floor(diffMs / 60000);
+  if (min < 1) return 'hace instantes';
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h`;
+  const d = Math.floor(h / 24);
+  return `hace ${d} d`;
 }
 
 function Iniciales({ nombre }: { nombre: string }) {
@@ -58,7 +91,8 @@ function Iniciales({ nombre }: { nombre: string }) {
 }
 
 export default function Alertas() {
-  const [alertas, setAlertas]         = useState(alertasIniciales);
+  const [alertas, setAlertas]         = useState<Alerta[]>([]);
+  const [loadingAlertas, setLoadingA] = useState(true);
   const [filtro, setFiltro]           = useState('todos');
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [usuario, setUsuario]         = useState<UsuarioActual | null>(null);
@@ -68,19 +102,52 @@ export default function Alertas() {
   const [editTexto, setEditTexto]     = useState('');
   const [guardando, setGuardando]     = useState(false);
   const [error, setError]             = useState('');
+  const [accionError, setAccionError] = useState('');
   const confirmDialog = useConfirm();
 
   useEffect(() => {
     axios.get('/api/user-info', { withCredentials: true })
       .then(r => setUsuario(r.data))
       .catch(() => {});
+    cargarAlertas();
     cargarComentarios();
   }, []);
+
+  const cargarAlertas = () => {
+    setLoadingA(true);
+    axios.get<Alerta[]>('/api/alertas', { withCredentials: true })
+      .then(r => setAlertas(r.data))
+      .catch(() => {})
+      .finally(() => setLoadingA(false));
+  };
 
   const cargarComentarios = () => {
     axios.get('/api/comentarios', { withCredentials: true })
       .then(r => setComentarios(r.data))
       .catch(() => {});
+  };
+
+  const cambiarEstadoAlerta = async (id: number, estado: 'activa' | 'suspendida' | 'resuelta') => {
+    setAccionError('');
+    try {
+      await axios.put(`/api/alertas/${id}`, { estado }, { withCredentials: true });
+      setAlertas(prev => prev.map(a => a.id === id
+        ? { ...a, estado, resuelta_en: estado === 'resuelta' ? new Date().toISOString() : a.resuelta_en }
+        : a));
+    } catch (e: any) {
+      setAccionError(e.response?.data?.error || 'Error al actualizar la alerta');
+    }
+  };
+
+  const eliminarAlerta = async (id: number) => {
+    const ok = await confirmDialog({ message: '¿Eliminar esta alerta? Esta acción no se puede deshacer.', danger: true });
+    if (!ok) return;
+    try {
+      await axios.delete(`/api/alertas/${id}`, { withCredentials: true });
+      setAlertas(prev => prev.filter(a => a.id !== id));
+    } catch (e: any) {
+      setAccionError(e.response?.data?.error || 'Error al eliminar la alerta');
+    }
   };
 
   const enviar = async () => {
@@ -123,15 +190,20 @@ export default function Alertas() {
     }
   };
 
-  const isAdmin    = usuario?.rol === 'admin';
-  const critCount  = alertas.filter(a => a.severidad === 'critica').length;
-  const altaCount  = alertas.filter(a => a.severidad === 'alta').length;
-  const mediaCount = alertas.filter(a => a.severidad === 'media').length;
+  const isAdmin = usuario?.rol === 'admin';
 
-  const alertasFiltradas = filtro === 'todos' ? alertas : alertas.filter(a => a.severidad === filtro);
+  // Activas + suspendidas: son las que aún requieren gestión del admin.
+  const gestionables = alertas.filter(a => a.estado !== 'resuelta');
+  const resueltas     = alertas.filter(a => a.estado === 'resuelta').slice(0, 10);
+
+  const critCount  = gestionables.filter(a => a.severidad === 'critica').length;
+  const altaCount  = gestionables.filter(a => a.severidad === 'alta').length;
+  const mediaCount = gestionables.filter(a => a.severidad === 'media').length;
+
+  const alertasFiltradas = filtro === 'todos' ? gestionables : gestionables.filter(a => a.severidad === filtro);
 
   const FILTERS = [
-    { key: 'todos',   label: `Todos (${alertas.length})` },
+    { key: 'todos',   label: `Todos (${gestionables.length})` },
     { key: 'critica', label: `Crítica (${critCount})` },
     { key: 'alta',    label: `Alta (${altaCount})` },
     { key: 'media',   label: `Media (${mediaCount})` },
@@ -147,8 +219,15 @@ export default function Alertas() {
       <div>
         <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Sistema de Monitoreo</p>
         <h2 className="text-3xl font-black tracking-tighter gradient-text">Alertas del Sistema</h2>
-        <p className="text-sm text-gray-500 mt-1">Notificaciones activas que requieren atención inmediata</p>
+        <p className="text-sm text-gray-500 mt-1">Se genera una alerta automática cuando una zona acumula 5 o más reportes del mismo problema</p>
       </div>
+
+      {accionError && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between">
+          <span>⚠ {accionError}</span>
+          <button onClick={() => setAccionError('')} className="text-red-400 hover:text-red-300 ml-4"><X size={14} /></button>
+        </div>
+      )}
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -167,19 +246,19 @@ export default function Alertas() {
       </div>
 
       {/* BANNER DE ESTADO */}
-      {alertas.length > 0 ? (
+      {gestionables.length > 0 ? (
         <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
             <Bell size={16} className="text-red-400 animate-pulse" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black text-red-400">
-              {alertas.length} alerta{alertas.length !== 1 ? 's' : ''} activa{alertas.length !== 1 ? 's' : ''} — requieren atención
+              {gestionables.length} alerta{gestionables.length !== 1 ? 's' : ''} activa{gestionables.length !== 1 ? 's' : ''} — requieren atención
             </p>
             <p className="text-xs text-gray-500">Resuelve cada incidencia para mantener el sistema estable.</p>
           </div>
         </div>
-      ) : (
+      ) : !loadingAlertas ? (
         <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
             <CheckCircle size={16} className="text-green-400" />
@@ -189,10 +268,15 @@ export default function Alertas() {
             <p className="text-xs text-gray-500">Todos los sistemas operan con normalidad.</p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* ALERTAS ACTIVAS */}
-      {alertas.length > 0 && (
+      {loadingAlertas ? (
+        <div className="portal-card p-10 text-center">
+          <div className="w-6 h-6 border-2 border-aqua-cyan/30 border-t-aqua-cyan rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500 font-medium">Cargando alertas...</p>
+        </div>
+      ) : gestionables.length > 0 && (
         <>
           <div className="flex gap-2 flex-wrap">
             {FILTERS.map(({ key, label }) => (
@@ -215,8 +299,9 @@ export default function Alertas() {
               </div>
             ) : (
               alertasFiltradas.map((alerta) => {
-                const style = SEV_STYLE[alerta.severidad];
-                const Icon  = alerta.icono;
+                const style  = SEV_STYLE[alerta.severidad];
+                const eStyle = ESTADO_STYLE[alerta.estado];
+                const Icon   = TIPO_ICON[alerta.tipo] ?? Bell;
                 return (
                   <div key={alerta.id}
                     className={`portal-card ${style.cardTop} overflow-hidden hover:scale-[1.005] transition-all duration-200`}>
@@ -233,18 +318,48 @@ export default function Alertas() {
                               style={{ color: style.text, backgroundColor: style.bg }}>
                               {style.label}
                             </span>
+                            <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full ${eStyle.bg} ${eStyle.text}`}>
+                              {eStyle.label}
+                            </span>
                           </div>
                           <p className="text-sm text-gray-400 leading-relaxed mb-3">{alerta.descripcion}</p>
                           <div className="flex flex-wrap gap-4 text-[10px] text-gray-500">
-                            <span>Zona: <strong className="text-gray-400">{alerta.zona}</strong></span>
-                            <span className="flex items-center gap-1"><Clock size={10} />{alerta.timestamp}</span>
+                            <span className="flex items-center gap-1">
+                              <MapPin size={10} />
+                              Zona: <strong className="text-gray-400">{alerta.zona}, {alerta.sector}</strong>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users size={10} />
+                              {alerta.total_reportes} reportes · último de <strong className="text-gray-400">{alerta.usuario}</strong>
+                            </span>
+                            <span className="flex items-center gap-1"><Clock size={10} />{timeAgo(alerta.actualizado_en ?? alerta.creado_en)}</span>
                           </div>
                         </div>
-                        <button onClick={() => setAlertas(prev => prev.filter(a => a.id !== alerta.id))}
-                          title="Marcar como resuelto"
-                          className="p-2 rounded-xl text-gray-500 hover:text-green-400 hover:bg-green-400/10 transition-all flex-shrink-0">
-                          <X size={16} />
-                        </button>
+
+                        {isAdmin && (
+                          <div className="flex gap-1.5 flex-shrink-0">
+                            {alerta.estado === 'activa' && (
+                              <button onClick={() => cambiarEstadoAlerta(alerta.id, 'suspendida')} title="Suspender alerta"
+                                className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-amber-400 hover:border-amber-500/30 flex items-center justify-center transition-all">
+                                <PauseCircle size={12} />
+                              </button>
+                            )}
+                            {alerta.estado === 'suspendida' && (
+                              <button onClick={() => cambiarEstadoAlerta(alerta.id, 'activa')} title="Reactivar alerta"
+                                className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-aqua-cyan hover:border-aqua-cyan/30 flex items-center justify-center transition-all">
+                                <PlayCircle size={12} />
+                              </button>
+                            )}
+                            <button onClick={() => cambiarEstadoAlerta(alerta.id, 'resuelta')} title="Marcar como resuelta"
+                              className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-green-400 hover:border-green-500/30 flex items-center justify-center transition-all">
+                              <CheckCircle size={12} />
+                            </button>
+                            <button onClick={() => eliminarAlerta(alerta.id)} title="Eliminar alerta"
+                              className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center transition-all">
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -267,16 +382,26 @@ export default function Alertas() {
           </div>
         </div>
         <div className="p-4 space-y-1">
-          {historial.map((item, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
-              <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-bold text-gray-300">{item.label}</span>
-                <span className="text-gray-500 text-sm"> — {item.zona}</span>
+          {resueltas.length === 0 ? (
+            <p className="text-sm text-gray-600 text-center py-4">Aún no hay alertas resueltas.</p>
+          ) : (
+            resueltas.map((item) => (
+              <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
+                <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold text-gray-300">{item.tipo} resuelta</span>
+                  <span className="text-gray-500 text-sm"> — {item.zona}, {item.sector}</span>
+                </div>
+                {isAdmin && (
+                  <button onClick={() => eliminarAlerta(item.id)} title="Eliminar del historial"
+                    className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0">
+                    <Trash2 size={12} />
+                  </button>
+                )}
+                <span className="text-[10px] text-gray-600 flex-shrink-0">{timeAgo(item.resuelta_en ?? item.actualizado_en)}</span>
               </div>
-              <span className="text-[10px] text-gray-600 flex-shrink-0">{item.tiempo}</span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

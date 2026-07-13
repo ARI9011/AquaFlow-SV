@@ -202,7 +202,51 @@ app.listen(PORT, () => {
         if (err) console.error('Error creando tabla comentarios_reportes:', err.message);
         else console.log('✅ Tabla comentarios_reportes lista');
     });
+
+    db.query(`CREATE TABLE IF NOT EXISTS alertas (
+        id             INT AUTO_INCREMENT PRIMARY KEY,
+        tipo           VARCHAR(100) NOT NULL,
+        zona           VARCHAR(100) NOT NULL,
+        sector         VARCHAR(100) NOT NULL,
+        descripcion    TEXT NOT NULL,
+        severidad      ENUM('critica','alta','media') DEFAULT 'media',
+        estado         ENUM('activa','suspendida','resuelta') DEFAULT 'activa',
+        total_reportes INT NOT NULL DEFAULT 0,
+        usuario        VARCHAR(100) NOT NULL,
+        creado_en      DATETIME DEFAULT CURRENT_TIMESTAMP,
+        actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        resuelta_en    DATETIME NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
+        if (err) console.error('Error creando tabla alertas:', err.message);
+        else {
+            console.log('✅ Tabla alertas lista');
+            reconciliarAlertasExistentes();
+        }
+    });
 });
+
+// Al arrancar, revisa reportes que ya cumplían el umbral antes de que existiera esta lógica.
+function reconciliarAlertasExistentes() {
+    db.query(
+        `SELECT tipo, zona FROM reportes WHERE estado != 'resuelto' GROUP BY tipo, zona HAVING COUNT(*) >= ?`,
+        [UMBRAL_ALERTA],
+        (err, grupos) => {
+            if (err) return console.error('Error al reconciliar alertas:', err.message);
+            grupos.forEach(({ tipo, zona }) => {
+                db.query(
+                    `SELECT sector, descripcion, usuario FROM reportes
+                     WHERE tipo = ? AND zona = ? AND estado != 'resuelto' ORDER BY creado_en DESC LIMIT 1`,
+                    [tipo, zona],
+                    (err2, rows) => {
+                        if (err2 || !rows.length) return;
+                        const r = rows[0];
+                        verificarUmbralAlerta(tipo, zona, r.sector, r.descripcion, r.usuario);
+                    }
+                );
+            });
+        }
+    );
+}
 
 app.get('/api/user-info', (req, res) => {
     if (req.session.user) {
@@ -358,6 +402,87 @@ app.delete('/api/usuarios/:id', requireAdmin, (req, res) => {
     });
 });
 
+// ── ALERTAS AUTOMÁTICAS POR ZONA ──────────────────────────────────────
+const UMBRAL_ALERTA = 5; // reportes de la misma zona + tipo para generar alerta
+
+function calcularSeveridad(total) {
+    if (total >= 10) return 'critica';
+    if (total >= 7) return 'alta';
+    return 'media';
+}
+
+// Revisa si los reportes activos de una zona+tipo alcanzaron el umbral y
+// crea o actualiza la alerta correspondiente con los datos del reporte.
+function verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario) {
+    db.query(
+        `SELECT COUNT(*) AS total FROM reportes WHERE tipo = ? AND zona = ? AND estado != 'resuelto'`,
+        [tipo, zona],
+        (err, rows) => {
+            if (err) return console.error('Error al contar reportes para alerta:', err.message);
+            const total = rows[0].total;
+            if (total < UMBRAL_ALERTA) return;
+
+            const severidad = calcularSeveridad(total);
+
+            db.query(
+                `SELECT id, estado FROM alertas WHERE tipo = ? AND zona = ? AND estado IN ('activa','suspendida')
+                 ORDER BY FIELD(estado, 'activa', 'suspendida') LIMIT 1`,
+                [tipo, zona],
+                (err2, existentes) => {
+                    if (err2) return console.error('Error al buscar alerta existente:', err2.message);
+
+                    if (existentes.length > 0) {
+                        // Si está suspendida, se respeta la decisión del admin y solo se actualiza el conteo.
+                        const alerta = existentes[0];
+                        db.query(
+                            'UPDATE alertas SET total_reportes = ?, severidad = ?, descripcion = ?, usuario = ? WHERE id = ?',
+                            [total, severidad, descripcion, usuario, alerta.id],
+                            (err3) => { if (err3) console.error('Error al actualizar alerta:', err3.message); }
+                        );
+                    } else {
+                        db.query(
+                            `INSERT INTO alertas (tipo, zona, sector, descripcion, severidad, total_reportes, usuario)
+                             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                            [tipo, zona, sector, descripcion, severidad, total, usuario],
+                            (err3) => { if (err3) console.error('Error al crear alerta:', err3.message); }
+                        );
+                    }
+                }
+            );
+        }
+    );
+}
+
+// GET todas las alertas (cualquier usuario autenticado)
+app.get('/api/alertas', requireAuth, (req, res) => {
+    db.query('SELECT * FROM alertas ORDER BY creado_en DESC', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// PUT cambiar estado de una alerta: activa | suspendida | resuelta (solo admin)
+app.put('/api/alertas/:id', requireAdmin, (req, res) => {
+    const { estado } = req.body;
+    const validEstados = ['activa', 'suspendida', 'resuelta'];
+    if (!validEstados.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });
+    const resueltaEn = estado === 'resuelta' ? new Date() : null;
+    db.query('UPDATE alertas SET estado = ?, resuelta_en = ? WHERE id = ?', [estado, resueltaEn, req.params.id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Alerta no encontrada' });
+        res.json({ ok: true });
+    });
+});
+
+// DELETE eliminar una alerta (solo admin)
+app.delete('/api/alertas/:id', requireAdmin, (req, res) => {
+    db.query('DELETE FROM alertas WHERE id = ?', [req.params.id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Alerta no encontrada' });
+        res.json({ ok: true });
+    });
+});
+
 // ── REPORTES ──────────────────────────────────────────────────────────
 
 app.get('/api/reportes', requireAuth, (req, res) => {
@@ -386,6 +511,7 @@ app.post('/api/reportes', requireAuth, (req, res) => {
         [tipo, zona, sector, descripcion, validPrioridad, userId, usuario],
         (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
+            verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario);
             res.json({ id: result.insertId });
         }
     );
