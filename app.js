@@ -11,6 +11,59 @@ const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// ── Correo (Gmail SMTP) y códigos de verificación ─────────────────────
+const nodemailer = require('nodemailer');
+const mailer = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+});
+
+// Verificación de credenciales SMTP al arrancar (para diagnosticar el envío de correos)
+if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('tu_correo')) {
+    console.warn('⚠️  SMTP sin configurar: pon SMTP_USER y SMTP_PASS (contraseña de aplicación de Gmail) en .env. Los correos NO se enviarán.');
+} else {
+    mailer.verify()
+        .then(() => console.log('📮 SMTP listo — correos de verificación habilitados'))
+        .catch((e) => console.error('❌ SMTP inválido:', e.message, '— revisa SMTP_USER / SMTP_PASS (contraseña de aplicación de 16 dígitos, sin espacios)'));
+}
+
+// email -> { code, expires, intentos }
+const verifyCodes = new Map();
+const generarCodigo = () => String(Math.floor(100000 + Math.random() * 900000));
+
+async function enviarCorreoVerificacion(email, nombre, codigo) {
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+        <div style="background:#0d2137;padding:22px;text-align:center">
+          <span style="color:#00f2ea;font-size:22px;font-weight:800">AquaFlow <span style="color:#fff">SV</span></span>
+        </div>
+        <div style="padding:26px;color:#1b2735">
+          <h2 style="margin:0 0 8px">¡Bienvenido/a, ${nombre}!</h2>
+          <p style="color:#475569">Tu cuenta se creó correctamente usando tu cuenta de Google. Para verificarla, ingresa el siguiente código en la aplicación:</p>
+          <div style="text-align:center;margin:22px 0">
+            <span style="display:inline-block;font-size:30px;letter-spacing:8px;font-weight:800;color:#0d2137;background:#e0f7f5;border:1px solid #9be3dd;border-radius:10px;padding:12px 22px">${codigo}</span>
+          </div>
+          <p style="color:#64748b;font-size:13px">Este código expira en 10 minutos. Si no fuiste tú, puedes ignorar este correo.</p>
+        </div>
+        <div style="background:#f2f7fb;padding:14px;text-align:center;color:#94a3b8;font-size:12px">AquaFlow SV · Monitoreo Hídrico</div>
+      </div>`;
+    return mailer.sendMail({
+        from: `"AquaFlow SV" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'Verifica tu cuenta de AquaFlow SV',
+        html
+    });
+}
+
+// Genera, guarda y envía un código; no bloquea la respuesta si el correo tarda
+function emitirCodigo(email, nombre) {
+    const codigo = generarCodigo();
+    verifyCodes.set(email, { code: codigo, expires: Date.now() + 10 * 60 * 1000, intentos: 0 });
+    enviarCorreoVerificacion(email, nombre, codigo)
+        .then(() => console.log('📧 Código de verificación enviado a', email))
+        .catch((e) => console.error('❌ Error enviando correo a', email, '-', e.message));
+}
+
 const app = express();
 
 // ── Middlewares de autenticación y roles ──────────────────────────────
@@ -122,6 +175,98 @@ app.post('/auth/login', (req, res) => {
             blocked: false
         });
     });
+});
+
+// --- LOGIN CON GOOGLE (OAuth) ---
+app.post('/auth/google', async (req, res) => {
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ error: 'Token de Google requerido' });
+
+    try {
+        // Obtener el perfil del usuario desde Google con el access_token
+        const gRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+        if (!gRes.ok) return res.status(401).json({ error: 'Token de Google inválido' });
+
+        const perfil = await gRes.json();            // { sub, email, name, picture, ... }
+        const email  = perfil.email;
+        const nombre = perfil.name || (email ? email.split('@')[0] : 'Usuario Google');
+        if (!email) return res.status(400).json({ error: 'No se pudo obtener el correo de Google' });
+
+        db.query('SELECT * FROM usuarios WHERE Correo = ?', [email], (err, results) => {
+            if (err) return res.status(500).json({ error: 'Error en servidor' });
+
+            // El usuario ya existe -> iniciar sesión
+            if (results.length > 0) {
+                const usuario = results[0];
+                req.session.user = usuario;
+                console.log('✅ Login Google:', email, '| Rol:', usuario.rol);
+                const yaVerificado = usuario.verificado === 1 || usuario.verificado === true;
+                if (!yaVerificado) emitirCodigo(email, usuario.Usuario || nombre);
+                return res.json({ success: true, user: usuario, needsVerification: !yaVerificado });
+            }
+
+            // Usuario nuevo -> crearlo automáticamente y enviar código de verificación
+            const rol = email.toLowerCase().endsWith('@flowcdb.com') ? 'admin' : 'user';
+            const placeholder = bcrypt.hashSync('google-' + Date.now(), 10);
+            db.query(
+                'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)',
+                [nombre, email, placeholder, rol],
+                (err2, result) => {
+                    if (err2) return res.status(500).json({ error: 'Error al crear el usuario' });
+                    const nuevo = { ID: result.insertId, id: result.insertId, Usuario: nombre, Correo: email, rol };
+                    req.session.user = nuevo;
+                    console.log('🆕 Usuario Google creado:', email);
+                    emitirCodigo(email, nombre);
+                    return res.json({ success: true, user: nuevo, needsVerification: true });
+                }
+            );
+        });
+    } catch (e) {
+        console.error('Error /auth/google:', e);
+        return res.status(500).json({ error: 'Error al verificar con Google' });
+    }
+});
+
+// --- VERIFICAR CÓDIGO DE CUENTA ---
+app.post('/auth/verify-code', (req, res) => {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ error: 'Email y código requeridos' });
+
+    const rec = verifyCodes.get(email);
+    if (!rec) return res.status(400).json({ error: 'No hay un código pendiente. Solicita uno nuevo.' });
+    if (Date.now() > rec.expires) {
+        verifyCodes.delete(email);
+        return res.status(400).json({ error: 'El código expiró. Solicita uno nuevo.' });
+    }
+
+    rec.intentos = (rec.intentos || 0) + 1;
+    if (rec.intentos > 5) {
+        verifyCodes.delete(email);
+        return res.status(429).json({ error: 'Demasiados intentos. Solicita un código nuevo.' });
+    }
+    if (String(code).trim() !== rec.code) {
+        return res.status(400).json({ error: 'Código incorrecto.' });
+    }
+
+    verifyCodes.delete(email);
+    if (req.session.user) req.session.user.verificado = 1;
+    // Persistir en BD si existe la columna 'verificado' (si no existe, solo se informa)
+    db.query('UPDATE usuarios SET verificado = 1 WHERE Correo = ?', [email], (e) => {
+        if (e) console.log('(info) columna "verificado" no disponible aún:', e.code);
+    });
+    console.log('✔️  Cuenta verificada:', email);
+    return res.json({ success: true, message: 'Cuenta verificada correctamente' });
+});
+
+// --- REENVIAR CÓDIGO ---
+app.post('/auth/resend-code', (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email requerido' });
+    const nombre = (req.session.user && req.session.user.Usuario) || email.split('@')[0];
+    emitirCodigo(email, nombre);
+    return res.json({ success: true, message: 'Código reenviado' });
 });
 
 // --- LÓGICA DE REGISTRO (Ajustada a tu SQL) ---

@@ -8,6 +8,11 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    // Permite que el popup de "Iniciar con Google" no dispare el aviso de COOP
+    // (Cross-Origin-Opener-Policy would block the window.closed call)
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
     proxy: {
       '/auth': {
         target: 'http://localhost:3000',

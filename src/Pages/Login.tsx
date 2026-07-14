@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+import VerifyModal from '../components/VerifyModal';
 import BubbleBackground from '../components/BubbleBackground';
 import ParticleFlowHero from '../components/ParticleFlowHero';
 import { useAuth } from '../context/AuthContext';
@@ -34,15 +36,14 @@ export default function Login() {
   const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [socialNotice, setSocialNotice] = useState('');
 
   /* ── Login ── */
   const [loginEmail,    setLoginEmail]    = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  /* ── Rate limit (client-side UX, reforzado server-side) ── */
-  const [attempts,   setAttempts]   = useState(0);      // 0-3
-  const [lockedUntil, setLockedUntil] = useState(0);    // timestamp ms
+  /* ── Rate limit ── */
+  const [attempts,   setAttempts]   = useState(0);     
+  const [lockedUntil, setLockedUntil] = useState(0);    
 
   // Deriva los segundos restantes en cada render
   const secondsLeft = Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
@@ -64,9 +65,7 @@ export default function Login() {
 
   const isAdminEmail = (email: string) => email.toLowerCase().endsWith('@flowcdb.com');
 
-  /* ── Suaviza el cruce del panel diagonal: en vez de solo deslizarse, se
-     desvanece levemente a mitad de camino para que no se sienta como un
-     bloque opaco "girando" de golpe sobre el formulario. ── */
+  /* ── Suaviza el cruce del panel diagonal ── */
   const diagonalPanelRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -90,12 +89,38 @@ export default function Login() {
     setRegisterPassword(''); setRegisterConfirmPassword('');
   };
 
-  const handleSocialClick = (provider: string) => {
-    setSocialNotice(`Inicio con ${provider} disponible próximamente`);
-    setTimeout(() => setSocialNotice(''), 2500);
-  };
 
   /* ── Handlers ── */
+  // Correo pendiente de verificación (muestra el modal de código)
+  const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
+  // Usuario de Google en espera: NO se marca la sesión hasta cerrar/verificar el modal
+  const [pendingUser, setPendingUser] = useState<any>(null);
+
+  // Inicio de sesión con Google
+  const loginConGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setError(''); setLoading(true);
+      try {
+        const { data } = await axios.post('/auth/google', {
+          access_token: tokenResponse.access_token,
+        });
+        setAttempts(0);
+        if (data.needsVerification) {
+          setPendingUser(data.user);
+          setVerifyEmail(data.user.Correo);
+        } else {
+          setUser(data.user);
+          navigate('/dashboard');
+        }
+      } catch {
+        setError('No se pudo iniciar sesión con Google. Intenta de nuevo.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => setError('Inicio de sesión con Google cancelado.'),
+  });
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLocked || loading) return;
@@ -179,6 +204,13 @@ export default function Login() {
   /* ── UI ── */
   return (
     <div className="h-screen w-screen bg-black font-sans selection:bg-aqua-cyan/30 text-white relative overflow-hidden">
+      {verifyEmail && (
+        <VerifyModal
+          email={verifyEmail}
+          onVerified={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/dashboard'); }}
+          onClose={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/dashboard'); }}
+        />
+      )}
       {/* Halo ambiental de fondo */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div className="w-[70vw] h-[70vw] max-w-[900px] max-h-[900px] bg-aqua-cyan/[0.05] rounded-full blur-[130px]" />
@@ -232,14 +264,12 @@ export default function Login() {
                   {/* Login social */}
                   <button
                     type="button"
-                    onClick={() => handleSocialClick('Google')}
+                    onClick={() => loginConGoogle()}
                     className="w-full flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
                     <GoogleIcon /> Continuar con Google
                   </button>
-                  {socialNotice && (
-                    <p className="text-center text-[11px] text-aqua-cyan/80 font-semibold -mt-3 animate-pulse">{socialNotice}</p>
-                  )}
+                  {/* Inicio social manejado por el botón "Continuar con Google" */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
@@ -332,14 +362,12 @@ export default function Login() {
                   {/* Registro social */}
                   <button
                     type="button"
-                    onClick={() => handleSocialClick('Google')}
+                    onClick={() => loginConGoogle()}
                     className="w-full flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
                     <GoogleIcon /> Continuar con Google
                   </button>
-                  {socialNotice && (
-                    <p className="text-center text-[11px] text-aqua-cyan/80 font-semibold -mt-3 animate-pulse">{socialNotice}</p>
-                  )}
+                  {/* Inicio social manejado por el botón "Continuar con Google" */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
