@@ -26,9 +26,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { setUser, user, authLoading } = useAuth();
 
-  // Si ya hay sesión activa, redirigir al dashboard
+  // Si ya hay sesión activa, redirigir a la página de inicio
   useEffect(() => {
-    if (!authLoading && user) navigate('/dashboard', { replace: true });
+    if (!authLoading && user) navigate('/inicio', { replace: true });
   }, [user, authLoading, navigate]);
 
   /* ── Formulario ── */
@@ -110,7 +110,7 @@ export default function Login() {
           setVerifyEmail(data.user.Correo);
         } else {
           setUser(data.user);
-          navigate('/dashboard');
+          navigate('/inicio');
         }
       } catch {
         setError('No se pudo iniciar sesión con Google. Intenta de nuevo.');
@@ -132,7 +132,7 @@ export default function Login() {
       });
       setUser(data.user);
       setAttempts(0);
-      navigate('/dashboard');
+      navigate('/inicio');
     } catch (err: any) {
       const data = err.response?.data ?? {};
       const status = err.response?.status;
@@ -207,8 +207,8 @@ export default function Login() {
       {verifyEmail && (
         <VerifyModal
           email={verifyEmail}
-          onVerified={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/dashboard'); }}
-          onClose={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/dashboard'); }}
+          onVerified={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/inicio'); }}
+          onClose={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/inicio'); }}
         />
       )}
       {/* Halo ambiental de fondo */}

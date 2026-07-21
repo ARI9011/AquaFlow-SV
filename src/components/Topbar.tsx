@@ -4,6 +4,7 @@ import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu } from 'lucide-react
 import { useAuth } from '../context/AuthContext';
 
 const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
+  '/inicio':       { title: 'Inicio',                sub: 'Bienvenido a AquaFlow SV'     },
   '/dashboard':    { title: 'Dashboard',            sub: 'Resumen general del sistema'  },
   '/mapa':         { title: 'Mapa de Zonas',        sub: 'Gran San Salvador'            },
   '/sensores':     { title: 'Sensores IoT',          sub: 'Dispositivos de medición'    },
