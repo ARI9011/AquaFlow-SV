@@ -63,7 +63,13 @@ export default function Login() {
   const [registerPassword,        setRegisterPassword]        = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
-  const isAdminEmail = (email: string) => email.toLowerCase().endsWith('@flowcdb.com');
+  const ADMIN_EMAILS = [
+    'arielgarciacdb@gmail.com',
+    'axelfernandolopez267@gmail.com',
+    'ricardo.diaz17at@gmail.com',
+    'gerardo768burgos@gmail.com',
+  ];
+  const isAdminEmail = (email: string) => ADMIN_EMAILS.includes(email.toLowerCase());
 
   /* ── Suaviza el cruce del panel diagonal ── */
   const diagonalPanelRef = useRef<HTMLDivElement>(null);
@@ -185,7 +191,6 @@ export default function Login() {
         nombre: registerName,
         email:  registerEmail,
         password: registerPassword,
-        adminCode: isAdmin ? 'FLOWCDB2026' : '',
       });
       setSuccess(
         '¡Cuenta creada exitosamente!' +

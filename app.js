@@ -9,6 +9,15 @@ const bcrypt = require('bcryptjs');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
+// Correos con rol de administrador (los únicos 4 autorizados); cualquier otro correo se registra como 'user'
+const ADMIN_EMAILS = [
+    'arielgarciacdb@gmail.com',
+    'axelfernandolopez267@gmail.com',
+    'ricardo.diaz17at@gmail.com',
+    'gerardo768burgos@gmail.com',
+];
+const esCorreoAdmin = (email) => ADMIN_EMAILS.includes(email.toLowerCase());
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ── Correo (Gmail SMTP) y códigos de verificación ─────────────────────
@@ -208,7 +217,7 @@ app.post('/auth/google', async (req, res) => {
             }
 
             // Usuario nuevo -> crearlo automáticamente y enviar código de verificación
-            const rol = email.toLowerCase().endsWith('@flowcdb.com') ? 'admin' : 'user';
+            const rol = esCorreoAdmin(email) ? 'admin' : 'user';
             const placeholder = bcrypt.hashSync('google-' + Date.now(), 10);
             db.query(
                 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)',
@@ -271,14 +280,13 @@ app.post('/auth/resend-code', (req, res) => {
 
 // --- LÓGICA DE REGISTRO (Ajustada a tu SQL) ---
 app.post('/auth/register', (req, res) => {
-    const { nombre, email, password, adminCode } = req.body;
-    
+    const { nombre, email, password } = req.body;
+
     if (!nombre || !email || !password) {
         return res.status(400).json({ error: 'Todos los campos son requeridos' });
     }
 
-    const isFlowcdbEmail = email.toLowerCase().endsWith('@flowcdb.com');
-    const rol = (isFlowcdbEmail || adminCode === 'FLOWCDB2026') ? 'admin' : 'user';
+    const rol = esCorreoAdmin(email) ? 'admin' : 'user';
 
     db.query('SELECT id FROM usuarios WHERE Correo = ?', [email], (errCheck, rows) => {
         if (errCheck) return res.status(500).json({ error: 'Error en servidor' });
