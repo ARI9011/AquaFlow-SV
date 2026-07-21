@@ -1,9 +1,10 @@
+try { require('dotenv').config(); } catch { /* dotenvx maneja las variables en producción */ }
 const mysql = require('mysql2');
 
 // Configuración de la BD
 const dbConfig = {
     host: 'localhost',
-    port: 3306,
+    port: Number(process.env.DB_PORT) || 3306,
     user: 'root',
     password: '',
     database: 'aquaflow_sv',

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import Login from './Pages/Login';
+import Home from './Pages/Home';
 import Dashboard from './Pages/Dashboard';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
@@ -66,6 +67,9 @@ export default function App() {
           <Route path="/login" element={<Login />} />
 
           {/* Rutas privadas con guard de autenticación */}
+          <Route path="/inicio" element={
+            <ProtectedRoute><AdminLayout><Home /></AdminLayout></ProtectedRoute>
+          } />
           <Route path="/dashboard" element={
             <ProtectedRoute><AdminLayout><Dashboard /></AdminLayout></ProtectedRoute>
           } />

@@ -146,7 +146,7 @@ app.post('/auth/login', (req, res) => {
 
     const sql = 'SELECT * FROM usuarios WHERE Correo = ?';
     db.query(sql, [email], (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error en servidor' });
+        if (err) { console.error('Login query error:', err); return res.status(500).json({ error: 'Error en servidor' }); }
 
         const usuario = results[0];
         const passwordOk = usuario && (

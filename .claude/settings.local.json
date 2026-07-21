@@ -79,7 +79,18 @@
       "Bash(curl -s -X POST http://localhost:3000/auth/register -H \"Content-Type: application/json\" -d '{\"nombre\":\"Test QA\",\"email\":\"testqa_temp@example.com\",\"password\":\"ClaveSegura123\"}')",
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"testqa_temp@example.com\",\"password\":\"ClaveSegura123\"}')",
       "Bash(curl -s -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"testqa_temp@example.com\",\"password\":\"otra\"}')",
-      "Bash(node check-login-anim.js)"
+      "Bash(node check-login-anim.js)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(node -e \"console.log\\(require.resolve\\('playwright'\\)\\)\")",
+      "Bash(npx vite *)",
+      "Bash(where mysql *)",
+      "Bash(net start *)",
+      "Bash(sc query *)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=20308 or ProcessId=20544\")",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin2026@gmail.com\",\"password\":\"wrongpass\"}')"
     ]
   }
 }

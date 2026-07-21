@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  LayoutDashboard, Map as MapIcon, Droplets, FileText,
+  Home as HomeIcon, LayoutDashboard, Map as MapIcon, Droplets, FileText,
   Settings, Bell, Users, LogOut, Menu, X, ShieldCheck, User as UserIcon,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -140,6 +140,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
             <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Principal</p>
           )}
           <div className="space-y-0.5">
+            <NavItem icon={HomeIcon}        label="Inicio"         active={location.pathname === '/inicio'}    onClick={() => go('/inicio')}    collapsed={effectiveCollapsed} />
             <NavItem icon={LayoutDashboard} label="Dashboard"     active={location.pathname === '/dashboard'} onClick={() => go('/dashboard')} collapsed={effectiveCollapsed} />
             <NavItem icon={MapIcon}         label="Mapa de zonas"  active={location.pathname === '/mapa'}      onClick={() => go('/mapa')}      collapsed={effectiveCollapsed} />
             <NavItem icon={Droplets}        label="Sensores IoT"   active={location.pathname === '/sensores'}  onClick={() => go('/sensores')}  collapsed={effectiveCollapsed} />
