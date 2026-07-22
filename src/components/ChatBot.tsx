@@ -110,7 +110,7 @@ export default function ChatBot() {
         <button
           onClick={() => setOpen(v => !v)}
           aria-label={open ? 'Cerrar AquaBot' : 'Abrir AquaBot'}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-aqua-cyan to-teal-600 text-white flex items-center justify-center shadow-xl hover:shadow-aqua-cyan/30 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-aqua-cyan to-teal-600 text-ink flex items-center justify-center shadow-xl hover:shadow-aqua-cyan/30 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan"
         >
           {open ? <CloseIcon /> : <ChatBubbleIcon />}
         </button>
@@ -118,14 +118,14 @@ export default function ChatBot() {
 
       {/* ── Panel de chat ── */}
       {open && (
-        <div className="fixed bottom-[4.5rem] right-4 left-4 sm:left-auto sm:bottom-24 sm:right-6 z-50 w-auto sm:w-[360px] max-h-[70vh] sm:max-h-[540px] flex flex-col rounded-2xl border border-white/10 bg-[#071012] shadow-2xl shadow-black/70 overflow-hidden"
+        <div className="fixed bottom-[4.5rem] right-4 left-4 sm:left-auto sm:bottom-24 sm:right-6 z-50 w-auto sm:w-[360px] max-h-[70vh] sm:max-h-[540px] flex flex-col rounded-2xl border border-ink/10 bg-[var(--color-aqua-panel)] shadow-2xl shadow-black/70 overflow-hidden"
           style={{ animation: 'slide-up-panel .22s ease' }}>
 
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-aqua-cyan/15 to-transparent border-b border-white/5">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-aqua-cyan/15 to-transparent border-b border-ink/5">
             <BotAvatar size="sm" />
             <div>
-              <p className="font-black text-sm text-white leading-none">AquaBot</p>
+              <p className="font-black text-sm text-ink leading-none">AquaBot</p>
               <p className="text-[10px] text-aqua-cyan/80 font-medium">Asistente IA · AquaFlow SV</p>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
@@ -146,7 +146,7 @@ export default function ChatBot() {
                 <div className={`max-w-[78%] px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user'
                     ? 'bg-aqua-cyan text-aqua-dark font-semibold rounded-br-sm'
-                    : 'bg-white/5 text-gray-200 rounded-bl-sm border border-white/5'
+                    : 'bg-ink/5 text-gray-200 rounded-bl-sm border border-ink/5'
                 }`}>
                   {msg.content}
                 </div>
@@ -156,7 +156,7 @@ export default function ChatBot() {
             {loading && (
               <div className="flex gap-2 justify-start">
                 <div className="mt-1"><BotAvatar size="xs" /></div>
-                <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1.5 items-center">
+                <div className="bg-ink/5 border border-ink/5 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1.5 items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-aqua-cyan animate-bounce [animation-delay:0ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-aqua-cyan animate-bounce [animation-delay:150ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-aqua-cyan animate-bounce [animation-delay:300ms]" />
@@ -167,7 +167,7 @@ export default function ChatBot() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-white/5 flex gap-2 bg-white/[0.02]">
+          <div className="p-3 border-t border-ink/5 flex gap-2 bg-ink/[0.02]">
             <input
               ref={inputRef}
               type="text"
@@ -176,7 +176,7 @@ export default function ChatBot() {
               onKeyDown={handleKey}
               placeholder="Escribe tu pregunta..."
               disabled={loading}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-aqua-cyan/40 disabled:opacity-50 transition-colors"
+              className="flex-1 bg-ink/5 border border-ink/10 rounded-xl px-3 py-2 text-sm text-ink placeholder-gray-600 outline-none focus:border-aqua-cyan/40 disabled:opacity-50 transition-colors"
             />
             <button
               onClick={send}

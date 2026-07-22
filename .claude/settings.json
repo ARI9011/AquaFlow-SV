@@ -20,7 +20,8 @@
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('.claude/settings.json','utf8'\\)\\); console.log\\('JSON válido'\\)\")",
       "Bash(npx --yes playwright install chromium --with-deps)",
       "Read(//c/Users/Ferna/AppData/Local/ms-playwright/**)",
-      "Read(//c/Users/**)"
+      "Read(//c/Users/**)",
+      "Bash(node shot2.js)"
     ]
   }
 }

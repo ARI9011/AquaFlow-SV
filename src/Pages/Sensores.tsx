@@ -1,5 +1,88 @@
-import { useState } from 'react';
-import { Droplets, Zap, Wifi, AlertTriangle, CheckCircle, Battery, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Droplets, Zap, Wifi, AlertTriangle, CheckCircle, Battery, Clock, Cpu } from 'lucide-react';
+
+interface EstadoPiloto {
+  conectado: boolean;
+  caudal: number | null;
+  estado: string | null;
+  rele: boolean | null;
+  actualizado_en: string | null;
+}
+
+function segundosDesde(iso: string | null) {
+  if (!iso) return null;
+  return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+}
+
+function SensorPilotoCard() {
+  const [datos, setDatos] = useState<EstadoPiloto | null>(null);
+  const [, forzarRender] = useState(0);
+
+  // Streaming en vivo: el servidor empuja el estado apenas cambia, sin esperar
+  // a un intervalo fijo. El navegador reconecta solo si la conexión se cae.
+  useEffect(() => {
+    const es = new EventSource('/api/sensores/piloto/stream');
+    es.onmessage = (ev) => setDatos(JSON.parse(ev.data));
+    return () => es.close();
+  }, []);
+
+  // El servidor solo empuja cuando algo cambia; este tick local es solo para
+  // que el texto "hace Ns" se mantenga contando entre un push y el siguiente.
+  useEffect(() => {
+    const id = setInterval(() => forzarRender(n => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const conectado = !!datos?.conectado;
+  const segundos = segundosDesde(datos?.actualizado_en ?? null);
+
+  return (
+    <div className={`portal-card overflow-hidden transition-all duration-200 ${conectado ? '' : 'opacity-70'}`}>
+      <div className={`h-0.5 w-full ${conectado ? 'bg-gradient-to-r from-aqua-cyan/60 to-transparent' : 'bg-gradient-to-r from-red-500/60 to-transparent'}`} />
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${conectado ? 'bg-aqua-cyan/10' : 'bg-red-500/10'}`}>
+              <Cpu size={16} className={conectado ? 'text-aqua-cyan' : 'text-red-400'} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-black text-ink truncate">Sensor de Flujo (Arduino piloto)</p>
+              <p className="text-[10px] text-gray-500 font-bold truncate">Conectado por USB · sin zona asignada</p>
+            </div>
+          </div>
+          {conectado
+            ? <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-full flex-shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">En vivo</span>
+              </div>
+            : <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-full flex-shrink-0">
+                <AlertTriangle size={10} className="text-red-400" />
+                <span className="text-[9px] font-black text-red-400 uppercase tracking-wide">Desconectado</span>
+              </div>
+          }
+        </div>
+
+        <div className="bg-ink/[0.03] border border-ink/[0.05] rounded-xl px-4 py-3 mb-3 text-center">
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Flujo</p>
+          <p className="text-3xl font-black" style={{ color: conectado ? 'var(--color-aqua-cyan)' : '#6b7280' }}>
+            {conectado && datos?.caudal != null ? datos.caudal.toFixed(2) : '—'}
+            <span className="text-sm text-gray-500 ml-1 font-bold">L/min</span>
+          </p>
+          {conectado && datos?.estado && (
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">{datos.estado}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 pt-0.5">
+          <Clock size={10} className="text-gray-600" />
+          <span className="text-[10px] text-gray-500">
+            {conectado && segundos != null ? `Actualizado hace ${segundos}s` : 'Sin datos recientes del dispositivo'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const SENSORES = [
   { id: 1, nombre: 'Sensor T-001', zona: 'Colonia Escalón',  tipo: 'Presión', valor: 48.2, unidad: 'PSI',   bateria: 95, activo: true,  lectura: 'Hace 2 min' },
@@ -32,7 +115,7 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
               <TipoIcon size={16} className={s.activo ? 'text-aqua-cyan' : 'text-red-400'} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-black text-white truncate">{s.nombre}</p>
+              <p className="text-sm font-black text-ink truncate">{s.nombre}</p>
               <p className="text-[10px] text-gray-500 font-bold truncate">{s.zona}</p>
             </div>
           </div>
@@ -49,9 +132,9 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
         </div>
 
         {/* Valor principal */}
-        <div className="bg-white/[0.03] border border-white/[0.05] rounded-xl px-4 py-3 mb-3 text-center">
+        <div className="bg-ink/[0.03] border border-ink/[0.05] rounded-xl px-4 py-3 mb-3 text-center">
           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{s.tipo}</p>
-          <p className="text-3xl font-black" style={{ color: s.activo ? '#00f2ea' : '#6b7280' }}>
+          <p className="text-3xl font-black" style={{ color: s.activo ? 'var(--color-aqua-cyan)' : '#6b7280' }}>
             {s.valor}
             <span className="text-sm text-gray-500 ml-1 font-bold">{s.unidad}</span>
           </p>
@@ -67,7 +150,7 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
               </div>
               <span className={`text-[11px] font-black ${bat.text}`}>{s.bateria}%</span>
             </div>
-            <div className="w-full bg-white/[0.05] rounded-full h-1.5">
+            <div className="w-full bg-ink/[0.05] rounded-full h-1.5">
               <div className={`h-1.5 rounded-full ${bat.bar}`} style={{ width: `${s.bateria}%`, transition: 'width 0.8s ease' }} />
             </div>
           </div>
@@ -113,7 +196,17 @@ export default function Sensores() {
         <p className="text-sm text-gray-500 mt-1">Monitoreo en tiempo real de la red de sensores</p>
       </div>
 
+      {/* Dispositivo real conectado */}
+      <div>
+        <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2">Dispositivo real</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <SensorPilotoCard />
+        </div>
+      </div>
+
       {/* KPI Cards */}
+      <div>
+      <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2">Red simulada (datos de ejemplo)</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {KPIS.map((k) => (
           <div key={k.label} className={`portal-card ${k.border} p-5 flex items-center gap-4`}>
@@ -121,7 +214,7 @@ export default function Sensores() {
               <k.icon size={18} className={k.color} />
             </div>
             <div className="min-w-0">
-              <p className="text-2xl font-black text-white">{k.value}</p>
+              <p className="text-2xl font-black text-ink">{k.value}</p>
               <p className="text-[11px] font-bold text-gray-500 truncate">{k.label}</p>
               <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
             </div>
@@ -138,7 +231,7 @@ export default function Sensores() {
             className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
               filtro === key
                 ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
-                : 'bg-white/[0.03] text-gray-400 border-white/[0.06] hover:border-white/15 hover:text-gray-200'
+                : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-gray-200'
             }`}
           >
             {label}
@@ -158,6 +251,7 @@ export default function Sensores() {
           {filtrados.map((s) => <SensorCard key={s.id} s={s} />)}
         </div>
       )}
+      </div>
     </div>
   );
 }

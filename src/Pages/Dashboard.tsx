@@ -49,7 +49,7 @@ const KPIS = [
 const PressureTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0d1c21] border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
+    <div className="bg-[var(--color-aqua-panel)] border border-ink/10 rounded-xl px-4 py-3 shadow-2xl">
       <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">{label}</p>
       {payload.map((e: any) => (
         <div key={e.name} className="flex items-center gap-2 text-xs mb-1 last:mb-0">
@@ -65,9 +65,9 @@ const PressureTooltip = ({ active, payload, label }: any) => {
 const FlowTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0d1c21] border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
-      <p className="text-xs font-black text-white">{label}</p>
-      <p className="text-base font-black mt-0.5" style={{ color: payload[0]?.fill ?? '#00f2ea' }}>
+    <div className="bg-[var(--color-aqua-panel)] border border-ink/10 rounded-xl px-4 py-3 shadow-2xl">
+      <p className="text-xs font-black text-ink">{label}</p>
+      <p className="text-base font-black mt-0.5" style={{ color: payload[0]?.fill ?? 'var(--color-aqua-cyan)' }}>
         {payload[0]?.value} <span className="text-xs font-bold text-gray-500">L/min</span>
       </p>
     </div>
@@ -106,7 +106,7 @@ export default function Dashboard() {
               <k.icon size={18} className={k.accent} />
             </div>
             <div className="min-w-0">
-              <p className="text-2xl font-black text-white leading-none">{k.value}</p>
+              <p className="text-2xl font-black text-ink leading-none">{k.value}</p>
               <p className="text-[11px] font-bold text-gray-500 mt-0.5 leading-tight">{k.label}</p>
               <p className={`text-[10px] font-bold mt-1.5 ${k.accent}`}>{k.sub}</p>
             </div>
@@ -122,9 +122,9 @@ export default function Dashboard() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Tendencia de Presión</p>
-              <h3 className="text-sm font-black text-white mt-0.5">Últimas 8 horas · PSI por zona</h3>
+              <h3 className="text-sm font-black text-ink mt-0.5">Últimas 8 horas · PSI por zona</h3>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.06] px-3 py-1.5 rounded-full flex-shrink-0">
+            <div className="flex items-center gap-1.5 bg-ink/[0.03] border border-ink/[0.06] px-3 py-1.5 rounded-full flex-shrink-0">
               <Gauge size={11} className="text-aqua-cyan" />
               <span className="text-[10px] text-gray-400 font-bold">35–55 PSI normal</span>
             </div>
@@ -150,7 +150,7 @@ export default function Dashboard() {
               ))}
             </AreaChart>
           </ResponsiveContainer>
-          <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-white/[0.04]">
+          <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-ink/[0.04]">
             {Object.entries(ZONE_COLORS).map(([name, color]) => (
               <div key={name} className="flex items-center gap-1.5">
                 <span className="w-5 h-0.5 rounded-full" style={{ backgroundColor: color }} />
@@ -164,7 +164,7 @@ export default function Dashboard() {
         <div className="xl:col-span-2 portal-card p-5 flex flex-col">
           <div className="mb-4">
             <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Estado Actual</p>
-            <h3 className="text-sm font-black text-white mt-0.5">Presión por zona</h3>
+            <h3 className="text-sm font-black text-ink mt-0.5">Presión por zona</h3>
           </div>
           <div className="space-y-4 flex-1">
             {ZONAS.map((z) => (
@@ -179,13 +179,13 @@ export default function Dashboard() {
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${z.pill}`}>{z.estado}</span>
                   </div>
                 </div>
-                <div className="w-full bg-white/[0.05] rounded-full h-1.5">
+                <div className="w-full bg-ink/[0.05] rounded-full h-1.5">
                   <div className="h-1.5 rounded-full" style={{ width: `${(z.presion / 60) * 100}%`, backgroundColor: z.color }} />
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-4 pt-3 border-t border-white/[0.04] grid grid-cols-2 gap-2">
+          <div className="mt-4 pt-3 border-t border-ink/[0.04] grid grid-cols-2 gap-2">
             <div className="bg-green-500/[0.07] border border-green-500/15 rounded-xl p-3 text-center">
               <p className="text-xl font-black text-green-400">3</p>
               <p className="text-[10px] text-gray-500 font-bold mt-0.5">Óptimas</p>
@@ -205,7 +205,7 @@ export default function Dashboard() {
         <div className="xl:col-span-2 portal-card p-5">
           <div className="mb-4">
             <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Caudal Actual</p>
-            <h3 className="text-sm font-black text-white mt-0.5">Flujo por zona · L/min</h3>
+            <h3 className="text-sm font-black text-ink mt-0.5">Flujo por zona · L/min</h3>
           </div>
           <ResponsiveContainer width="100%" height={155}>
             <BarChart data={FLOW_DATA} margin={{ top: 2, right: 4, left: -26, bottom: 0 }}>
@@ -222,10 +222,10 @@ export default function Dashboard() {
 
         {/* Tabla operativa */}
         <div className="xl:col-span-3 portal-card overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.04] flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-ink/[0.04] flex items-center justify-between">
             <div>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Resumen Operativo</p>
-              <h3 className="text-sm font-black text-white mt-0.5">Todas las zonas monitoreadas</h3>
+              <h3 className="text-sm font-black text-ink mt-0.5">Todas las zonas monitoreadas</h3>
             </div>
             <div className="flex items-center gap-1.5">
               <Droplets size={13} className="text-aqua-cyan" />
@@ -235,7 +235,7 @@ export default function Dashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-white/[0.04] bg-white/[0.015]">
+                <tr className="border-b border-ink/[0.04] bg-ink/[0.015]">
                   {['Zona', 'Presión', 'Flujo', 'Estado'].map(h => (
                     <th key={h} className="px-5 py-2.5 text-[10px] uppercase font-black tracking-widest text-gray-600 whitespace-nowrap">{h}</th>
                   ))}
@@ -244,11 +244,11 @@ export default function Dashboard() {
               <tbody>
                 {ZONAS.map((z, i) => (
                   <tr key={z.nombre}
-                    className={`hover:bg-white/[0.02] transition-colors ${i < ZONAS.length - 1 ? 'border-b border-white/[0.03]' : ''}`}>
+                    className={`hover:bg-ink/[0.02] transition-colors ${i < ZONAS.length - 1 ? 'border-b border-ink/[0.03]' : ''}`}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
-                        <span className="text-sm font-bold text-white whitespace-nowrap">{z.nombre}</span>
+                        <span className="text-sm font-bold text-ink whitespace-nowrap">{z.nombre}</span>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">

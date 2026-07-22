@@ -2,16 +2,33 @@
 
 @theme {
   --color-aqua-dark:    #060b0d;
+  --color-aqua-shell:   #080f12;
   --color-aqua-card:    #0a1215;
   --color-aqua-panel:   #0d1c21;
   --color-aqua-cyan:    #00f2ea;
   --color-aqua-emerald: #00d1b2;
+  /* "ink" = color de texto/paneles principal; blanco en modo oscuro, oscuro en modo claro */
+  --color-ink: #ffffff;
+}
+
+/* ── Modo claro ──────────────────────────────────────────────────────
+   Cómodo y sin deslumbrar: fondo gris-azulado suave (no blanco puro) y
+   un teal más profundo que el cian neón para mantener buen contraste. */
+:root[data-theme="light"] {
+  --color-aqua-dark:    #eef2f5;
+  --color-aqua-shell:   #f7f5f0;
+  --color-aqua-card:    #f7f5f0;
+  --color-aqua-panel:   #f7f5f0;
+  --color-aqua-cyan:    #0e8a94;
+  --color-aqua-emerald: #059669;
+  --color-ink: #16232b;
 }
 
 body {
-  @apply bg-aqua-dark text-white antialiased;
+  @apply bg-aqua-dark text-ink antialiased;
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -22,14 +39,21 @@ h1, h2, h3, h4, h5, h6 {
 .custom-scrollbar::-webkit-scrollbar-track  { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb  { background: rgba(0,242,234,0.18); border-radius: 99px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,242,234,0.35); }
+:root[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb        { background: rgba(14,138,148,0.2); }
+:root[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover  { background: rgba(14,138,148,0.4); }
 
 .portal-card {
-  background: #0d1c21;
+  background: var(--color-aqua-panel);
   border: 1px solid rgba(255,255,255,0.05);
   border-radius: 1.25rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.25s ease;
 }
 .portal-card:hover { border-color: rgba(0,242,234,0.12); }
+:root[data-theme="light"] .portal-card {
+  border-color: rgba(16,35,43,0.08);
+  box-shadow: 0 1px 3px rgba(16,35,43,0.06);
+}
+:root[data-theme="light"] .portal-card:hover { border-color: rgba(14,138,148,0.25); }
 
 .portal-grid-bg {
   background-image:
@@ -37,9 +61,14 @@ h1, h2, h3, h4, h5, h6 {
     linear-gradient(90deg, rgba(0,242,234,0.03) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+:root[data-theme="light"] .portal-grid-bg {
+  background-image:
+    linear-gradient(rgba(14,138,148,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14,138,148,0.05) 1px, transparent 1px);
+}
 
 .gradient-text {
-  background: linear-gradient(135deg, #ffffff 0%, #00f2ea 60%, #00d1b2 100%);
+  background: linear-gradient(135deg, var(--color-ink) 0%, var(--color-aqua-cyan) 60%, var(--color-aqua-emerald) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

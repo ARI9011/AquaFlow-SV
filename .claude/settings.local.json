@@ -90,7 +90,28 @@
       "Bash(kill %1)",
       "Bash(wait)",
       "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=20308 or ProcessId=20544\")",
-      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin2026@gmail.com\",\"password\":\"wrongpass\"}')"
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X POST http://localhost:3000/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin2026@gmail.com\",\"password\":\"wrongpass\"}')",
+      "Bash(grep -roE \"[a-zA-Z-]*-white\\(/\\\\[[0-9.]+\\\\]|/[0-9]+\\)?\" src --include=*.tsx)",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"DELETE FROM usuarios WHERE Correo IN \\('qa.sensor.test@example.com','qa.sensor2.test@example.com'\\);\")",
+      "Bash(curl -s -c /tmp/qa6.txt http://localhost:3000/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"nombre\":\"QA Stream\",\"email\":\"qa.stream.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(curl -s -c /tmp/qa6.txt -b /tmp/qa6.txt http://localhost:3000/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"qa.stream.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(timeout 5 curl -s -N -b /tmp/qa6.txt http://localhost:3000/api/sensores/piloto/stream)",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"DELETE FROM usuarios WHERE Correo='qa.stream.test@example.com';\")",
+      "Bash(curl -s -c /tmp/qa7.txt http://localhost:3000/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"nombre\":\"QA Stream2\",\"email\":\"qa.stream2.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(curl -s -c /tmp/qa7.txt -b /tmp/qa7.txt http://localhost:3000/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"qa.stream2.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(node shot3.js)",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"DELETE FROM usuarios WHERE Correo='qa.stream2.test@example.com';\")",
+      "Bash(curl -s -c /tmp/qaR.txt http://localhost:3000/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"nombre\":\"QA Realtime\",\"email\":\"qa.realtime.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(curl -s -c /tmp/qaR.txt -b /tmp/qaR.txt http://localhost:3000/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"qa.realtime.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"UPDATE usuarios SET rol='admin' WHERE Correo='qa.realtime.test@example.com';\")",
+      "Bash(curl -s -b /tmp/qaR.txt http://localhost:3000/api/configuracion/sistema -X PUT -H \"Content-Type: application/json\" -d '{\"auto_refresh\":true,\"intervalo\":0,\"umbral_presion\":25,\"umbral_flujo\":8}')",
+      "Bash(curl -s -b /tmp/qaR.txt http://localhost:3000/api/configuracion)",
+      "Bash(curl -s -b /tmp/qaR.txt http://localhost:3000/api/configuracion/sistema -X PUT -H \"Content-Type: application/json\" -d '{\"auto_refresh\":true,\"intervalo\":30,\"umbral_presion\":25,\"umbral_flujo\":8}')",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"DELETE FROM reportes WHERE descripcion='Prueba de tiempo real'; DELETE FROM usuarios WHERE Correo='qa.realtime.test@example.com';\")",
+      "Bash(curl -s -c /tmp/qaV.txt http://localhost:3000/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"nombre\":\"QA Visual\",\"email\":\"qa.visual.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"UPDATE usuarios SET rol='admin' WHERE Correo='qa.visual.test@example.com';\")",
+      "Bash(curl -s -c /tmp/qaV.txt -b /tmp/qaV.txt http://localhost:3000/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"qa.visual.test@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(node shot4.js)"
     ]
   }
 }

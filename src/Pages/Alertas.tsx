@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { useConfirm } from '../components/ConfirmDialog';
+import { useConfig } from '../context/ConfigContext';
 
 const SEV_STYLE: Record<string, { text: string; bg: string; label: string; cardTop: string }> = {
   critica: { text: '#ef4444', bg: 'rgba(239,68,68,0.08)',  label: 'Crítica', cardTop: 'card-top-red'   },
@@ -104,6 +105,7 @@ export default function Alertas() {
   const [error, setError]             = useState('');
   const [accionError, setAccionError] = useState('');
   const confirmDialog = useConfirm();
+  const { pollingMs, tiempoReal } = useConfig();
 
   useEffect(() => {
     axios.get('/api/user-info', { withCredentials: true })
@@ -113,12 +115,28 @@ export default function Alertas() {
     cargarComentarios();
   }, []);
 
-  const cargarAlertas = () => {
-    setLoadingA(true);
+  // Auto-refresh según el intervalo configurado por el admin en Configuración.
+  useEffect(() => {
+    if (!pollingMs) return;
+    const id = setInterval(() => { cargarAlertas(true); cargarComentarios(); }, pollingMs);
+    return () => clearInterval(id);
+  }, [pollingMs]);
+
+  // Modo "Tiempo real": el servidor avisa por streaming apenas algo cambia,
+  // en vez de esperar a un intervalo fijo.
+  useEffect(() => {
+    if (!tiempoReal) return;
+    const es = new EventSource('/api/alertas/stream');
+    es.onmessage = () => { cargarAlertas(true); cargarComentarios(); };
+    return () => es.close();
+  }, [tiempoReal]);
+
+  const cargarAlertas = (silent = false) => {
+    if (!silent) setLoadingA(true);
     axios.get<Alerta[]>('/api/alertas', { withCredentials: true })
       .then(r => setAlertas(r.data))
       .catch(() => {})
-      .finally(() => setLoadingA(false));
+      .finally(() => { if (!silent) setLoadingA(false); });
   };
 
   const cargarComentarios = () => {
@@ -237,7 +255,7 @@ export default function Alertas() {
               <k.icon size={18} className={k.color} />
             </div>
             <div>
-              <p className="text-2xl font-black text-white">{kpiCount(k.key)}</p>
+              <p className="text-2xl font-black text-ink">{kpiCount(k.key)}</p>
               <p className="text-[11px] font-bold text-gray-500">{k.label}</p>
               <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
             </div>
@@ -284,7 +302,7 @@ export default function Alertas() {
                 className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
                   filtro === key
                     ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
-                    : 'bg-white/[0.03] text-gray-400 border-white/[0.06] hover:border-white/15 hover:text-gray-200'
+                    : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-gray-200'
                 }`}>
                 {label}
               </button>
@@ -313,7 +331,7 @@ export default function Alertas() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <h3 className="font-black text-white text-sm">{alerta.tipo}</h3>
+                            <h3 className="font-black text-ink text-sm">{alerta.tipo}</h3>
                             <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full"
                               style={{ color: style.text, backgroundColor: style.bg }}>
                               {style.label}
@@ -340,22 +358,22 @@ export default function Alertas() {
                           <div className="flex gap-1.5 flex-shrink-0">
                             {alerta.estado === 'activa' && (
                               <button onClick={() => cambiarEstadoAlerta(alerta.id, 'suspendida')} title="Suspender alerta"
-                                className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-amber-400 hover:border-amber-500/30 flex items-center justify-center transition-all">
+                                className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-amber-400 hover:border-amber-500/30 flex items-center justify-center transition-all">
                                 <PauseCircle size={12} />
                               </button>
                             )}
                             {alerta.estado === 'suspendida' && (
                               <button onClick={() => cambiarEstadoAlerta(alerta.id, 'activa')} title="Reactivar alerta"
-                                className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-aqua-cyan hover:border-aqua-cyan/30 flex items-center justify-center transition-all">
+                                className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-aqua-cyan hover:border-aqua-cyan/30 flex items-center justify-center transition-all">
                                 <PlayCircle size={12} />
                               </button>
                             )}
                             <button onClick={() => cambiarEstadoAlerta(alerta.id, 'resuelta')} title="Marcar como resuelta"
-                              className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-green-400 hover:border-green-500/30 flex items-center justify-center transition-all">
+                              className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-green-400 hover:border-green-500/30 flex items-center justify-center transition-all">
                               <CheckCircle size={12} />
                             </button>
                             <button onClick={() => eliminarAlerta(alerta.id)} title="Eliminar alerta"
-                              className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center transition-all">
+                              className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center transition-all">
                               <Trash2 size={12} />
                             </button>
                           </div>
@@ -372,12 +390,12 @@ export default function Alertas() {
 
       {/* HISTORIAL */}
       <div className="portal-card overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center gap-3">
+        <div className="p-5 border-b border-ink/5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-green-500/10 flex items-center justify-center">
             <History size={16} className="text-green-400" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-white">Historial Reciente</h3>
+            <h3 className="font-bold text-base text-ink">Historial Reciente</h3>
             <p className="text-[10px] text-gray-500 mt-0.5">Alertas resueltas recientemente</p>
           </div>
         </div>
@@ -386,7 +404,7 @@ export default function Alertas() {
             <p className="text-sm text-gray-600 text-center py-4">Aún no hay alertas resueltas.</p>
           ) : (
             resueltas.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.02] transition-colors">
+              <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-ink/[0.02] transition-colors">
                 <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-bold text-gray-300">{item.tipo} resuelta</span>
@@ -407,13 +425,13 @@ export default function Alertas() {
 
       {/* COMENTARIOS */}
       <div className="portal-card overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center justify-between">
+        <div className="p-5 border-b border-ink/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
               <MessageSquare size={16} className="text-aqua-cyan" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-white">Comentarios del equipo</h3>
+              <h3 className="font-bold text-base text-ink">Comentarios del equipo</h3>
               <p className="text-[10px] text-gray-500 mt-0.5">{comentarios.length} comentario{comentarios.length !== 1 ? 's' : ''}</p>
             </div>
           </div>
@@ -428,7 +446,7 @@ export default function Alertas() {
           {/* Formulario */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              {usuario ? <Iniciales nombre={usuario.Usuario} /> : <div className="w-8 h-8 rounded-full bg-white/5 flex-shrink-0" />}
+              {usuario ? <Iniciales nombre={usuario.Usuario} /> : <div className="w-8 h-8 rounded-full bg-ink/5 flex-shrink-0" />}
               <div className="flex-1">
                 <textarea
                   value={nuevoTexto}
@@ -436,7 +454,7 @@ export default function Alertas() {
                   onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) enviar(); }}
                   placeholder="Escribe un comentario sobre esta alerta... (Ctrl+Enter para enviar)"
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-aqua-cyan/40 resize-none transition-colors"
+                  className="w-full bg-ink/5 border border-ink/10 rounded-2xl px-4 py-3 text-sm text-ink placeholder-gray-600 outline-none focus:border-aqua-cyan/40 resize-none transition-colors"
                 />
               </div>
             </div>
@@ -452,7 +470,7 @@ export default function Alertas() {
             </div>
           </div>
 
-          {comentarios.length > 0 && <div className="border-t border-white/5" />}
+          {comentarios.length > 0 && <div className="border-t border-ink/5" />}
 
           <div className="space-y-4">
             {comentarios.length === 0 ? (
@@ -466,7 +484,7 @@ export default function Alertas() {
                   <Iniciales nombre={c.usuario} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <span className="text-sm font-bold text-white">{c.usuario}</span>
+                      <span className="text-sm font-bold text-ink">{c.usuario}</span>
                       {c.rol === 'admin' && (
                         <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-aqua-cyan bg-aqua-cyan/10 px-1.5 py-0.5 rounded-md border border-aqua-cyan/20">
                           <ShieldCheck size={9} /> Admin
@@ -478,7 +496,7 @@ export default function Alertas() {
                       <div className="space-y-2">
                         <textarea value={editTexto} onChange={e => setEditTexto(e.target.value)}
                           rows={3} autoFocus
-                          className="w-full bg-white/5 border border-aqua-cyan/30 rounded-xl px-3 py-2 text-sm text-white outline-none resize-none"
+                          className="w-full bg-ink/5 border border-aqua-cyan/30 rounded-xl px-3 py-2 text-sm text-ink outline-none resize-none"
                         />
                         <div className="flex gap-2">
                           <button onClick={() => guardarEdicion(c.id)} disabled={guardando}
@@ -486,7 +504,7 @@ export default function Alertas() {
                             {guardando ? 'Guardando...' : 'Guardar'}
                           </button>
                           <button onClick={() => setEditandoId(null)}
-                            className="px-3 py-1.5 rounded-lg bg-white/5 text-gray-400 text-xs font-bold hover:bg-white/10 transition-all">
+                            className="px-3 py-1.5 rounded-lg bg-ink/5 text-gray-400 text-xs font-bold hover:bg-ink/10 transition-all">
                             Cancelar
                           </button>
                         </div>

@@ -127,12 +127,12 @@ export default function Usuarios() {
 
       {/* TABLA */}
       <div className="portal-card card-top-cyan overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center gap-3">
+        <div className="p-5 border-b border-ink/5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
             <Users size={16} className="text-aqua-cyan" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-white">Directorio de usuarios</h3>
+            <h3 className="font-bold text-base text-ink">Directorio de usuarios</h3>
             <p className="text-[10px] text-gray-500 mt-0.5">
               {loading ? 'Cargando...' : `${users.length} usuario${users.length !== 1 ? 's' : ''} registrado${users.length !== 1 ? 's' : ''}`}
             </p>
@@ -153,23 +153,23 @@ export default function Usuarios() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-white/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
+              <thead className="bg-ink/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
                 <tr>
                   <th className="px-6 py-4">Usuario</th>
                   <th className="px-6 py-4">Rol</th>
                   <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.03]">
+              <tbody className="divide-y divide-ink/[0.03]">
                 {users.map((user) => (
-                  <tr key={user.ID} className="hover:bg-white/[0.02] transition-colors group">
+                  <tr key={user.ID} className="hover:bg-ink/[0.02] transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-aqua-cyan/10 border border-aqua-cyan/20 flex items-center justify-center text-aqua-cyan flex-shrink-0">
                           <User size={16} />
                         </div>
                         <div>
-                          <p className="font-bold text-white text-sm">{user.Usuario}</p>
+                          <p className="font-bold text-ink text-sm">{user.Usuario}</p>
                           <p className="text-[10px] text-gray-500">{user.Correo}</p>
                         </div>
                       </div>
@@ -178,7 +178,7 @@ export default function Usuarios() {
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${
                         user.rol === 'admin'
                           ? 'bg-aqua-cyan/15 text-aqua-cyan border border-aqua-cyan/20'
-                          : 'bg-white/5 text-gray-400 border border-white/10'
+                          : 'bg-ink/5 text-gray-400 border border-ink/10'
                       }`}>
                         {user.rol === 'admin'
                           ? <><ShieldCheck size={11} /> Administrador</>
@@ -208,9 +208,9 @@ export default function Usuarios() {
       {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-aqua-dark/80 backdrop-blur-sm p-4">
-          <div className="bg-[#0d1c21] border border-aqua-cyan/20 w-full max-w-md rounded-3xl p-7 relative animate-in zoom-in-95 duration-200 shadow-2xl">
+          <div className="bg-[var(--color-aqua-panel)] border border-aqua-cyan/20 w-full max-w-md rounded-3xl p-7 relative animate-in zoom-in-95 duration-200 shadow-2xl">
             <button onClick={cerrarModal}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all">
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl text-gray-500 hover:text-ink hover:bg-ink/10 transition-all">
               <X size={18} />
             </button>
 
@@ -219,7 +219,7 @@ export default function Usuarios() {
                 {editingId ? <Edit2 size={16} className="text-aqua-cyan" /> : <UserPlus size={16} className="text-aqua-cyan" />}
               </div>
               <div>
-                <h3 className="text-lg font-black text-white tracking-tight">
+                <h3 className="text-lg font-black text-ink tracking-tight">
                   {editingId ? 'Editar usuario' : 'Nuevo usuario'}
                 </h3>
                 <p className="text-[10px] text-gray-500 mt-0.5">
@@ -234,7 +234,7 @@ export default function Usuarios() {
                 placeholder="Nombre de usuario"
                 value={formData.Usuario}
                 onChange={(e) => setFormData({ ...formData, Usuario: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
+                className="w-full bg-ink/5 border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
               />
               <input
                 required
@@ -242,20 +242,20 @@ export default function Usuarios() {
                 placeholder="Correo electrónico"
                 value={formData.Correo}
                 onChange={(e) => setFormData({ ...formData, Correo: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
+                className="w-full bg-ink/5 border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
               />
               <input
                 type="password"
                 placeholder={editingId ? 'Nueva contraseña (opcional)' : 'Contraseña'}
                 onChange={(e) => setFormData({ ...formData, Contra: e.target.value })}
                 required={!editingId}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
+                className="w-full bg-ink/5 border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
               />
               <div>
                 <select
                   value={formData.rol}
                   onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
-                  className="w-full bg-[#060b0d] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-aqua-cyan/40 transition-colors"
+                  className="w-full bg-[var(--color-aqua-dark)] border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 transition-colors"
                 >
                   <option value="user">Técnico / Usuario</option>
                   <option value="admin">Administrador</option>

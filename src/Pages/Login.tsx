@@ -208,7 +208,7 @@ export default function Login() {
 
   /* ── UI ── */
   return (
-    <div className="h-screen w-screen bg-black font-sans selection:bg-aqua-cyan/30 text-white relative overflow-hidden">
+    <div className="h-screen w-screen bg-black font-sans selection:bg-aqua-cyan/30 text-ink relative overflow-hidden">
       {verifyEmail && (
         <VerifyModal
           email={verifyEmail}
@@ -248,11 +248,11 @@ export default function Login() {
 
             {/* LOGO */}
             <div className="flex items-center gap-3 mb-10 group">
-              <div className="w-12 h-12 bg-white/[0.03] border border-aqua-cyan/20 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-aqua-cyan/10 group-hover:border-aqua-cyan/50 transition-all duration-500">
+              <div className="w-12 h-12 bg-ink/[0.03] border border-aqua-cyan/20 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-aqua-cyan/10 group-hover:border-aqua-cyan/50 transition-all duration-500">
                 💧
               </div>
               <div>
-                <h1 className="text-2xl font-black tracking-tighter text-white leading-none">AquaFlow <span className="text-aqua-cyan">SV</span></h1>
+                <h1 className="text-2xl font-black tracking-tighter text-ink leading-none">AquaFlow <span className="text-aqua-cyan">SV</span></h1>
                 <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-1">Monitoreo Hídrico</p>
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function Login() {
               {isLogin ? (
                 <div className="space-y-6">
                   <div className="text-center mb-2">
-                    <h2 className="text-2xl font-black text-white tracking-tight">Bienvenido</h2>
+                    <h2 className="text-2xl font-black text-ink tracking-tight">Bienvenido</h2>
                     <p className="text-gray-500 text-sm mt-1 font-medium">Ingresa tu email y contraseña</p>
                   </div>
 
@@ -270,14 +270,14 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => loginConGoogle()}
-                    className="w-full flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
                     <GoogleIcon /> Continuar con Google
                   </button>
                   {/* Inicio social manejado por el botón "Continuar con Google" */}
 
                   <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-ink/5" /></div>
                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
                       <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">o con tu email</span>
                     </div>
@@ -311,7 +311,7 @@ export default function Login() {
                   {attempts > 0 && !isLocked && (
                     <div className="flex justify-center gap-1.5">
                       {Array.from({ length: MAX_ATTEMPTS }).map((_, i) => (
-                        <div key={i} className={`w-2 h-2 rounded-full transition-colors duration-300 ${i < attempts ? 'bg-red-500' : 'bg-white/10'}`} />
+                        <div key={i} className={`w-2 h-2 rounded-full transition-colors duration-300 ${i < attempts ? 'bg-red-500' : 'bg-ink/10'}`} />
                       ))}
                     </div>
                   )}
@@ -325,7 +325,7 @@ export default function Login() {
                         value={loginEmail}
                         onChange={e => setLoginEmail(e.target.value)}
                         disabled={isLocked || loading}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 focus:bg-white/[0.05] transition-all duration-300 disabled:opacity-40"
+                        className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 focus:bg-ink/[0.05] transition-all duration-300 disabled:opacity-40"
                       />
                       {isAdminEmail(loginEmail) && loginEmail && (
                         <p className="text-[10px] text-aqua-cyan font-bold mt-1">🔑 Acceso Admin detectado</p>
@@ -340,7 +340,7 @@ export default function Login() {
                         value={loginPassword}
                         onChange={e => setLoginPassword(e.target.value)}
                         disabled={isLocked || loading}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 focus:bg-white/[0.05] transition-all duration-300 disabled:opacity-40"
+                        className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 focus:bg-ink/[0.05] transition-all duration-300 disabled:opacity-40"
                       />
                     </div>
 
@@ -360,7 +360,7 @@ export default function Login() {
                 /* ── FORMULARIO REGISTRO ── */
                 <div className="space-y-6">
                   <div className="text-center mb-2">
-                    <h2 className="text-2xl font-black text-white tracking-tight">Crear Cuenta</h2>
+                    <h2 className="text-2xl font-black text-ink tracking-tight">Crear Cuenta</h2>
                     <p className="text-gray-500 text-sm mt-1 font-medium">Regístrate para acceder al sistema</p>
                   </div>
 
@@ -368,14 +368,14 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => loginConGoogle()}
-                    className="w-full flex items-center justify-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
                     <GoogleIcon /> Continuar con Google
                   </button>
                   {/* Inicio social manejado por el botón "Continuar con Google" */}
 
                   <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5" /></div>
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-ink/5" /></div>
                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
                       <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">o con tu email</span>
                     </div>
@@ -400,7 +400,7 @@ export default function Login() {
                         placeholder="Tu nombre"
                         value={registerName}
                         onChange={e => setRegisterName(e.target.value)}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
+                        className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
                       />
                     </div>
 
@@ -411,7 +411,7 @@ export default function Login() {
                         placeholder="tu@email.com"
                         value={registerEmail}
                         onChange={e => setRegisterEmail(e.target.value)}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
+                        className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
                       />
                       {isAdminEmail(registerEmail) && registerEmail && (
                         <p className="text-[10px] text-aqua-cyan font-bold">🔑 Se registrará como ADMINISTRADOR</p>
@@ -425,7 +425,7 @@ export default function Login() {
                         placeholder="Mínimo 6 caracteres"
                         value={registerPassword}
                         onChange={e => setRegisterPassword(e.target.value)}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
+                        className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
                       />
                     </div>
 
@@ -436,12 +436,12 @@ export default function Login() {
                         placeholder="Repite tu contraseña"
                         value={registerConfirmPassword}
                         onChange={e => setRegisterConfirmPassword(e.target.value)}
-                        className={`w-full bg-white/[0.03] border rounded-2xl px-5 py-3 text-sm text-white focus:outline-none transition-all duration-300 ${
+                        className={`w-full bg-ink/[0.03] border rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none transition-all duration-300 ${
                           registerConfirmPassword && registerPassword !== registerConfirmPassword
                             ? 'border-red-500/50 focus:border-red-500'
                             : registerConfirmPassword && registerPassword === registerConfirmPassword
                               ? 'border-green-500/50 focus:border-green-500'
-                              : 'border-white/10 focus:border-aqua-cyan/50'
+                              : 'border-ink/10 focus:border-aqua-cyan/50'
                         }`}
                       />
                       {registerConfirmPassword && registerPassword !== registerConfirmPassword && (
@@ -466,7 +466,7 @@ export default function Login() {
 
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/5" />
+                <div className="w-full border-t border-ink/5" />
               </div>
               <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
                 <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-600">O</span>

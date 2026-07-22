@@ -84,8 +84,8 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
 
       {/* ── Branding ── */}
       <div className="mb-12 text-center relative z-10">
-        <h1 className="text-4xl font-black tracking-tighter text-white">
-          AquaFlow <span style={{ color: '#00f2ea' }}>SV</span>
+        <h1 className="text-4xl font-black tracking-tighter text-ink">
+          AquaFlow <span style={{ color: 'var(--color-aqua-cyan)' }}>SV</span>
         </h1>
         <p
           className="text-[10px] uppercase tracking-[0.45em] font-bold mt-1"
@@ -180,7 +180,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
 
       {/* ── Percentage + status ── */}
       <div className="mt-8 text-center relative z-10">
-        <p className="text-5xl font-black font-mono leading-none" style={{ color: '#00f2ea' }}>
+        <p className="text-5xl font-black font-mono leading-none" style={{ color: 'var(--color-aqua-cyan)' }}>
           {fillPct}
           <span className="text-2xl ml-0.5" style={{ color: 'rgba(0,242,234,0.45)' }}>%</span>
         </p>

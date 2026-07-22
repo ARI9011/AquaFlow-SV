@@ -6,6 +6,8 @@ const db = require('./db');
 const cors = require('cors');
 const Groq = require('groq-sdk');
 const bcrypt = require('bcryptjs');
+const sensoresArduino = require('./sensores-arduino');
+const eventos = require('./eventos');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
@@ -304,6 +306,38 @@ app.post('/auth/register', (req, res) => {
     });
 });
 
+// Migraciones ligeras de esquema: este servidor MySQL no soporta la cláusula
+// IF EXISTS / IF NOT EXISTS en ADD/DROP COLUMN, así que se verifica a mano.
+function ensureColumnDropped(table, column) {
+    db.query(
+        `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+        [table, column],
+        (err, rows) => {
+            if (err) return console.error(`Error verificando columna ${table}.${column}:`, err.message);
+            if (rows[0].n > 0) {
+                db.query(`ALTER TABLE ${table} DROP COLUMN ${column}`, (errDrop) => {
+                    if (errDrop) console.error(`Error eliminando columna ${table}.${column}:`, errDrop.message);
+                });
+            }
+        }
+    );
+}
+
+function ensureColumnAdded(table, column, definitionSql) {
+    db.query(
+        `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+        [table, column],
+        (err, rows) => {
+            if (err) return console.error(`Error verificando columna ${table}.${column}:`, err.message);
+            if (rows[0].n === 0) {
+                db.query(`ALTER TABLE ${table} ADD COLUMN ${definitionSql}`, (errAdd) => {
+                    if (errAdd) console.error(`Error agregando columna ${table}.${column}:`, errAdd.message);
+                });
+            }
+        }
+    );
+}
+
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`🚀 AquaFlow SV corriendo en http://localhost:${PORT}`);
@@ -376,6 +410,55 @@ app.listen(PORT, () => {
             reconciliarAlertasExistentes();
         }
     });
+
+    // Configuración del sistema: una sola fila (id=1), editable solo por admin
+    db.query(`CREATE TABLE IF NOT EXISTS configuracion_sistema (
+        id                INT PRIMARY KEY DEFAULT 1,
+        auto_refresh      TINYINT(1) NOT NULL DEFAULT 1,
+        intervalo         INT NOT NULL DEFAULT 30,
+        umbral_presion    DECIMAL(6,2) NOT NULL DEFAULT 25,
+        umbral_flujo      DECIMAL(6,2) NOT NULL DEFAULT 8,
+        actualizado_en    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
+        if (err) return console.error('Error creando tabla configuracion_sistema:', err.message);
+        console.log('✅ Tabla configuracion_sistema lista');
+        db.query('INSERT IGNORE INTO configuracion_sistema (id) VALUES (1)', (err2) => {
+            if (err2) console.error('Error inicializando configuracion_sistema:', err2.message);
+        });
+        // Migración: la expiración de sesión configurable se retiró (nunca tuvo efecto real).
+        ensureColumnDropped('configuracion_sistema', 'sesion_expiracion');
+    });
+
+    // Preferencias de notificaciones (y apariencia) por usuario
+    db.query(`CREATE TABLE IF NOT EXISTS configuracion_notificaciones (
+        usuario_id     INT PRIMARY KEY,
+        notif_alertas  TINYINT(1) NOT NULL DEFAULT 1,
+        notif_reportes TINYINT(1) NOT NULL DEFAULT 1,
+        notif_sensores TINYINT(1) NOT NULL DEFAULT 0,
+        tema           VARCHAR(10) NOT NULL DEFAULT 'oscuro',
+        actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
+        if (err) return console.error('Error creando tabla configuracion_notificaciones:', err.message);
+        console.log('✅ Tabla configuracion_notificaciones lista');
+        // Migración: si la tabla ya existía de una versión anterior sin la columna 'tema', se agrega.
+        ensureColumnAdded('configuracion_notificaciones', 'tema', "tema VARCHAR(10) NOT NULL DEFAULT 'oscuro'");
+    });
+
+    // Historial de lecturas de sensores físicos (por ahora solo el sensor de flujo piloto del Arduino)
+    db.query(`CREATE TABLE IF NOT EXISTS lecturas_sensores (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        dispositivo VARCHAR(50) NOT NULL,
+        caudal      DECIMAL(6,2) NULL,
+        estado      VARCHAR(20) NULL,
+        rele        TINYINT(1) NULL,
+        creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
+        if (err) return console.error('Error creando tabla lecturas_sensores:', err.message);
+        console.log('✅ Tabla lecturas_sensores lista');
+    });
+
+    // Puente con el Arduino por puerto serie (detecta el dispositivo solo, reintenta si se desconecta)
+    sensoresArduino.iniciar();
 });
 
 // Al arrancar, revisa reportes que ya cumplían el umbral antes de que existiera esta lógica.
@@ -452,6 +535,129 @@ app.put('/api/usuarios/:id', requireAdmin, (req, res) => {
     }
 });
 
+// --- SENSOR PILOTO (Arduino por puerto serie) ---
+app.get('/api/sensores/piloto', requireAuth, (req, res) => {
+    res.json(sensoresArduino.obtenerEstado());
+});
+
+// Streaming en vivo (Server-Sent Events): empuja el estado al instante en que cambia,
+// sin que el navegador tenga que estar preguntando en un intervalo fijo.
+app.get('/api/sensores/piloto/stream', requireAuth, (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+    res.flushHeaders();
+
+    const desuscribir = sensoresArduino.suscribir(res);
+    req.on('close', desuscribir);
+});
+
+// Streams genéricos para "Reportes" y "Alertas" — usados cuando en Configuración
+// se elige "Tiempo real" en vez de un intervalo fijo. Solo avisan que hubo un
+// cambio; el navegador vuelve a pedir la lista con el mismo endpoint GET de siempre.
+function registrarStream(ruta, canal) {
+    app.get(ruta, requireAuth, (req, res) => {
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        });
+        res.flushHeaders();
+        const desuscribir = eventos.suscribir(canal, res);
+        req.on('close', desuscribir);
+    });
+}
+registrarStream('/api/reportes/stream', 'reportes');
+registrarStream('/api/alertas/stream', 'alertas');
+
+// Historial reciente (para graficar tendencia); por defecto últimas 8 horas.
+app.get('/api/sensores/piloto/historial', requireAuth, (req, res) => {
+    db.query(
+        `SELECT caudal, estado, rele, creado_en FROM lecturas_sensores
+         WHERE dispositivo = 'piloto' AND creado_en >= DATE_SUB(NOW(), INTERVAL 8 HOUR)
+         ORDER BY creado_en ASC`,
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Error al cargar historial' });
+            res.json(rows);
+        }
+    );
+});
+
+// --- CONFIGURACIÓN ---
+// GET: cualquier usuario autenticado (el técnico necesita el intervalo/auto_refresh
+// del sistema para su propio polling, aunque no pueda editarlo).
+app.get('/api/configuracion', requireAuth, (req, res) => {
+    const userId = req.session.user.id || req.session.user.ID;
+    db.query('SELECT auto_refresh, intervalo, umbral_presion, umbral_flujo FROM configuracion_sistema WHERE id = 1', (err, sisRows) => {
+        if (err) return res.status(500).json({ error: 'Error al cargar configuración' });
+        db.query(
+            'SELECT notif_alertas, notif_reportes, notif_sensores, tema FROM configuracion_notificaciones WHERE usuario_id = ?',
+            [userId],
+            (err2, notifRows) => {
+                if (err2) return res.status(500).json({ error: 'Error al cargar configuración' });
+                res.json({
+                    sistema: sisRows[0] || { auto_refresh: 1, intervalo: 30, umbral_presion: 25, umbral_flujo: 8 },
+                    notificaciones: notifRows[0] || { notif_alertas: 1, notif_reportes: 1, notif_sensores: 0, tema: 'oscuro' },
+                });
+            }
+        );
+    });
+});
+
+// PUT: preferencias de notificaciones del propio usuario (cualquier rol)
+app.put('/api/configuracion/notificaciones', requireAuth, (req, res) => {
+    const userId = req.session.user.id || req.session.user.ID;
+    const { notif_alertas, notif_reportes, notif_sensores } = req.body;
+    db.query(
+        `INSERT INTO configuracion_notificaciones (usuario_id, notif_alertas, notif_reportes, notif_sensores)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE notif_alertas = VALUES(notif_alertas), notif_reportes = VALUES(notif_reportes), notif_sensores = VALUES(notif_sensores)`,
+        [userId, !!notif_alertas, !!notif_reportes, !!notif_sensores],
+        (err) => {
+            if (err) return res.status(500).json({ error: 'Error al guardar notificaciones' });
+            res.json({ success: true });
+        }
+    );
+});
+
+// PUT: tema visual (claro/oscuro) del propio usuario — se aplica al instante, no depende del botón "Guardar"
+app.put('/api/configuracion/tema', requireAuth, (req, res) => {
+    const userId = req.session.user.id || req.session.user.ID;
+    const tema = req.body.tema === 'claro' ? 'claro' : 'oscuro';
+    db.query(
+        `INSERT INTO configuracion_notificaciones (usuario_id, tema) VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE tema = VALUES(tema)`,
+        [userId, tema],
+        (err) => {
+            if (err) return res.status(500).json({ error: 'Error al guardar el tema' });
+            res.json({ success: true, tema });
+        }
+    );
+});
+
+// PUT: configuración del sistema (solo admin) — afecta a todos los usuarios
+app.put('/api/configuracion/sistema', requireAdmin, (req, res) => {
+    const { auto_refresh, intervalo, umbral_presion, umbral_flujo } = req.body;
+    const intervaloNum = Number(intervalo);
+    const presionNum   = Number(umbral_presion);
+    const flujoNum     = Number(umbral_flujo);
+    // 0 es un valor especial: significa "tiempo real" (sin intervalo, vía streaming) en vez de sondeo.
+    if (!Number.isFinite(intervaloNum) || intervaloNum < 0) return res.status(400).json({ error: 'Intervalo inválido' });
+    if (!Number.isFinite(presionNum) || presionNum < 0) return res.status(400).json({ error: 'Umbral de presión inválido' });
+    if (!Number.isFinite(flujoNum) || flujoNum < 0) return res.status(400).json({ error: 'Umbral de flujo inválido' });
+
+    db.query(
+        `UPDATE configuracion_sistema SET auto_refresh=?, intervalo=?, umbral_presion=?, umbral_flujo=? WHERE id = 1`,
+        [!!auto_refresh, intervaloNum, presionNum, flujoNum],
+        (err) => {
+            if (err) return res.status(500).json({ error: 'Error al guardar configuración' });
+            res.json({ success: true });
+        }
+    );
+});
+
 // --- CHAT IA ---
 const SYSTEM_PROMPT = `Eres AquaBot, el asistente inteligente de AquaFlow SV, un sistema de monitoreo de redes de agua potable para el Gran San Salvador, El Salvador.
 
@@ -517,6 +723,7 @@ app.post('/api/comentarios', (req, res) => {
         [id, Usuario, rol, contenido.trim()],
         (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
+            eventos.emitir('alertas');
             res.json({ id: result.insertId, usuario_id: id, usuario: Usuario, rol, contenido: contenido.trim(), creado_en: new Date() });
         }
     );
@@ -530,6 +737,7 @@ app.put('/api/comentarios/:id', (req, res) => {
     if (!contenido?.trim()) return res.status(400).json({ error: 'El contenido no puede estar vacío' });
     db.query('UPDATE comentarios_alertas SET contenido = ? WHERE id = ?', [contenido.trim(), req.params.id], (err) => {
         if (err) return res.status(500).json({ error: err.message });
+        eventos.emitir('alertas');
         res.json({ ok: true });
     });
 });
@@ -540,6 +748,7 @@ app.delete('/api/comentarios/:id', (req, res) => {
     if (req.session.user.rol !== 'admin') return res.status(403).json({ error: 'Solo administradores' });
     db.query('DELETE FROM comentarios_alertas WHERE id = ?', [req.params.id], (err) => {
         if (err) return res.status(500).json({ error: err.message });
+        eventos.emitir('alertas');
         res.json({ ok: true });
     });
 });
@@ -590,14 +799,20 @@ function verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario) {
                         db.query(
                             'UPDATE alertas SET total_reportes = ?, severidad = ?, descripcion = ?, usuario = ? WHERE id = ?',
                             [total, severidad, descripcion, usuario, alerta.id],
-                            (err3) => { if (err3) console.error('Error al actualizar alerta:', err3.message); }
+                            (err3) => {
+                                if (err3) return console.error('Error al actualizar alerta:', err3.message);
+                                eventos.emitir('alertas');
+                            }
                         );
                     } else {
                         db.query(
                             `INSERT INTO alertas (tipo, zona, sector, descripcion, severidad, total_reportes, usuario)
                              VALUES (?, ?, ?, ?, ?, ?, ?)`,
                             [tipo, zona, sector, descripcion, severidad, total, usuario],
-                            (err3) => { if (err3) console.error('Error al crear alerta:', err3.message); }
+                            (err3) => {
+                                if (err3) return console.error('Error al crear alerta:', err3.message);
+                                eventos.emitir('alertas');
+                            }
                         );
                     }
                 }
@@ -623,6 +838,7 @@ app.put('/api/alertas/:id', requireAdmin, (req, res) => {
     db.query('UPDATE alertas SET estado = ?, resuelta_en = ? WHERE id = ?', [estado, resueltaEn, req.params.id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         if (result.affectedRows === 0) return res.status(404).json({ error: 'Alerta no encontrada' });
+        eventos.emitir('alertas');
         res.json({ ok: true });
     });
 });
@@ -632,6 +848,7 @@ app.delete('/api/alertas/:id', requireAdmin, (req, res) => {
     db.query('DELETE FROM alertas WHERE id = ?', [req.params.id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         if (result.affectedRows === 0) return res.status(404).json({ error: 'Alerta no encontrada' });
+        eventos.emitir('alertas');
         res.json({ ok: true });
     });
 });
@@ -665,6 +882,7 @@ app.post('/api/reportes', requireAuth, (req, res) => {
         (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
             verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario);
+            eventos.emitir('reportes');
             res.json({ id: result.insertId });
         }
     );
@@ -689,6 +907,7 @@ app.put('/api/reportes/:id', requireAuth, (req, res) => {
             [tipo || r.tipo, zona || r.zona, sector || r.sector, descripcion || r.descripcion, estadoFinal, validPrioridad, id],
             (err2) => {
                 if (err2) return res.status(500).json({ error: err2.message });
+                eventos.emitir('reportes');
                 res.json({ ok: true });
             }
         );
@@ -707,6 +926,7 @@ app.delete('/api/reportes/:id', requireAuth, (req, res) => {
         db.query('DELETE FROM comentarios_reportes WHERE reporte_id = ?', [id], () => {
             db.query('DELETE FROM reportes WHERE id = ?', [id], (err2) => {
                 if (err2) return res.status(500).json({ error: err2.message });
+                eventos.emitir('reportes');
                 res.json({ ok: true });
             });
         });
@@ -735,6 +955,7 @@ app.post('/api/reportes/:id/comentarios', requireAuth, (req, res) => {
         [req.params.id, userId, usuario, rol, contenido.trim()],
         (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
+            eventos.emitir('reportes');
             res.json({ id: result.insertId, reporte_id: Number(req.params.id), usuario_id: userId, usuario, rol, contenido: contenido.trim(), creado_en: new Date() });
         }
     );
@@ -751,6 +972,7 @@ app.delete('/api/reportes/:id/comentarios/:cid', requireAuth, (req, res) => {
             return res.status(403).json({ error: 'Sin permiso para eliminar este comentario' });
         db.query('DELETE FROM comentarios_reportes WHERE id = ?', [cid], (err2) => {
             if (err2) return res.status(500).json({ error: err2.message });
+            eventos.emitir('reportes');
             res.json({ ok: true });
         });
     });

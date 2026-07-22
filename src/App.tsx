@@ -15,6 +15,7 @@ import Alertas from './Pages/Alertas';
 import Configuracion from './Pages/Configuracion';
 import ChatBot from './components/ChatBot';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ConfigProvider } from './context/ConfigContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ConfirmProvider } from './components/ConfirmDialog';
 
@@ -36,7 +37,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
-    <div className="flex min-h-screen bg-aqua-dark text-white font-sans">
+    <div className="flex min-h-screen bg-aqua-dark text-ink font-sans">
       <BubbleBackground />
       <Sidebar
         isAdmin={user?.rol === 'admin'}
@@ -58,6 +59,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <ConfigProvider>
       <ConfirmProvider>
       {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
       <Router>
@@ -97,6 +99,7 @@ export default function App() {
         </Routes>
       </Router>
       </ConfirmProvider>
+      </ConfigProvider>
     </AuthProvider>
   );
 }

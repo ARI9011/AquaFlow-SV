@@ -45,13 +45,13 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <div className="w-full max-w-md bg-[#0d2137] border border-white/10 rounded-3xl p-8 shadow-2xl">
+      <div className="w-full max-w-md bg-[var(--color-aqua-panel)] border border-ink/10 rounded-3xl p-8 shadow-2xl">
         <div className="flex justify-center mb-4">
           <div className="w-14 h-14 rounded-2xl bg-aqua-cyan/15 flex items-center justify-center">
             <MailCheck className="text-aqua-cyan" size={28} />
           </div>
         </div>
-        <h2 className="text-2xl font-black text-white text-center tracking-tight">Verifica tu cuenta</h2>
+        <h2 className="text-2xl font-black text-ink text-center tracking-tight">Verifica tu cuenta</h2>
         <p className="text-sm text-gray-400 text-center mt-2">
           Enviamos un código de 6 dígitos a<br />
           <span className="text-aqua-cyan font-semibold">{email}</span>
@@ -62,7 +62,7 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
           onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
           inputMode="numeric"
           placeholder="______"
-          className="mt-6 w-full text-center text-3xl tracking-[0.5em] font-bold bg-black/30 border border-white/10 rounded-2xl py-4 text-white placeholder-gray-600 focus:outline-none focus:border-aqua-cyan/60"
+          className="mt-6 w-full text-center text-3xl tracking-[0.5em] font-bold bg-black/30 border border-ink/10 rounded-2xl py-4 text-ink placeholder-gray-600 focus:outline-none focus:border-aqua-cyan/60"
         />
 
         {error && <p className="text-red-400 text-sm text-center mt-3">{error}</p>}

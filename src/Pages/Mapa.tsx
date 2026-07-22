@@ -40,7 +40,7 @@ const ZonaCard = ({ zona }: { zona: typeof zonasData[0] }) => {
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="min-w-0">
-            <h3 className="font-bold text-white text-sm group-hover:text-aqua-cyan transition-colors truncate">{zona.nombre}</h3>
+            <h3 className="font-bold text-ink text-sm group-hover:text-aqua-cyan transition-colors truncate">{zona.nombre}</h3>
             <p className="text-[10px] text-gray-500 font-medium">{zona.sector}</p>
           </div>
           <div className="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0" style={{ backgroundColor: zona.color }} />
@@ -54,7 +54,7 @@ const ZonaCard = ({ zona }: { zona: typeof zonasData[0] }) => {
             <span className="text-gray-500">Flujo</span>
             <span className="font-mono font-bold text-gray-300">{zona.flujo} L/m</span>
           </div>
-          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-white/5">
+          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-ink/5">
             <span className="text-gray-500">Estado</span>
             <span className="font-black text-[10px] uppercase px-2 py-0.5 rounded-md"
               style={{ color: st.text, backgroundColor: st.bg }}>
@@ -102,7 +102,7 @@ export default function Mapa() {
               <k.icon size={18} className={k.color} />
             </div>
             <div>
-              <p className="text-2xl font-black text-white">{k.value}</p>
+              <p className="text-2xl font-black text-ink">{k.value}</p>
               <p className="text-[11px] font-bold text-gray-500">{k.label}</p>
               <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
             </div>
@@ -112,18 +112,18 @@ export default function Mapa() {
 
       {/* MAPA INTERACTIVO */}
       <div className="portal-card overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center gap-3">
+        <div className="p-5 border-b border-ink/5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
             <Activity size={16} className="text-aqua-cyan" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-white">Mapa Interactivo — San Salvador</h3>
+            <h3 className="font-bold text-base text-ink">Mapa Interactivo — San Salvador</h3>
             <p className="text-[10px] text-gray-500 mt-0.5">Haz clic en los marcadores para ver detalles de cada zona</p>
           </div>
         </div>
         <div style={{ height: '460px' }}>
           {!mapMounted ? (
-            <div className="h-full flex items-center justify-center bg-[#060b0d]">
+            <div className="h-full flex items-center justify-center bg-[var(--color-aqua-dark)]">
               <div className="flex flex-col items-center gap-3 text-gray-500">
                 <div className="w-7 h-7 border-2 border-aqua-cyan/30 border-t-aqua-cyan rounded-full animate-spin" />
                 <span className="text-xs font-medium">Cargando mapa...</span>
@@ -134,7 +134,7 @@ export default function Mapa() {
               center={[13.7242, -89.1950]}
               zoom={13}
               preferCanvas={true}
-              style={{ height: '100%', width: '100%', background: '#060b0d' }}
+              style={{ height: '100%', width: '100%', background: 'var(--color-aqua-dark)' }}
               scrollWheelZoom={true}
             >
               <BoundsFitter />
@@ -170,7 +170,7 @@ export default function Mapa() {
                         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                             <span style={{ color: 'rgba(255,255,255,0.38)' }}>Presión</span>
-                            <span style={{ fontWeight: 700, color: '#00f2ea', fontFamily: 'monospace' }}>{zona.presion} PSI</span>
+                            <span style={{ fontWeight: 700, color: 'var(--color-aqua-cyan)', fontFamily: 'monospace' }}>{zona.presion} PSI</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                             <span style={{ color: 'rgba(255,255,255,0.38)' }}>Flujo</span>
@@ -201,7 +201,7 @@ export default function Mapa() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <MapPin size={15} className="text-aqua-cyan" />
-          <h3 className="font-bold text-white text-base">Zonas Monitoreadas</h3>
+          <h3 className="font-bold text-ink text-base">Zonas Monitoreadas</h3>
           <span className="text-[10px] text-gray-600 font-bold ml-1">{zonasData.length} zonas</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -211,18 +211,18 @@ export default function Mapa() {
 
       {/* TABLA DETALLADA */}
       <div className="portal-card overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center gap-3">
+        <div className="p-5 border-b border-ink/5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
             <Globe size={16} className="text-aqua-cyan" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-white">Detalles de Ubicaciones</h3>
+            <h3 className="font-bold text-base text-ink">Detalles de Ubicaciones</h3>
             <p className="text-[10px] text-gray-500 mt-0.5">Coordenadas y métricas por zona</p>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-white/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
+            <thead className="bg-ink/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
               <tr>
                 <th className="px-6 py-4">Zona</th>
                 <th className="px-6 py-4">Coordenadas</th>
@@ -231,14 +231,14 @@ export default function Mapa() {
                 <th className="px-6 py-4 text-center">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-ink/[0.03]">
               {zonasData.map((zona) => (
-                <tr key={zona.id} className="hover:bg-white/[0.02] transition-colors">
+                <tr key={zona.id} className="hover:bg-ink/[0.02] transition-colors">
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: zona.color }} />
                       <div>
-                        <span className="font-bold text-white text-sm">{zona.nombre}</span>
+                        <span className="font-bold text-ink text-sm">{zona.nombre}</span>
                         <p className="text-[10px] text-gray-500">{zona.sector}</p>
                       </div>
                     </div>
@@ -266,10 +266,10 @@ export default function Mapa() {
         <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-3 px-1">Leyenda de estados</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {LEYENDA.map(item => (
-            <div key={item.estado} className="flex items-center gap-2.5 bg-white/[0.02] rounded-xl px-3 py-2.5">
+            <div key={item.estado} className="flex items-center gap-2.5 bg-ink/[0.02] rounded-xl px-3 py-2.5">
               <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
               <div>
-                <p className="text-xs font-black text-white">{item.estado}</p>
+                <p className="text-xs font-black text-ink">{item.estado}</p>
                 <p className="text-[10px] text-gray-600 font-mono">{item.rango}</p>
               </div>
             </div>

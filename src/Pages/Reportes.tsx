@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useConfig } from '../context/ConfigContext';
 import { useConfirm } from '../components/ConfirmDialog';
 import {
   FileText, AlertTriangle, CheckCircle, Clock, MapPin,
@@ -96,15 +97,15 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#0a1518] border border-white/10 rounded-2xl shadow-2xl">
+      <div className="w-full max-w-md bg-[var(--color-aqua-panel)] border border-ink/10 rounded-2xl shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-          <h3 className="font-black text-white text-base">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ink/5">
+          <h3 className="font-black text-ink text-base">
             {initial?.id ? 'Editar Reporte' : 'Nuevo Reporte'}
           </h3>
           <button onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+            className="w-7 h-7 rounded-lg bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-gray-400 hover:text-ink transition-colors">
             <X size={14} />
           </button>
         </div>
@@ -118,8 +119,8 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
           <div className="space-y-1.5">
             <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest">Tipo de incidencia</label>
             <select value={tipo} onChange={e => setTipo(e.target.value)}
-              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all">
-              {TIPOS.map(t => <option key={t} value={t} className="bg-[#0a1518]">{t}</option>)}
+              className="w-full bg-ink/[0.03] border border-ink/10 rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all">
+              {TIPOS.map(t => <option key={t} value={t} className="bg-[var(--color-aqua-panel)]">{t}</option>)}
             </select>
           </div>
 
@@ -127,8 +128,8 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
           <div className="space-y-1.5">
             <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest">Zona</label>
             <select value={zona} onChange={e => setZona(e.target.value)}
-              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all">
-              {Object.keys(ZONAS_MAP).map(z => <option key={z} value={z} className="bg-[#0a1518]">{z}</option>)}
+              className="w-full bg-ink/[0.03] border border-ink/10 rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all">
+              {Object.keys(ZONAS_MAP).map(z => <option key={z} value={z} className="bg-[var(--color-aqua-panel)]">{z}</option>)}
             </select>
             <p className="text-[10px] text-gray-600 ml-1">Sector: <span className="text-gray-400">{sector}</span></p>
           </div>
@@ -142,7 +143,7 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
                   className={`flex-1 py-2 rounded-xl text-xs font-black uppercase transition-all border ${
                     prioridad === p
                       ? `${P_STYLE[p].bg} ${P_STYLE[p].text} ${P_STYLE[p].border}`
-                      : 'bg-white/[0.02] text-gray-500 border-white/[0.06] hover:border-white/15'
+                      : 'bg-ink/[0.02] text-gray-500 border-ink/[0.06] hover:border-ink/15'
                   }`}>
                   {P_STYLE[p].label}
                 </button>
@@ -165,7 +166,7 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
                     className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
                       estado === s
                         ? `${E_STYLE[s].bg} ${E_STYLE[s].text} ${E_STYLE[s].border}`
-                        : 'bg-white/[0.02] text-gray-500 border-white/[0.06] disabled:opacity-30'
+                        : 'bg-ink/[0.02] text-gray-500 border-ink/[0.06] disabled:opacity-30'
                     }`}>
                     {E_STYLE[s].label}
                   </button>
@@ -179,13 +180,13 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
             <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest">Descripción</label>
             <textarea required rows={3} value={desc} onChange={e => setDesc(e.target.value)}
               placeholder="Describe la incidencia con detalle..."
-              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-aqua-cyan/50 transition-all resize-none placeholder-gray-600" />
+              className="w-full bg-ink/[0.03] border border-ink/10 rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all resize-none placeholder-gray-600" />
           </div>
 
           {/* Acciones */}
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-gray-400 font-bold text-sm hover:bg-white/[0.06] transition-colors disabled:opacity-50">
+              className="flex-1 py-2.5 rounded-xl bg-ink/[0.03] border border-ink/10 text-gray-400 font-bold text-sm hover:bg-ink/[0.06] transition-colors disabled:opacity-50">
               Cancelar
             </button>
             <button type="submit" disabled={saving || !desc.trim()}
@@ -241,7 +242,7 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
   };
 
   return (
-    <div className="border-t border-white/[0.05] mt-4 pt-4 space-y-3">
+    <div className="border-t border-ink/[0.05] mt-4 pt-4 space-y-3">
       {loadingC ? (
         <p className="text-[11px] text-gray-600 animate-pulse">Cargando comentarios...</p>
       ) : comentarios.length === 0 ? (
@@ -253,10 +254,10 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
               <div className="w-6 h-6 rounded-lg bg-aqua-cyan/10 border border-aqua-cyan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[8px] font-black text-aqua-cyan">{c.usuario.charAt(0).toUpperCase()}</span>
               </div>
-              <div className="flex-1 bg-white/[0.02] border border-white/[0.05] rounded-xl px-3 py-2">
+              <div className="flex-1 bg-ink/[0.02] border border-ink/[0.05] rounded-xl px-3 py-2">
                 <div className="flex items-center justify-between mb-1 gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[11px] font-black text-white truncate">{c.usuario}</span>
+                    <span className="text-[11px] font-black text-ink truncate">{c.usuario}</span>
                     {c.rol === 'admin' && (
                       <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md bg-aqua-cyan/15 text-aqua-cyan border border-aqua-cyan/20 flex-shrink-0">
                         Admin
@@ -289,7 +290,7 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addComentario(); }}}
           placeholder="Escribe un comentario..."
           disabled={sending}
-          className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-aqua-cyan/40 transition-colors disabled:opacity-50"
+          className="flex-1 bg-ink/[0.03] border border-ink/10 rounded-xl px-3 py-2 text-xs text-ink placeholder-gray-600 focus:outline-none focus:border-aqua-cyan/40 transition-colors disabled:opacity-50"
         />
         <button onClick={addComentario} disabled={!texto.trim() || sending}
           className="w-8 h-8 rounded-xl bg-aqua-cyan text-aqua-dark flex items-center justify-center hover:bg-aqua-cyan/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0">
@@ -305,6 +306,7 @@ export default function Reportes() {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   const confirmDialog = useConfirm();
+  const { pollingMs, tiempoReal } = useConfig();
 
   const [reportes,   setReportes]   = useState<Reporte[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -315,15 +317,31 @@ export default function Reportes() {
   const [saving,     setSaving]     = useState(false);
   const [errorMsg,   setErrorMsg]   = useState('');
 
-  const fetchReportes = useCallback(() => {
-    setLoading(true);
+  const fetchReportes = useCallback((silent = false) => {
+    if (!silent) setLoading(true);
     axios.get<Reporte[]>('/api/reportes')
       .then(r => setReportes(r.data))
-      .catch(() => setErrorMsg('Error al cargar reportes.'))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setErrorMsg('Error al cargar reportes.'); })
+      .finally(() => { if (!silent) setLoading(false); });
   }, []);
 
   useEffect(() => { fetchReportes(); }, [fetchReportes]);
+
+  // Auto-refresh según el intervalo configurado por el admin en Configuración (sin mostrar el spinner de carga).
+  useEffect(() => {
+    if (!pollingMs) return;
+    const id = setInterval(() => fetchReportes(true), pollingMs);
+    return () => clearInterval(id);
+  }, [pollingMs, fetchReportes]);
+
+  // Modo "Tiempo real": el servidor avisa por streaming apenas algo cambia,
+  // en vez de esperar a un intervalo fijo.
+  useEffect(() => {
+    if (!tiempoReal) return;
+    const es = new EventSource('/api/reportes/stream');
+    es.onmessage = () => fetchReportes(true);
+    return () => es.close();
+  }, [tiempoReal, fetchReportes]);
 
   /* ── Derivados ─────────────────────────────────────────────────── */
   const pendientes = reportes.filter(r => r.estado === 'pendiente').length;
@@ -445,7 +463,7 @@ export default function Reportes() {
               <k.icon size={18} className={k.color} />
             </div>
             <div>
-              <p className="text-2xl font-black text-white">{k.value}</p>
+              <p className="text-2xl font-black text-ink">{k.value}</p>
               <p className="text-[11px] font-bold text-gray-500">{k.label}</p>
               <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
             </div>
@@ -460,7 +478,7 @@ export default function Reportes() {
             className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
               filtro === key
                 ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
-                : 'bg-white/[0.03] text-gray-400 border-white/[0.06] hover:border-white/15 hover:text-gray-200'
+                : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-gray-200'
             }`}>
             {label}
           </button>
@@ -487,7 +505,7 @@ export default function Reportes() {
         <div className="space-y-2">
           {filtrados.map(r => {
             const TipoIcon   = TIPO_ICON[r.tipo]   ?? FileText;
-            const tipoColor  = TIPO_COLOR[r.tipo]  ?? 'text-gray-400 bg-white/5';
+            const tipoColor  = TIPO_COLOR[r.tipo]  ?? 'text-gray-400 bg-ink/5';
             const p          = P_STYLE[r.prioridad] ?? P_STYLE.media;
             const e          = E_STYLE[r.estado]    ?? E_STYLE.pendiente;
             const isExpanded = expandedId === r.id;
@@ -507,7 +525,7 @@ export default function Reportes() {
                     <div className="flex-1 min-w-0">
                       {/* Título + badges */}
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 className="font-black text-white text-sm">{r.tipo}</h3>
+                        <h3 className="font-black text-ink text-sm">{r.tipo}</h3>
                         <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${p.text} ${p.bg} ${p.border}`}>
                           ● {p.label}
                         </span>
@@ -536,21 +554,21 @@ export default function Reportes() {
 
                     {/* ID + acciones */}
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <span className="text-[10px] text-gray-600 font-mono bg-white/[0.03] border border-white/[0.06] px-2 py-1 rounded-lg hidden sm:block">
+                      <span className="text-[10px] text-gray-600 font-mono bg-ink/[0.03] border border-ink/[0.06] px-2 py-1 rounded-lg hidden sm:block">
                         #R-{String(r.id).padStart(3, '0')}
                       </span>
                       {(canEdit || canDelete) && (
                         <div className="flex gap-1.5">
                           {canEdit && (
                             <button onClick={() => openEdit(r)}
-                              className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-aqua-cyan hover:border-aqua-cyan/30 flex items-center justify-center transition-all"
+                              className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-aqua-cyan hover:border-aqua-cyan/30 flex items-center justify-center transition-all"
                               title="Editar reporte">
                               <Edit2 size={12} />
                             </button>
                           )}
                           {canDelete && (
                             <button onClick={() => handleDelete(r.id)}
-                              className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.07] text-gray-500 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center transition-all"
+                              className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center transition-all"
                               title="Eliminar reporte">
                               <Trash2 size={12} />
                             </button>
@@ -561,7 +579,7 @@ export default function Reportes() {
                   </div>
 
                   {/* Toggle comentarios */}
-                  <div className="mt-4 pt-3 border-t border-white/[0.04]">
+                  <div className="mt-4 pt-3 border-t border-ink/[0.04]">
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : r.id)}
                       className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-aqua-cyan transition-colors">

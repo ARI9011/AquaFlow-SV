@@ -87,7 +87,7 @@ const FEATURES: { icon: any; title: string; desc: string; path: string; accent: 
   { icon: Droplets,        title: 'Sensores IoT',           desc: 'Estado y lecturas de los dispositivos conectados.',            path: '/sensores',       accent: 'text-green-400', bg: 'bg-green-500/10' },
   { icon: Bell,            title: 'Alertas Tempranas',      desc: 'Notificaciones automáticas ante presión crítica o fallas.',    path: '/alertas',        accent: 'text-amber-400', bg: 'bg-amber-500/10' },
   { icon: FileText,        title: 'Reportes Ciudadanos',    desc: 'Canal directo para que la comunidad reporte incidencias.',     path: '/reportes',       accent: 'text-purple-400',bg: 'bg-purple-500/10' },
-  { icon: Settings,        title: 'Configuración',          desc: 'Ajusta preferencias y parámetros del sistema.',                path: '/configuracion',  accent: 'text-gray-300',  bg: 'bg-white/10' },
+  { icon: Settings,        title: 'Configuración',          desc: 'Ajusta preferencias y parámetros del sistema.',                path: '/configuracion',  accent: 'text-gray-300',  bg: 'bg-ink/10' },
   { icon: Users,           title: 'Gestión de Usuarios',    desc: 'Administra accesos y roles del equipo técnico.',               path: '/usuarios',       accent: 'text-red-400',   bg: 'bg-red-500/10', adminOnly: true },
 ];
 
@@ -115,12 +115,12 @@ export default function Home() {
     <div className="space-y-6 page-enter pb-4">
 
       {/* ── HERO ── */}
-      <div className="relative rounded-3xl overflow-hidden border border-white/10 h-[460px] md:h-[500px]">
+      <div className="relative rounded-3xl overflow-hidden border border-ink/10 h-[460px] md:h-[500px]">
         <ParticleFlowHero />
         <div className="absolute inset-0 bg-gradient-to-t from-aqua-dark via-aqua-dark/75 to-aqua-dark/10" />
         <div className="absolute inset-0 bg-gradient-to-r from-aqua-dark/95 via-aqua-dark/45 to-transparent" />
         <div className="relative h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-3xl">
-          <div className="inline-flex w-fit items-center gap-2 bg-white/[0.05] border border-aqua-cyan/25 rounded-full pl-2.5 pr-3.5 py-1.5 mb-5">
+          <div className="inline-flex w-fit items-center gap-2 bg-ink/[0.05] border border-aqua-cyan/25 rounded-full pl-2.5 pr-3.5 py-1.5 mb-5">
             <Sparkles size={12} className="text-aqua-cyan" />
             <span className="text-[10px] font-black uppercase tracking-widest text-aqua-cyan">Nuevo</span>
             <span className="text-[10px] font-bold text-gray-300">Alertas de presión en tiempo real</span>
@@ -129,7 +129,7 @@ export default function Home() {
           <p className="text-aqua-cyan/70 text-[11px] uppercase tracking-[0.3em] font-bold mb-2">
             {saludoActual()}{user ? `, ${user.Usuario.split(' ')[0]}` : ''}
           </p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-white leading-[1.05] mb-4">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-ink leading-[1.05] mb-4">
             El agua del Gran San Salvador,<span className="gradient-text"> monitoreada en vivo.</span>
           </h1>
           <p className="text-gray-400 text-sm sm:text-base font-medium max-w-xl mb-8 leading-relaxed">
@@ -147,7 +147,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => navigate('/mapa')}
-              className="flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white font-bold px-6 py-3.5 rounded-2xl transition-all duration-300"
+              className="flex items-center gap-2 bg-ink/[0.04] hover:bg-ink/[0.08] border border-ink/10 text-ink font-bold px-6 py-3.5 rounded-2xl transition-all duration-300"
             >
               Explorar el mapa
             </button>
@@ -171,7 +171,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-stretch">
           <div className="lg:col-span-3 portal-card p-6 sm:p-8 flex flex-col justify-center">
             <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">Nuestra misión</p>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mb-3">Tecnología al servicio del agua</h2>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink mb-3">Tecnología al servicio del agua</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
               AquaFlow SV nace para cerrar la brecha entre la infraestructura hídrica del Gran San Salvador y los
               datos que la mantienen funcionando. Unimos sensores IoT, mapas en vivo y la voz de la ciudadanía en
@@ -200,7 +200,7 @@ export default function Home() {
       <Reveal>
         <div className="mb-1">
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Explora la plataforma</p>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Todo lo que necesitas, en un solo panel</h2>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink">Todo lo que necesitas, en un solo panel</h2>
         </div>
       </Reveal>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -214,7 +214,7 @@ export default function Home() {
                 <f.icon size={20} className={f.accent} />
               </div>
               <div>
-                <h3 className="text-sm font-black text-white mb-1">{f.title}</h3>
+                <h3 className="text-sm font-black text-ink mb-1">{f.title}</h3>
                 <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
               <span className="flex items-center gap-1 text-[10px] font-bold text-gray-600 group-hover:text-aqua-cyan transition-colors mt-auto pt-1">
@@ -229,7 +229,7 @@ export default function Home() {
       <Reveal>
         <div className="text-center max-w-xl mx-auto pt-4 mb-1">
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">Proceso</p>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">¿Cómo funciona AquaFlow?</h2>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink">¿Cómo funciona AquaFlow?</h2>
           <p className="text-gray-500 text-sm mt-2">De la gota de agua al dato, en cuatro pasos.</p>
         </div>
       </Reveal>
@@ -237,11 +237,11 @@ export default function Home() {
         {PASOS.map((p, i) => (
           <Reveal key={p.n} delay={i * 100}>
             <div className="portal-card p-5 h-full relative overflow-hidden">
-              <span className="absolute -top-3 -right-1 text-5xl font-black text-white/[0.03] select-none">{p.n}</span>
+              <span className="absolute -top-3 -right-1 text-5xl font-black text-ink/[0.03] select-none">{p.n}</span>
               <div className="w-10 h-10 rounded-xl bg-aqua-cyan/10 flex items-center justify-center mb-4 relative z-10">
                 <p.icon size={18} className="text-aqua-cyan" />
               </div>
-              <h3 className="text-sm font-black text-white mb-1.5 relative z-10">{p.title}</h3>
+              <h3 className="text-sm font-black text-ink mb-1.5 relative z-10">{p.title}</h3>
               <p className="text-xs text-gray-500 leading-relaxed relative z-10">{p.desc}</p>
             </div>
           </Reveal>
@@ -272,7 +272,7 @@ export default function Home() {
           </div>
           <div className="relative">
             <Waves size={28} className="text-aqua-cyan mx-auto mb-4 float-slow" />
-            <h2 className="text-xl sm:text-2xl font-black text-white mb-2">¿Listo para revisar tus datos?</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-ink mb-2">¿Listo para revisar tus datos?</h2>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               Entra al panel de control y visualiza el estado del agua en Gran San Salvador en tiempo real.
             </p>
