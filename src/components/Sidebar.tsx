@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 
 interface NavItemProps {
   icon: any;
@@ -59,6 +60,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useLang();
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
@@ -140,10 +142,10 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
             <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Principal</p>
           )}
           <div className="space-y-0.5">
-            <NavItem icon={HomeIcon}        label="Inicio"         active={location.pathname === '/inicio'}    onClick={() => go('/inicio')}    collapsed={effectiveCollapsed} />
-            <NavItem icon={LayoutDashboard} label="Dashboard"     active={location.pathname === '/dashboard'} onClick={() => go('/dashboard')} collapsed={effectiveCollapsed} />
-            <NavItem icon={MapIcon}         label="Mapa de zonas"  active={location.pathname === '/mapa'}      onClick={() => go('/mapa')}      collapsed={effectiveCollapsed} />
-            <NavItem icon={Droplets}        label="Sensores IoT"   active={location.pathname === '/sensores'}  onClick={() => go('/sensores')}  collapsed={effectiveCollapsed} />
+            <NavItem icon={HomeIcon}        label={t('nav.inicio')}     active={location.pathname === '/inicio'}    onClick={() => go('/inicio')}    collapsed={effectiveCollapsed} />
+            <NavItem icon={LayoutDashboard} label={t('nav.dashboard')}  active={location.pathname === '/dashboard'} onClick={() => go('/dashboard')} collapsed={effectiveCollapsed} />
+            <NavItem icon={MapIcon}         label={t('nav.mapa')}       active={location.pathname === '/mapa'}      onClick={() => go('/mapa')}      collapsed={effectiveCollapsed} />
+            <NavItem icon={Droplets}        label={t('nav.sensores')}   active={location.pathname === '/sensores'}  onClick={() => go('/sensores')}  collapsed={effectiveCollapsed} />
           </div>
         </div>
 
@@ -152,9 +154,9 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
             <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Ciudadano</p>
           )}
           <div className="space-y-0.5">
-            <NavItem icon={FileText}  label="Reportes"       active={location.pathname === '/reportes'}     onClick={() => go('/reportes')}     collapsed={effectiveCollapsed} />
-            <NavItem icon={Bell}      label="Alertas"        badge={3} active={location.pathname === '/alertas'} onClick={() => go('/alertas')} collapsed={effectiveCollapsed} />
-            <NavItem icon={Settings}  label="Configuración"  active={location.pathname === '/configuracion'} onClick={() => go('/configuracion')} collapsed={effectiveCollapsed} />
+            <NavItem icon={FileText}  label={t('nav.reportes')}      active={location.pathname === '/reportes'}     onClick={() => go('/reportes')}     collapsed={effectiveCollapsed} />
+            <NavItem icon={Bell}      label={t('nav.alertas')}       badge={3} active={location.pathname === '/alertas'} onClick={() => go('/alertas')} collapsed={effectiveCollapsed} />
+            <NavItem icon={Settings}  label={t('nav.configuracion')} active={location.pathname === '/configuracion'} onClick={() => go('/configuracion')} collapsed={effectiveCollapsed} />
           </div>
         </div>
 
@@ -164,7 +166,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
               <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Administración</p>
             )}
             <div className="space-y-0.5">
-              <NavItem icon={Users} label="Usuarios" active={location.pathname === '/usuarios'} onClick={() => go('/usuarios')} collapsed={effectiveCollapsed} />
+              <NavItem icon={Users} label={t('nav.usuarios')} active={location.pathname === '/usuarios'} onClick={() => go('/usuarios')} collapsed={effectiveCollapsed} />
             </div>
           </div>
         )}

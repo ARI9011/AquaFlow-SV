@@ -216,3 +216,98 @@ h1, h2, h3, h4, h5, h6 {
 .leaflet-control-attribution a:hover {
   color: #00f2ea !important;
 }
+/* ── Google Translate widget: ocultar barra superior y estilizar el selector ── */
+.goog-te-banner-frame,
+.skiptranslate iframe.goog-te-banner-frame {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+/* Contenedor del selector en el Topbar */
+.gt-selector .goog-te-gadget {
+  color: transparent;
+  font-size: 0;
+}
+.gt-selector .goog-te-gadget .goog-te-combo {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+.gt-selector .goog-te-combo:hover {
+  border-color: rgba(0, 242, 234, 0.4);
+}
+/* Quitar el "Powered by" y el texto sobrante */
+.goog-logo-link, .goog-te-gadget span { display: none !important; }
+/* Evitar el resaltado amarillo que Google pone sobre el texto traducido */
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* ═══════════════════ ACCESIBILIDAD (WCAG) ═══════════════════ */
+
+/* 1) Skip link: oculto hasta que recibe foco con Tab */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 2000;
+  background: #00f2ea;
+  color: #052;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 10px;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 12px;
+  outline: 3px solid #fff;
+}
+
+/* 2) Foco visible al navegar con teclado (no aparece al usar mouse) */
+:focus-visible {
+  outline: 3px solid #00f2ea !important;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* 3) Alto contraste: se activa con la clase .high-contrast en <html> */
+html.high-contrast {
+  filter: contrast(1.35);
+}
+html.high-contrast body {
+  background: #000 !important;
+}
+html.high-contrast a,
+html.high-contrast button {
+  text-decoration: none;
+}
+/* Bordes más marcados y texto más claro en alto contraste */
+html.high-contrast .text-gray-400,
+html.high-contrast .text-gray-500,
+html.high-contrast .text-gray-600 {
+  color: #e5e7eb !important;
+}
+html.high-contrast [class*="border-ink"] {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* 4) Respetar la preferencia del sistema de reducir movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

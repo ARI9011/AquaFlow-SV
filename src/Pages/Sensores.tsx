@@ -18,12 +18,36 @@ function SensorPilotoCard() {
   const [datos, setDatos] = useState<EstadoPiloto | null>(null);
   const [, forzarRender] = useState(0);
 
-  // Streaming en vivo: el servidor empuja el estado apenas cambia, sin esperar
-  // a un intervalo fijo. El navegador reconecta solo si la conexión se cae.
+  // Streaming en vivo: el servidor empuja el estado apenas cambia. Si el backend
+  // aún no está disponible, reintenta cada 5 s de forma controlada (sin llenar
+  // la consola de errores).
   useEffect(() => {
-    const es = new EventSource('/api/sensores/piloto/stream');
-    es.onmessage = (ev) => setDatos(JSON.parse(ev.data));
-    return () => es.close();
+    let es: EventSource | null = null;
+    let reintento: ReturnType<typeof setTimeout> | null = null;
+    let cerrado = false;
+
+    const conectar = () => {
+      if (cerrado) return;
+      es = new EventSource('/api/sensores/piloto/stream');
+
+      es.onmessage = (ev) => {
+        try { setDatos(JSON.parse(ev.data)); } catch { /* ignorar datos inválidos */ }
+      };
+
+      es.onerror = () => {
+        // El backend no responde (aún no arranca o se cayó): cerrar y reintentar.
+        es?.close();
+        setDatos((d) => (d ? { ...d, conectado: false } : d));
+        if (!cerrado) reintento = setTimeout(conectar, 5000);
+      };
+    };
+
+    conectar();
+    return () => {
+      cerrado = true;
+      if (reintento) clearTimeout(reintento);
+      es?.close();
+    };
   }, []);
 
   // El servidor solo empuja cuando algo cambia; este tick local es solo para

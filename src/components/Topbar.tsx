@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 
-const PAGE_TITLES: Record<string, { title: string; sub: string }> = {
-  '/inicio':       { title: 'Inicio',                sub: 'Bienvenido a AquaFlow SV'     },
-  '/dashboard':    { title: 'Dashboard',            sub: 'Resumen general del sistema'  },
-  '/mapa':         { title: 'Mapa de Zonas',        sub: 'Gran San Salvador'            },
-  '/sensores':     { title: 'Sensores IoT',          sub: 'Dispositivos de medición'    },
-  '/usuarios':     { title: 'Gestión de Usuarios',  sub: 'Control de acceso'           },
-  '/reportes':     { title: 'Reportes Ciudadanos',  sub: 'Incidencias reportadas'      },
-  '/alertas':      { title: 'Alertas del Sistema',  sub: '3 alertas activas'           },
-  '/configuracion':{ title: 'Configuración',        sub: 'Preferencias del sistema'    },
+// Mapa de rutas -> clave de traducción (los textos viven en src/i18n.ts)
+const PAGE_KEYS: Record<string, string> = {
+  '/inicio':        'inicio',
+  '/dashboard':     'dashboard',
+  '/mapa':          'mapa',
+  '/sensores':      'sensores',
+  '/usuarios':      'usuarios',
+  '/reportes':      'reportes',
+  '/alertas':       'alertas',
+  '/configuracion': 'config',
 };
 
 const ALERTS_COUNT = 3;
@@ -22,7 +24,9 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const page = PAGE_TITLES[location.pathname] ?? { title: 'AquaFlow SV', sub: 'Monitoreo Hídrico' };
+  const { t, lang, toggleLang } = useLang();
+  const key = PAGE_KEYS[location.pathname] ?? 'default';
+  const page = { title: t(`page.${key}.title`), sub: t(`page.${key}.sub`) };
 
   const handleLogout = async () => {
     setDropdownOpen(false);
@@ -63,13 +67,26 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       {/* ACCIONES DERECHAS */}
       <div className="flex items-center gap-2">
 
+        {/* SELECTOR DE IDIOMA (ES / EN) */}
+        <button
+          onClick={toggleLang}
+          aria-label={lang === 'es' ? 'Cambiar idioma a inglés' : 'Change language to Spanish'}
+          title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+          className="h-9 px-3 flex items-center gap-1.5 rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-aqua-cyan/40 transition-all text-xs font-bold text-gray-300"
+        >
+          <span className={lang === 'es' ? 'text-aqua-cyan' : 'text-gray-500'}>ES</span>
+          <span className="text-gray-600">/</span>
+          <span className={lang === 'en' ? 'text-aqua-cyan' : 'text-gray-500'}>EN</span>
+        </button>
+
         {/* CAMPANA DE NOTIFICACIONES */}
         <div className="relative">
           <button
             onClick={() => { setBellOpen(v => !v); setDropdownOpen(false); }}
+            aria-label={`Notificaciones, ${ALERTS_COUNT} alertas`}
             className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-ink/15 transition-all text-gray-400 hover:text-ink"
           >
-            <Bell size={16} />
+            <Bell size={16} aria-hidden="true" />
             {ALERTS_COUNT > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-ink text-[9px] font-black rounded-full flex items-center justify-center shadow-lg">
                 {ALERTS_COUNT}
@@ -112,6 +129,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* AVATAR + DROPDOWN */}
         <div className="relative">
           <button
+            aria-label="Menú de usuario"
             onClick={() => { setDropdownOpen(v => !v); setBellOpen(false); }}
             className="flex items-center gap-2 md:gap-2.5 bg-ink/[0.03] hover:bg-ink/[0.07] border border-ink/[0.06] hover:border-ink/15 p-1.5 pr-3 rounded-xl transition-all"
           >
