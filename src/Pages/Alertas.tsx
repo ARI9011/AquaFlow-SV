@@ -302,7 +302,7 @@ export default function Alertas() {
                 className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
                   filtro === key
                     ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
-                    : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-gray-200'
+                    : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-ink'
                 }`}>
                 {label}
               </button>
@@ -407,7 +407,7 @@ export default function Alertas() {
               <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-ink/[0.02] transition-colors">
                 <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold text-gray-300">{item.tipo} resuelta</span>
+                  <span className="text-sm font-bold text-ink/80">{item.tipo} resuelta</span>
                   <span className="text-gray-500 text-sm"> — {item.zona}, {item.sector}</span>
                 </div>
                 {isAdmin && (
@@ -510,7 +510,7 @@ export default function Alertas() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{c.contenido}</p>
+                      <p className="text-sm text-ink/80 leading-relaxed whitespace-pre-wrap">{c.contenido}</p>
                     )}
                   </div>
                   {isAdmin && editandoId !== c.id && (

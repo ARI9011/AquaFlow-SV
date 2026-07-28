@@ -275,7 +275,7 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
                     )}
                   </div>
                 </div>
-                <p className="text-[12px] text-gray-300 leading-relaxed">{c.contenido}</p>
+                <p className="text-[12px] text-ink/80 leading-relaxed">{c.contenido}</p>
               </div>
             </div>
           ))}
@@ -478,7 +478,7 @@ export default function Reportes() {
             className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
               filtro === key
                 ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
-                : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-gray-200'
+                : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-ink'
             }`}>
             {label}
           </button>
@@ -547,7 +547,7 @@ export default function Reportes() {
                           <span>{fmtDate(r.creado_en)}</span>
                         </div>
                         <div className="text-[10px] text-gray-500">
-                          Por: <span className="text-gray-300 font-bold">{r.usuario}</span>
+                          Por: <span className="text-ink/80 font-bold">{r.usuario}</span>
                         </div>
                       </div>
                     </div>

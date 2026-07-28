@@ -255,7 +255,7 @@ export default function Sensores() {
             className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
               filtro === key
                 ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
-                : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-gray-200'
+                : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-ink'
             }`}
           >
             {label}

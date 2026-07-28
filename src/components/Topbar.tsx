@@ -72,7 +72,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
           onClick={toggleLang}
           aria-label={lang === 'es' ? 'Cambiar idioma a inglés' : 'Change language to Spanish'}
           title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-          className="h-9 px-3 flex items-center gap-1.5 rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-aqua-cyan/40 transition-all text-xs font-bold text-gray-300"
+          className="h-9 px-3 flex items-center gap-1.5 rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-aqua-cyan/40 transition-all text-xs font-bold text-ink/80"
         >
           <span className={lang === 'es' ? 'text-aqua-cyan' : 'text-gray-500'}>ES</span>
           <span className="text-gray-600">/</span>
@@ -108,7 +108,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
                 <div key={i} className="px-4 py-3 flex items-start gap-3 hover:bg-ink/[0.03] border-b border-ink/[0.04] last:border-0 transition-colors cursor-pointer">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${a.color}`} />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-200 truncate">{a.text}</p>
+                    <p className="text-xs font-bold text-ink/90 truncate">{a.text}</p>
                     <p className="text-[10px] text-gray-600 mt-0.5">{a.time}</p>
                   </div>
                 </div>
