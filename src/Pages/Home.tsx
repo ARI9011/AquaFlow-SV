@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Map as MapIcon, Droplets, Bell, FileText, Settings,
   Users, ArrowRight, Sparkles, Gauge, Radio, Satellite, ShieldCheck,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ParticleFlowHero from '../components/ParticleFlowHero';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function useInView<T extends HTMLElement>(threshold = 0.2) {
   const ref = useRef<T | null>(null);
@@ -105,14 +106,54 @@ const IMPACTO = [
   { value: 6,       suffix: '',  label: 'Sensores IoT desplegados' },
 ];
 
+// Nombre amigable de cada apartado protegido (para el mensaje del aviso)
+const NOMBRE_RUTA: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/mapa': 'Mapa de zonas',
+  '/sensores': 'Sensores IoT',
+  '/reportes': 'Reportes',
+  '/alertas': 'Alertas',
+  '/configuracion': 'Configuración',
+  '/usuarios': 'Usuarios',
+};
+
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   const features = FEATURES.filter(f => !f.adminOnly || isAdmin);
 
+  // Sección que un visitante SIN sesión intentó abrir (para mostrar el aviso)
+  const [seccionBloqueada, setSeccionBloqueada] = useState<string | null>(null);
+
+  // Si hay sesión, navega normal; si no, muestra el aviso de "inicia sesión".
+  const irA = (path: string, nombre: string) => {
+    if (user) navigate(path);
+    else setSeccionBloqueada(nombre);
+  };
+
+  // Si ProtectedRoute nos trajo aquí por intentar entrar a un apartado sin sesión
+  // (o por cerrar sesión estando en uno), mostramos el aviso automáticamente.
+  useEffect(() => {
+    const st = location.state as { requireLogin?: boolean; from?: string } | null;
+    if (st?.requireLogin) {
+      setSeccionBloqueada(NOMBRE_RUTA[st.from ?? ''] ?? 'esta sección');
+      // Limpiar el estado para que el aviso no reaparezca al navegar/recargar.
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
+
   return (
     <div className="space-y-6 page-enter pb-4">
+      {seccionBloqueada && (
+        <LoginRequiredModal
+          seccion={seccionBloqueada}
+          onIniciarSesion={() => navigate('/login')}
+          onCancelar={() => setSeccionBloqueada(null)}
+        />
+      )}
+
 
       {/* ── HERO ── */}
       <div className="relative rounded-3xl overflow-hidden border border-ink/10 h-[460px] md:h-[500px]">
@@ -139,14 +180,14 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => irA('/dashboard', 'Dashboard')}
               className="group flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/85 text-aqua-dark font-black px-6 py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-aqua-cyan/10 active:scale-[0.98]"
             >
               Ir al Dashboard
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={() => navigate('/mapa')}
+              onClick={() => irA('/mapa', 'Mapa de zonas')}
               className="flex items-center gap-2 bg-ink/[0.04] hover:bg-ink/[0.08] border border-ink/10 text-ink font-bold px-6 py-3.5 rounded-2xl transition-all duration-300"
             >
               Explorar el mapa
@@ -207,7 +248,7 @@ export default function Home() {
         {features.map((f, i) => (
           <Reveal key={f.title} delay={i * 60}>
             <button
-              onClick={() => navigate(f.path)}
+              onClick={() => irA(f.path, f.title)}
               className="portal-card w-full h-full text-left p-5 flex flex-col gap-3 hover:scale-[1.02] hover:border-aqua-cyan/20 transition-all duration-300 group"
             >
               <div className={`w-11 h-11 rounded-xl ${f.bg} flex items-center justify-center`}>
@@ -277,7 +318,7 @@ export default function Home() {
               Entra al panel de control y visualiza el estado del agua en Gran San Salvador en tiempo real.
             </p>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => irA('/dashboard', 'Dashboard')}
               className="inline-flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/85 text-aqua-dark font-black px-7 py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-aqua-cyan/10 active:scale-[0.98]"
             >
               Ir al Dashboard <ArrowRight size={16} />

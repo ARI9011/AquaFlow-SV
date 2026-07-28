@@ -30,8 +30,9 @@ function ChatBotGuard() {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, authLoading } = useAuth();
+  const location = useLocation();
   if (authLoading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace state={{ requireLogin: true, from: location.pathname }} />;
   if (user.rol !== 'admin') return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
@@ -103,8 +104,9 @@ export default function App() {
             <ProtectedRoute><AdminLayout><Configuracion /></AdminLayout></ProtectedRoute>
           } />
 
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* Página de bienvenida PÚBLICA: con barra lateral y topbar, sin exigir login */}
+          <Route path="/" element={<AdminLayout><Home /></AdminLayout>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
       </ConfirmProvider>

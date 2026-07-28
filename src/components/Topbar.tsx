@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu } from 'lucide-react';
+import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 
@@ -31,7 +31,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const handleLogout = async () => {
     setDropdownOpen(false);
     await logout();
-    navigate('/login', { replace: true });
+    // No forzamos ir al login: si estaba en un apartado, ProtectedRoute mostrará el aviso.
   };
 
   const closeAll = () => { setDropdownOpen(false); setBellOpen(false); };
@@ -126,7 +126,8 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* DIVISOR */}
         <div className="w-px h-6 bg-ink/[0.06]" />
 
-        {/* AVATAR + DROPDOWN */}
+        {/* Con sesión: menú de usuario. Sin sesión: botón "Iniciar sesión" */}
+        {user ? (
         <div className="relative">
           <button
             aria-label="Menú de usuario"
@@ -167,6 +168,15 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             </div>
           )}
         </div>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            aria-label="Iniciar sesión"
+            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-aqua-cyan text-[#052] font-bold text-xs uppercase tracking-wide hover:brightness-110 transition-all"
+          >
+            <LogIn size={15} /> Iniciar sesión
+          </button>
+        )}
       </div>
     </header>
   );
