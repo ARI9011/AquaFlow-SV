@@ -1,6 +1,4 @@
-// Diccionario de traducciones propio (sin depender de Google).
-// Para agregar más textos: añade la clave en 'es' y su traducción en 'en',
-// y en el componente usa  t('mi.clave').
+
 
 export type Lang = 'es' | 'en';
 

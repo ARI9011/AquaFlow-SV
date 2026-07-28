@@ -65,7 +65,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
+    // No forzamos ir al login: si estaba en un apartado, ProtectedRoute mostrará el aviso.
   };
 
   const go = (path: string) => {

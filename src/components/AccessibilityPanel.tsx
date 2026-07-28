@@ -2,10 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Volume2, VolumeX, Contrast, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { useA11y } from '../context/AccessibilityContext';
 
-// Panel flotante de accesibilidad (WCAG):
-// - Aumentar / reducir / restablecer tamaño de texto
-// - Alto contraste
-// - Narrador por cursor (lee el elemento que señalas con el mouse)
 
 export default function AccessibilityPanel() {
   const [abierto, setAbierto] = useState(false);
