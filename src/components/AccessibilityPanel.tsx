@@ -7,7 +7,6 @@ export default function AccessibilityPanel() {
   const [abierto, setAbierto] = useState(false);
   const { fontScale, highContrast, aumentarTexto, reducirTexto, resetTexto, toggleContraste } = useA11y();
 
-  // ── Narrador por cursor ──────────────────────────────────────────────
   const [narrador, setNarrador] = useState(false);
   const [soportaVoz, setSoportaVoz] = useState(true);
   const ultimoRef = useRef<string>('');

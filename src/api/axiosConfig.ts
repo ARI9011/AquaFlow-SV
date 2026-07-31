@@ -11,7 +11,6 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       const isOnLogin    = window.location.pathname === '/login';
       const isAuthCheck  = error.config?.url?.includes('/api/user-info');
-      // Solo redirigir si no estamos ya en login y no es la verificación inicial de sesión
       if (!isOnLogin && !isAuthCheck) {
         window.location.href = '/login';
       }

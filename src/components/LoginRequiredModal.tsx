@@ -1,12 +1,9 @@
 import { Lock, LogIn, X } from 'lucide-react';
 
-// Modal de advertencia que aparece cuando un visitante (sin sesión) intenta
-// entrar a una sección protegida desde la página de bienvenida.
-
 interface Props {
-  seccion?: string;              // nombre de la sección que intentó abrir (opcional)
-  onIniciarSesion: () => void;   // ir al login
-  onCancelar: () => void;        // cerrar y quedarse en la bienvenida
+  seccion?: string;             
+  onIniciarSesion: () => void;   
+  onCancelar: () => void;        
 }
 
 export default function LoginRequiredModal({ seccion, onIniciarSesion, onCancelar }: Props) {

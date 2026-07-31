@@ -61,14 +61,9 @@ export default function BubbleBackground({ count = DEFAULT_BUBBLE_COUNT, variant
       }
     };
 
-    // Lectura síncrona inmediata al montar (no depender solo del primer
-    // callback, asíncrono, de ResizeObserver: dentro de contenedores con
-    // clip-path/overflow-hidden puede no llegar a tiempo y dejar el canvas
-    // en 0x0, sin dibujar nada).
     const rect = canvas.getBoundingClientRect();
     applySize(rect.width, rect.height);
 
-    // ResizeObserver cubre cambios posteriores de tamaño (resize, breakpoints).
     const ro = new ResizeObserver(entries => {
       const entry = entries[0];
       if (!entry) return;

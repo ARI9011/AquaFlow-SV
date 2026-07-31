@@ -12,7 +12,6 @@ interface Particle {
 }
 
 const PARTICLE_COUNT = 550;
-// Vórtice (remolino) como fracción del tamaño del panel, similar a la referencia.
 const VORTEX = { xFrac: 0.66, yFrac: 0.52, radius: 210 };
 
 function spawnParticle(w: number, h: number): Particle {
@@ -54,10 +53,6 @@ export default function ParticleFlowHero() {
       }
     };
 
-    // Lectura inmediata y síncrona del tamaño real al montar: no depender
-    // solo del primer callback (asíncrono) de ResizeObserver, que dentro de
-    // un contenedor con clip-path + overflow-hidden puede tardar o no
-    // disparar a tiempo y dejar el canvas en 0x0 (por eso se veía en negro).
     const rect = canvas.getBoundingClientRect();
     applySize(rect.width, rect.height);
 
@@ -81,8 +76,6 @@ export default function ParticleFlowHero() {
       }
       t += 0.006;
 
-      // No se limpia el frame: se pinta un negro casi opaco encima para
-      // dejar una estela de luz detrás de cada partícula (efecto flujo).
       ctx.fillStyle = 'rgba(1, 4, 5, 0.14)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -96,8 +89,6 @@ export default function ParticleFlowHero() {
         let ax = Math.cos(angle) * 0.05;
         let ay = Math.sin(angle) * 0.05;
 
-        // Remolino: velocidad tangencial alrededor del punto del vórtice,
-        // con una leve atracción hacia el centro para que no se disperse.
         const dx = p.x - vx0;
         const dy = p.y - vy0;
         const dist = Math.sqrt(dx * dx + dy * dy) + 0.0001;

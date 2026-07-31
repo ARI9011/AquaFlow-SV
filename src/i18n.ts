@@ -1,5 +1,3 @@
-
-
 export type Lang = 'es' | 'en';
 
 export const translations: Record<Lang, Record<string, string>> = {

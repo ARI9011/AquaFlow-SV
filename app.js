@@ -11,7 +11,6 @@ const eventos = require('./eventos');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
-// Correos con rol de administrador (los únicos 4 autorizados); cualquier otro correo se registra como 'user'
 const ADMIN_EMAILS = [
     'arielgarciacdb@gmail.com',
     'axelfernandolopez267@gmail.com',
@@ -22,14 +21,12 @@ const esCorreoAdmin = (email) => ADMIN_EMAILS.includes(email.toLowerCase());
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// ── Correo (Gmail SMTP) y códigos de verificación ─────────────────────
 const nodemailer = require('nodemailer');
 const mailer = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 });
 
-// Verificación de credenciales SMTP al arrancar (para diagnosticar el envío de correos)
 if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('tu_correo')) {
     console.warn('⚠️  SMTP sin configurar: pon SMTP_USER y SMTP_PASS (contraseña de aplicación de Gmail) en .env. Los correos NO se enviarán.');
 } else {
@@ -38,7 +35,6 @@ if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.in
         .catch((e) => console.error('❌ SMTP inválido:', e.message, '— revisa SMTP_USER / SMTP_PASS (contraseña de aplicación de 16 dígitos, sin espacios)'));
 }
 
-// email -> { code, expires, intentos }
 const verifyCodes = new Map();
 const generarCodigo = () => String(Math.floor(100000 + Math.random() * 900000));
 
@@ -66,7 +62,6 @@ async function enviarCorreoVerificacion(email, nombre, codigo) {
     });
 }
 
-// Genera, guarda y envía un código; no bloquea la respuesta si el correo tarda
 function emitirCodigo(email, nombre) {
     const codigo = generarCodigo();
     verifyCodes.set(email, { code: codigo, expires: Date.now() + 10 * 60 * 1000, intentos: 0 });
@@ -77,7 +72,6 @@ function emitirCodigo(email, nombre) {
 
 const app = express();
 
-// ── Middlewares de autenticación y roles ──────────────────────────────
 function requireAuth(req, res, next) {
     if (!req.session.user) return res.status(401).json({ error: 'No autenticado' });
     next();
@@ -90,7 +84,7 @@ function requireAdmin(req, res, next) {
 }
 
 // ── Rate limiting para login (por email, en memoria) ─────────────────
-const loginAttempts = new Map(); // email -> { count, lockUntil }
+const loginAttempts = new Map(); 
 
 function cleanExpiredAttempts() {
     const now = Date.now();
@@ -100,7 +94,7 @@ function cleanExpiredAttempts() {
 }
 setInterval(cleanExpiredAttempts, 5 * 60 * 1000); // limpiar cada 5 min
 
-// 1. Configuración de CORS (Siempre al principio)
+
 app.use(cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],

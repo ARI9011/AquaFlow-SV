@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-// ── Glass geometry (SVG viewBox 0 0 100 145) ──────────────────────
 const CX         = 50;
 const GLASS_TOP  = 10;
 const GLASS_BOT  = 130;
@@ -13,7 +12,6 @@ const BL = CX - BASE_W / 2;  // 18  (base left)
 const BR = CX + BASE_W / 2;  // 82  (base right)
 const GLASS_PTS = `${RL},${GLASS_TOP} ${RR},${GLASS_TOP} ${BR},${GLASS_BOT} ${BL},${GLASS_BOT}`;
 
-// ── Wave path (Y=0 is the water surface, opens downward to y=200) ──
 const PERIOD = 28;
 const AMP    = 5;
 const N      = 9;
@@ -37,7 +35,6 @@ const getLabel = (p: number) =>
   p < 100 ? 'Casi listo...'         :
              '¡Sistema listo!';
 
-// ─────────────────────────────────────────────────────────────────
 export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
   const [fillPct, setFillPct] = useState(0);
   const [exiting, setExiting] = useState(false);
