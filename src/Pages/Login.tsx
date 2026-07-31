@@ -270,7 +270,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => loginConGoogle()}
-                    className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-ink/80 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
                     <GoogleIcon /> Continuar con Google
                   </button>
@@ -368,7 +368,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => loginConGoogle()}
-                    className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-gray-300 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-ink/80 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
                     <GoogleIcon /> Continuar con Google
                   </button>

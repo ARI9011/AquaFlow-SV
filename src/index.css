@@ -283,21 +283,37 @@ body {
 html.high-contrast {
   filter: contrast(1.35);
 }
-html.high-contrast body {
-  background: #000 !important;
-}
 html.high-contrast a,
 html.high-contrast button {
   text-decoration: none;
 }
-/* Bordes más marcados y texto más claro en alto contraste */
-html.high-contrast .text-gray-400,
-html.high-contrast .text-gray-500,
-html.high-contrast .text-gray-600 {
+
+/* Modo oscuro + alto contraste: fondo negro puro y texto/bordes claros */
+html.high-contrast:not([data-theme="light"]) body {
+  background: #000 !important;
+}
+html.high-contrast:not([data-theme="light"]) .text-gray-400,
+html.high-contrast:not([data-theme="light"]) .text-gray-500,
+html.high-contrast:not([data-theme="light"]) .text-gray-600 {
   color: #e5e7eb !important;
 }
-html.high-contrast [class*="border-ink"] {
+html.high-contrast:not([data-theme="light"]) [class*="border-ink"] {
   border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Modo claro + alto contraste: fondo blanco puro y texto/bordes oscuros
+   (antes se forzaba fondo negro con texto oscuro del tema claro, dejando
+   todo ilegible) */
+html.high-contrast[data-theme="light"] body {
+  background: #fff !important;
+}
+html.high-contrast[data-theme="light"] .text-gray-400,
+html.high-contrast[data-theme="light"] .text-gray-500,
+html.high-contrast[data-theme="light"] .text-gray-600 {
+  color: #1f2937 !important;
+}
+html.high-contrast[data-theme="light"] [class*="border-ink"] {
+  border-color: rgba(22, 35, 43, 0.45) !important;
 }
 
 /* 4) Respetar la preferencia del sistema de reducir movimiento */

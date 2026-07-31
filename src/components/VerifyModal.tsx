@@ -84,7 +84,7 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
           >
             {resending ? 'Reenviando…' : 'Reenviar código'}
           </button>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition">
+          <button onClick={onClose} className="text-gray-500 hover:text-ink transition">
             Verificar después
           </button>
         </div>

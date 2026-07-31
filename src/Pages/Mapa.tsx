@@ -52,7 +52,7 @@ const ZonaCard = ({ zona }: { zona: typeof zonasData[0] }) => {
           </div>
           <div className="flex justify-between text-[11px]">
             <span className="text-gray-500">Flujo</span>
-            <span className="font-mono font-bold text-gray-300">{zona.flujo} L/m</span>
+            <span className="font-mono font-bold text-ink/80">{zona.flujo} L/m</span>
           </div>
           <div className="flex justify-between items-center text-[11px] pt-2 border-t border-ink/5">
             <span className="text-gray-500">Estado</span>
@@ -247,7 +247,7 @@ export default function Mapa() {
                     {zona.lat.toFixed(4)}, {zona.lng.toFixed(4)}
                   </td>
                   <td className="px-6 py-5 text-center font-bold text-aqua-cyan">{zona.presion} PSI</td>
-                  <td className="px-6 py-5 text-center font-bold text-gray-300">{zona.flujo} L/m</td>
+                  <td className="px-6 py-5 text-center font-bold text-ink/80">{zona.flujo} L/m</td>
                   <td className="px-6 py-5 text-center">
                     <span className="font-black text-[10px] uppercase px-3 py-1 rounded-lg"
                       style={{ color: estadoStyle[zona.estado].text, backgroundColor: estadoStyle[zona.estado].bg }}>

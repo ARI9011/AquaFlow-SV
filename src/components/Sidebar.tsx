@@ -23,12 +23,12 @@ const NavItem = ({ icon: Icon, label, active = false, badge, onClick, collapsed 
       flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative
       ${active
         ? 'bg-aqua-cyan/10 text-aqua-cyan border border-aqua-cyan/15 shadow-[0_0_20px_rgba(0,242,234,0.06)]'
-        : 'text-gray-500 hover:bg-ink/[0.04] hover:text-gray-200 border border-transparent'}
+        : 'text-gray-500 hover:bg-ink/[0.04] hover:text-ink border border-transparent'}
       ${collapsed ? 'justify-center px-0' : ''}
     `}>
     <div className="flex items-center gap-3">
       <Icon size={17}
-        className={`flex-shrink-0 transition-colors ${active ? 'text-aqua-cyan' : 'text-gray-600 group-hover:text-gray-300'}`}
+        className={`flex-shrink-0 transition-colors ${active ? 'text-aqua-cyan' : 'text-gray-600 group-hover:text-ink'}`}
       />
       {!collapsed && <span className="font-semibold text-sm tracking-wide whitespace-nowrap">{label}</span>}
     </div>
@@ -116,7 +116,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
         {!effectiveCollapsed && (
           <button
             onClick={() => (mobileOpen ? onCloseMobile?.() : setCollapsed(true))}
-            className="p-1.5 hover:bg-ink/[0.06] rounded-lg transition-colors text-gray-600 hover:text-gray-300 flex-shrink-0"
+            className="p-1.5 hover:bg-ink/[0.06] rounded-lg transition-colors text-gray-600 hover:text-ink flex-shrink-0"
           >
             <X size={16} />
           </button>

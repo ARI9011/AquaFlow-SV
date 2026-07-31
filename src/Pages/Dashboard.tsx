@@ -172,7 +172,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: z.color }} />
-                    <span className="text-xs text-gray-300 font-bold truncate">{z.nombre.split(' ')[0]}</span>
+                    <span className="text-xs text-ink/80 font-bold truncate">{z.nombre.split(' ')[0]}</span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                     <span className="text-xs font-black" style={{ color: z.color }}>{z.presion} PSI</span>
@@ -256,7 +256,7 @@ export default function Dashboard() {
                       <span className="text-xs text-gray-600 ml-1">PSI</span>
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
-                      <span className="text-sm font-bold text-gray-300">{z.flujo}</span>
+                      <span className="text-sm font-bold text-ink/80">{z.flujo}</span>
                       <span className="text-xs text-gray-600 ml-1">L/min</span>
                     </td>
                     <td className="px-5 py-3.5">

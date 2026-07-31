@@ -88,7 +88,7 @@ const FEATURES: { icon: any; title: string; desc: string; path: string; accent: 
   { icon: Droplets,        title: 'Sensores IoT',           desc: 'Estado y lecturas de los dispositivos conectados.',            path: '/sensores',       accent: 'text-green-400', bg: 'bg-green-500/10' },
   { icon: Bell,            title: 'Alertas Tempranas',      desc: 'Notificaciones automáticas ante presión crítica o fallas.',    path: '/alertas',        accent: 'text-amber-400', bg: 'bg-amber-500/10' },
   { icon: FileText,        title: 'Reportes Ciudadanos',    desc: 'Canal directo para que la comunidad reporte incidencias.',     path: '/reportes',       accent: 'text-purple-400',bg: 'bg-purple-500/10' },
-  { icon: Settings,        title: 'Configuración',          desc: 'Ajusta preferencias y parámetros del sistema.',                path: '/configuracion',  accent: 'text-gray-300',  bg: 'bg-ink/10' },
+  { icon: Settings,        title: 'Configuración',          desc: 'Ajusta preferencias y parámetros del sistema.',                path: '/configuracion',  accent: 'text-ink/80',  bg: 'bg-ink/10' },
   { icon: Users,           title: 'Gestión de Usuarios',    desc: 'Administra accesos y roles del equipo técnico.',               path: '/usuarios',       accent: 'text-red-400',   bg: 'bg-red-500/10', adminOnly: true },
 ];
 
@@ -164,7 +164,7 @@ export default function Home() {
           <div className="inline-flex w-fit items-center gap-2 bg-ink/[0.05] border border-aqua-cyan/25 rounded-full pl-2.5 pr-3.5 py-1.5 mb-5">
             <Sparkles size={12} className="text-aqua-cyan" />
             <span className="text-[10px] font-black uppercase tracking-widest text-aqua-cyan">Nuevo</span>
-            <span className="text-[10px] font-bold text-gray-300">Alertas de presión en tiempo real</span>
+            <span className="text-[10px] font-bold text-ink/80">Alertas de presión en tiempo real</span>
           </div>
 
           <p className="text-aqua-cyan/70 text-[11px] uppercase tracking-[0.3em] font-bold mb-2">
@@ -230,7 +230,7 @@ export default function Home() {
                 <div className="w-9 h-9 rounded-lg bg-aqua-cyan/10 flex items-center justify-center flex-shrink-0">
                   <i.icon size={16} className="text-aqua-cyan" />
                 </div>
-                <p className="text-xs text-gray-300 font-semibold">{i.text}</p>
+                <p className="text-xs text-ink/80 font-semibold">{i.text}</p>
               </div>
             ))}
           </div>
