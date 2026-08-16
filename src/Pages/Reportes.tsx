@@ -36,10 +36,10 @@ interface Comentario {
 
 /* ── Datos estáticos ─────────────────────────────────────────────── */
 const ZONAS_MAP: Record<string, string> = {
-  'Colonia Escalón':  'San Salvador',
-  'Soyapango Centro': 'Soyapango',
-  'Mejicanos Norte':  'Mejicanos',
-  'Ilopango Sur':     'Ilopango',
+  'Cuscatancingo Centro':  'Cuscatancingo',
+  'Soyapango Centro':     'Soyapango',
+  'Plan del Pino':        'Ciudad Delgado',
+  'Ciudad Delgado Centro': 'Ciudad Delgado',
 };
 
 const TIPOS = ['Fuga de agua', 'Presión baja', 'Corte de servicio', 'Agua turbia', 'Otro'];

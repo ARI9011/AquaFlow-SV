@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AquaFlowLogo from './AquaFlowLogo';
 
 const CX         = 50;
 const GLASS_TOP  = 10;
@@ -79,14 +80,15 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
         }}
       />
 
-      {/* ── Branding ── */}
-      <div className="mb-12 text-center relative z-10">
-        <h1 className="text-4xl font-black tracking-tighter text-ink">
+      {/* ── Branding con Logo Oficial ── */}
+      <div className="mb-8 text-center relative z-10 flex flex-col items-center">
+        <AquaFlowLogo size={64} variant="cyan" />
+        <h1 className="text-4xl font-black tracking-tighter text-ink mt-3">
           AquaFlow <span style={{ color: 'var(--color-aqua-cyan)' }}>SV</span>
         </h1>
         <p
           className="text-[10px] uppercase tracking-[0.45em] font-bold mt-1"
-          style={{ color: 'rgba(0,242,234,0.28)' }}
+          style={{ color: 'rgba(0,242,234,0.4)' }}
         >
           Sistema de Monitoreo Hídrico
         </p>

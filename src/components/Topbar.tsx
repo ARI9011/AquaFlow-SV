@@ -6,14 +6,15 @@ import { useLang } from '../context/LanguageContext';
 
 // Mapa de rutas -> clave de traducción (los textos viven en src/i18n.ts)
 const PAGE_KEYS: Record<string, string> = {
-  '/inicio':        'inicio',
-  '/dashboard':     'dashboard',
-  '/mapa':          'mapa',
-  '/sensores':      'sensores',
-  '/usuarios':      'usuarios',
-  '/reportes':      'reportes',
-  '/alertas':       'alertas',
-  '/configuracion': 'config',
+  '/inicio':         'inicio',
+  '/dashboard':      'dashboard',
+  '/mapa':           'mapa',
+  '/sensores':       'sensores',
+  '/sobre-nosotros': 'sobreNosotros',
+  '/usuarios':       'usuarios',
+  '/reportes':       'reportes',
+  '/alertas':        'alertas',
+  '/configuracion':  'config',
 };
 
 const ALERTS_COUNT = 3;
@@ -101,7 +102,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
                 <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black">{ALERTS_COUNT} activas</span>
               </div>
               {[
-                { text: 'Presión crítica en Ilopango Sur', time: 'Hace 5 min', color: 'bg-red-500' },
+                { text: 'Presión crítica en Plan del Pino', time: 'Hace 5 min', color: 'bg-red-500' },
                 { text: 'Sensor F-002 desconectado',       time: 'Hace 18 min', color: 'bg-amber-500' },
                 { text: 'Flujo bajo en Soyapango',         time: 'Hace 1 h',   color: 'bg-amber-500' },
               ].map((a, i) => (

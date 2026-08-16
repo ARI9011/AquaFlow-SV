@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
   Home as HomeIcon, LayoutDashboard, Map as MapIcon, Droplets, FileText,
-  Settings, Bell, Users, LogOut, Menu, X, ShieldCheck, User as UserIcon,
+  Settings, Bell, Users, LogOut, Menu, X, ShieldCheck, User as UserIcon, Info,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
+import AquaFlowLogo from './AquaFlowLogo';
 
 interface NavItemProps {
   icon: any;
@@ -97,19 +98,17 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
       {/* LOGO HEADER */}
       <div className={`h-16 flex items-center border-b border-ink/[0.04] flex-shrink-0 px-3 ${effectiveCollapsed ? 'justify-center' : 'justify-between'}`}>
         {!effectiveCollapsed && (
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-aqua-cyan/15 border border-aqua-cyan/25 flex items-center justify-center flex-shrink-0">
-              <Droplets size={14} className="text-aqua-cyan" />
-            </div>
+          <div className="flex items-center gap-2.5 min-w-0 cursor-pointer" onClick={() => go('/inicio')}>
+            <AquaFlowLogo size={32} variant="cyan" />
             <div className="min-w-0">
               <p className="text-sm font-black text-ink tracking-tight leading-none">AquaFlow</p>
-              <p className="text-[9px] text-aqua-cyan/60 font-bold uppercase tracking-widest">SV · Monitoreo</p>
+              <p className="text-[9px] text-aqua-cyan/70 font-bold uppercase tracking-widest mt-0.5">SV · Monitoreo</p>
             </div>
           </div>
         )}
         {effectiveCollapsed && (
-          <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 border border-aqua-cyan/20 flex items-center justify-center">
-            <Droplets size={15} className="text-aqua-cyan" />
+          <div className="cursor-pointer" onClick={() => go('/inicio')} title="AquaFlow SV">
+            <AquaFlowLogo size={28} variant="cyan" />
           </div>
         )}
         {/* Cerrar drawer (solo móvil) */}
@@ -139,10 +138,11 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
             <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Principal</p>
           )}
           <div className="space-y-0.5">
-            <NavItem icon={HomeIcon}        label={t('nav.inicio')}     active={location.pathname === '/inicio'}    onClick={() => go('/inicio')}    collapsed={effectiveCollapsed} />
-            <NavItem icon={LayoutDashboard} label={t('nav.dashboard')}  active={location.pathname === '/dashboard'} onClick={() => go('/dashboard')} collapsed={effectiveCollapsed} />
-            <NavItem icon={MapIcon}         label={t('nav.mapa')}       active={location.pathname === '/mapa'}      onClick={() => go('/mapa')}      collapsed={effectiveCollapsed} />
-            <NavItem icon={Droplets}        label={t('nav.sensores')}   active={location.pathname === '/sensores'}  onClick={() => go('/sensores')}  collapsed={effectiveCollapsed} />
+            <NavItem icon={HomeIcon}        label={t('nav.inicio')}        active={location.pathname === '/inicio'}        onClick={() => go('/inicio')}        collapsed={effectiveCollapsed} />
+            <NavItem icon={LayoutDashboard} label={t('nav.dashboard')}     active={location.pathname === '/dashboard'}     onClick={() => go('/dashboard')}     collapsed={effectiveCollapsed} />
+            <NavItem icon={MapIcon}         label={t('nav.mapa')}          active={location.pathname === '/mapa'}          onClick={() => go('/mapa')}          collapsed={effectiveCollapsed} />
+            <NavItem icon={Droplets}        label={t('nav.sensores')}      active={location.pathname === '/sensores'}      onClick={() => go('/sensores')}      collapsed={effectiveCollapsed} />
+            <NavItem icon={Info}            label={t('nav.sobreNosotros')} active={location.pathname === '/sobre-nosotros'} onClick={() => go('/sobre-nosotros')} collapsed={effectiveCollapsed} />
           </div>
         </div>
 

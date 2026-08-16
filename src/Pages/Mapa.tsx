@@ -1,21 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { Globe, AlertTriangle, CheckCircle, Activity, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
-
-const zonasData = [
-  { id: 1, nombre: 'Colonia Escalón',  sector: 'cuscatansingo', lat: 13.788145, lng: -89.187340, presion: 48.2, flujo: 15.2, estado: 'Óptimo',  color: '#22c55e' },
-  { id: 2, nombre: 'Soyapango Centro', sector: 'Soyapango',    lat: 13.712607, lng: -89.136888, presion: 42.5, flujo: 12.8, estado: 'Estable',  color: '#00f2ea' },
-  { id: 3, nombre: 'Mejicanos Norte',  sector: 'Plan del pino',    lat: 13.718460, lng: -89.151406, presion: 18.4, flujo: 5.1,  estado: 'Crítico',  color: '#ef4444' },
-  { id: 4, nombre: 'Ilopango Sur',     sector: 'Ciudad Delgado',     lat: 13.714030, lng: -89.172931, presion: 35.0, flujo: 10.0, estado: 'Alerta',   color: '#f59e0b' },
-];
-
-const estadoStyle: Record<string, { text: string; bg: string; tw: string; cardTop: string }> = {
-  'Óptimo':  { text: '#22c55e', bg: 'rgba(34,197,94,0.13)',  tw: 'text-green-400', cardTop: 'card-top-green' },
-  'Estable': { text: '#00f2ea', bg: 'rgba(0,242,234,0.13)',  tw: 'text-cyan-400',  cardTop: 'card-top-cyan'  },
-  'Crítico': { text: '#ef4444', bg: 'rgba(239,68,68,0.13)',  tw: 'text-red-400',   cardTop: 'card-top-red'   },
-  'Alerta':  { text: '#f59e0b', bg: 'rgba(245,158,11,0.13)', tw: 'text-amber-400', cardTop: 'card-top-amber' },
-};
+import { ZONAS_VERDADERAS, ESTADO_STYLES, type ZonaMonitoreada } from '../data/zonas';
 
 const LEYENDA = [
   { estado: 'Óptimo',  color: '#22c55e', rango: '50–60 PSI' },
@@ -27,21 +15,24 @@ const LEYENDA = [
 function BoundsFitter() {
   const map = useMap();
   useEffect(() => {
-    map.setMaxBounds([[13.62, -89.30], [13.82, -89.08]]);
-    map.setMinZoom(12);
+    map.setMaxBounds([[13.55, -89.40], [13.90, -88.95]]);
+    map.setMinZoom(11);
   }, [map]);
   return null;
 }
 
-const ZonaCard = ({ zona }: { zona: typeof zonasData[0] }) => {
-  const st = estadoStyle[zona.estado];
+const ZonaCard = ({ zona, onClick }: { zona: ZonaMonitoreada; onClick?: () => void }) => {
+  const st = ESTADO_STYLES[zona.estado] || ESTADO_STYLES['Estable'];
   return (
-    <div className={`portal-card ${st.cardTop} overflow-hidden hover:scale-[1.015] transition-all duration-200 cursor-pointer group`}>
+    <div 
+      onClick={onClick}
+      className={`portal-card ${st.cardTop} overflow-hidden hover:scale-[1.015] transition-all duration-200 cursor-pointer group`}
+    >
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="min-w-0">
             <h3 className="font-bold text-ink text-sm group-hover:text-aqua-cyan transition-colors truncate">{zona.nombre}</h3>
-            <p className="text-[10px] text-gray-500 font-medium">{zona.sector}</p>
+            <p className="text-[10px] text-gray-500 font-medium capitalize">{zona.sector}</p>
           </div>
           <div className="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0" style={{ backgroundColor: zona.color }} />
         </div>
@@ -69,35 +60,59 @@ const ZonaCard = ({ zona }: { zona: typeof zonasData[0] }) => {
 
 export default function Mapa() {
   const [mapMounted, setMapMounted] = useState(false);
+  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'operativas' | 'incidencias'>('todos');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMapMounted(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const operativas   = zonasData.filter(z => z.estado === 'Óptimo' || z.estado === 'Estable').length;
-  const incidencias  = zonasData.filter(z => z.estado === 'Crítico' || z.estado === 'Alerta').length;
+  const operativasCount  = ZONAS_VERDADERAS.filter(z => z.estado === 'Óptimo' || z.estado === 'Estable').length;
+  const incidenciasCount = ZONAS_VERDADERAS.filter(z => z.estado === 'Crítico' || z.estado === 'Alerta').length;
+
+  const zonasFiltradas = ZONAS_VERDADERAS.filter(z => {
+    if (filtroEstado === 'operativas') return z.estado === 'Óptimo' || z.estado === 'Estable';
+    if (filtroEstado === 'incidencias') return z.estado === 'Crítico' || z.estado === 'Alerta';
+    return true;
+  });
 
   const KPIS = [
-    { label: 'Total zonas',    value: zonasData.length, sub: 'Monitoreadas',      color: 'text-aqua-cyan', bg: 'bg-aqua-cyan/10', top: 'card-top-cyan',  icon: Globe        },
-    { label: 'Operativas',     value: operativas,        sub: 'Óptimo / Estable', color: 'text-green-400', bg: 'bg-green-500/10', top: 'card-top-green', icon: CheckCircle  },
-    { label: 'Con incidencia', value: incidencias,       sub: 'Alerta / Crítico', color: 'text-red-400',   bg: 'bg-red-500/10',   top: 'card-top-red',   icon: AlertTriangle },
+    { id: 'todos', label: 'Total zonas', value: ZONAS_VERDADERAS.length, sub: 'Monitoreadas', color: 'text-aqua-cyan', bg: 'bg-aqua-cyan/10', top: 'card-top-cyan', icon: Globe, action: () => setFiltroEstado('todos') },
+    { id: 'operativas', label: 'Operativas', value: operativasCount, sub: 'Óptimo / Estable', color: 'text-green-400', bg: 'bg-green-500/10', top: 'card-top-green', icon: CheckCircle, action: () => setFiltroEstado('operativas') },
+    { id: 'incidencias', label: 'Con incidencia', value: incidenciasCount, sub: 'Alerta / Crítico', color: 'text-red-400', bg: 'bg-red-500/10', top: 'card-top-red', icon: AlertTriangle, action: () => setFiltroEstado('incidencias') },
   ];
 
   return (
     <div className="space-y-5 page-enter portal-grid-bg min-h-full pb-2">
 
       {/* ENCABEZADO */}
-      <div>
-        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Gran San Salvador</p>
-        <h2 className="text-3xl font-black tracking-tighter gradient-text">Mapa de Zonas</h2>
-        <p className="text-sm text-gray-500 mt-1">Ubicación y estado de todas las zonas de monitoreo</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Gran San Salvador</p>
+          <h2 className="text-3xl font-black tracking-tighter gradient-text">Mapa de Zonas</h2>
+          <p className="text-sm text-gray-500 mt-1">Ubicación y estado en tiempo real de todas las zonas de monitoreo</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/sensores')}
+            className="px-3.5 py-2 rounded-xl bg-aqua-cyan/10 border border-aqua-cyan/20 hover:bg-aqua-cyan/20 text-aqua-cyan text-xs font-bold transition-all flex items-center gap-1.5"
+          >
+            <Activity size={14} /> Ver Sensores IoT
+          </button>
+        </div>
       </div>
 
-      {/* KPI CARDS */}
+      {/* KPI CARDS (INTERACTIVOS) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {KPIS.map(k => (
-          <div key={k.label} className={`portal-card ${k.top} p-5 flex items-center gap-4`}>
+          <div 
+            key={k.id} 
+            onClick={k.action}
+            className={`portal-card ${k.top} p-5 flex items-center gap-4 cursor-pointer hover:scale-[1.015] transition-all duration-200 ${
+              filtroEstado === k.id ? 'ring-1 ring-aqua-cyan/50 shadow-lg' : ''
+            }`}
+          >
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0`}>
               <k.icon size={18} className={k.color} />
             </div>
@@ -112,14 +127,24 @@ export default function Mapa() {
 
       {/* MAPA INTERACTIVO */}
       <div className="portal-card overflow-hidden">
-        <div className="p-5 border-b border-ink/5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
-            <Activity size={16} className="text-aqua-cyan" />
+        <div className="p-5 border-b border-ink/5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
+              <Activity size={16} className="text-aqua-cyan" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-ink">Mapa Interactivo — San Salvador</h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">Haz clic en los marcadores para ver detalles de cada zona</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-base text-ink">Mapa Interactivo — San Salvador</h3>
-            <p className="text-[10px] text-gray-500 mt-0.5">Haz clic en los marcadores para ver detalles de cada zona</p>
-          </div>
+          {filtroEstado !== 'todos' && (
+            <button 
+              onClick={() => setFiltroEstado('todos')}
+              className="text-xs font-bold text-aqua-cyan hover:underline"
+            >
+              Mostrar todas
+            </button>
+          )}
         </div>
         <div style={{ height: '460px' }}>
           {!mapMounted ? (
@@ -131,8 +156,8 @@ export default function Mapa() {
             </div>
           ) : (
             <MapContainer
-              center={[13.7242, -89.1950]}
-              zoom={13}
+              center={[13.7350, -89.1620]}
+              zoom={12}
               preferCanvas={true}
               style={{ height: '100%', width: '100%', background: 'var(--color-aqua-dark)' }}
               scrollWheelZoom={true}
@@ -145,42 +170,42 @@ export default function Mapa() {
                 updateWhenIdle={false}
                 updateWhenZooming={false}
               />
-              {zonasData.map((zona) => (
+              {zonasFiltradas.map((zona) => (
                 <React.Fragment key={zona.id}>
                   <CircleMarker
                     center={[zona.lat, zona.lng]}
-                    radius={24}
+                    radius={26}
                     interactive={false}
-                    pathOptions={{ color: zona.color, fillColor: zona.color, fillOpacity: 0.1, weight: 0 }}
+                    pathOptions={{ color: zona.color, fillColor: zona.color, fillOpacity: 0.12, weight: 0 }}
                   />
                   <CircleMarker
                     center={[zona.lat, zona.lng]}
-                    radius={12}
-                    pathOptions={{ color: zona.color, fillColor: zona.color, fillOpacity: 0.9, weight: 2, opacity: 1 }}
+                    radius={13}
+                    pathOptions={{ color: zona.color, fillColor: zona.color, fillOpacity: 0.95, weight: 2, opacity: 1 }}
                   >
                     <Popup>
-                      <div style={{ minWidth: '185px', fontFamily: 'Inter, sans-serif' }}>
+                      <div style={{ minWidth: '190px', fontFamily: 'Inter, sans-serif' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                           <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: zona.color, flexShrink: 0 }} />
                           <div>
                             <p style={{ fontWeight: 900, fontSize: '13px', color: 'white', margin: 0, lineHeight: 1.2 }}>{zona.nombre}</p>
-                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', margin: 0, marginTop: '2px' }}>{zona.sector}</p>
+                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: 0, marginTop: '2px', textTransform: 'capitalize' }}>{zona.sector}</p>
                           </div>
                         </div>
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.38)' }}>Presión</span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Presión</span>
                             <span style={{ fontWeight: 700, color: 'var(--color-aqua-cyan)', fontFamily: 'monospace' }}>{zona.presion} PSI</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.38)' }}>Flujo</span>
-                            <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.75)', fontFamily: 'monospace' }}>{zona.flujo} L/m</span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Flujo</span>
+                            <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: 'monospace' }}>{zona.flujo} L/m</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.38)' }}>Estado</span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Estado</span>
                             <span style={{
                               fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em',
-                              color: zona.color, background: estadoStyle[zona.estado].bg,
+                              color: zona.color, background: ESTADO_STYLES[zona.estado]?.bg || 'rgba(0,242,234,0.13)',
                               padding: '2px 8px', borderRadius: '6px',
                             }}>
                               {zona.estado}
@@ -202,22 +227,22 @@ export default function Mapa() {
         <div className="flex items-center gap-2 mb-3">
           <MapPin size={15} className="text-aqua-cyan" />
           <h3 className="font-bold text-ink text-base">Zonas Monitoreadas</h3>
-          <span className="text-[10px] text-gray-600 font-bold ml-1">{zonasData.length} zonas</span>
+          <span className="text-[10px] text-gray-600 font-bold ml-1">{zonasFiltradas.length} zonas</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {zonasData.map((zona) => <ZonaCard key={zona.id} zona={zona} />)}
+          {zonasFiltradas.map((zona) => <ZonaCard key={zona.id} zona={zona} />)}
         </div>
       </div>
 
-      {/* TABLA DETALLADA */}
+      {/* TABLA DETALLADA DE ZONAS VERDADERAS */}
       <div className="portal-card overflow-hidden">
         <div className="p-5 border-b border-ink/5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-aqua-cyan/10 flex items-center justify-center">
             <Globe size={16} className="text-aqua-cyan" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-ink">Detalles de Ubicaciones</h3>
-            <p className="text-[10px] text-gray-500 mt-0.5">Coordenadas y métricas por zona</p>
+            <h3 className="font-bold text-base text-ink">Detalles de Ubicaciones Reales</h3>
+            <p className="text-[10px] text-gray-500 mt-0.5">Coordenadas exactas y lecturas dinámicas por zona</p>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -232,25 +257,25 @@ export default function Mapa() {
               </tr>
             </thead>
             <tbody className="divide-y divide-ink/[0.03]">
-              {zonasData.map((zona) => (
+              {zonasFiltradas.map((zona) => (
                 <tr key={zona.id} className="hover:bg-ink/[0.02] transition-colors">
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: zona.color }} />
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: zona.color }} />
                       <div>
                         <span className="font-bold text-ink text-sm">{zona.nombre}</span>
-                        <p className="text-[10px] text-gray-500">{zona.sector}</p>
+                        <p className="text-[10px] text-gray-500 capitalize">{zona.sector}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-5 font-mono text-[11px] text-gray-400">
-                    {zona.lat.toFixed(4)}, {zona.lng.toFixed(4)}
+                    {zona.lat.toFixed(6)}, {zona.lng.toFixed(6)}
                   </td>
                   <td className="px-6 py-5 text-center font-bold text-aqua-cyan">{zona.presion} PSI</td>
                   <td className="px-6 py-5 text-center font-bold text-ink/80">{zona.flujo} L/m</td>
                   <td className="px-6 py-5 text-center">
                     <span className="font-black text-[10px] uppercase px-3 py-1 rounded-lg"
-                      style={{ color: estadoStyle[zona.estado].text, backgroundColor: estadoStyle[zona.estado].bg }}>
+                      style={{ color: ESTADO_STYLES[zona.estado]?.text, backgroundColor: ESTADO_STYLES[zona.estado]?.bg }}>
                       {zona.estado}
                     </span>
                   </td>
@@ -280,3 +305,4 @@ export default function Mapa() {
     </div>
   );
 }
+

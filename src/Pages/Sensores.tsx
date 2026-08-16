@@ -109,12 +109,12 @@ function SensorPilotoCard() {
 }
 
 const SENSORES = [
-  { id: 1, nombre: 'Sensor T-001', zona: 'Colonia Escalón',  tipo: 'Presión', valor: 48.2, unidad: 'PSI',   bateria: 95, activo: true,  lectura: 'Hace 2 min' },
-  { id: 2, nombre: 'Sensor F-001', zona: 'Colonia Escalón',  tipo: 'Flujo',   valor: 15.2, unidad: 'L/min', bateria: 88, activo: true,  lectura: 'Hace 1 min' },
-  { id: 3, nombre: 'Sensor T-002', zona: 'Soyapango Centro', tipo: 'Presión', valor: 42.5, unidad: 'PSI',   bateria: 72, activo: true,  lectura: 'Hace 3 min' },
-  { id: 4, nombre: 'Sensor F-002', zona: 'Soyapango Centro', tipo: 'Flujo',   valor: 12.8, unidad: 'L/min', bateria: 15, activo: false, lectura: 'Hace 45 min' },
-  { id: 5, nombre: 'Sensor T-003', zona: 'Mejicanos Norte',  tipo: 'Presión', valor: 18.4, unidad: 'PSI',   bateria: 60, activo: true,  lectura: 'Hace 5 min' },
-  { id: 6, nombre: 'Sensor T-004', zona: 'Ilopango Sur',     tipo: 'Presión', valor: 35.0, unidad: 'PSI',   bateria: 82, activo: true,  lectura: 'Hace 2 min' },
+  { id: 1, nombre: 'Sensor T-001', zona: 'Cuscatancingo Centro',  tipo: 'Presión', valor: 48.2, unidad: 'PSI',   bateria: 95, activo: true,  lectura: 'Hace 2 min' },
+  { id: 2, nombre: 'Sensor F-001', zona: 'Cuscatancingo Centro',  tipo: 'Flujo',   valor: 15.2, unidad: 'L/min', bateria: 88, activo: true,  lectura: 'Hace 1 min' },
+  { id: 3, nombre: 'Sensor T-002', zona: 'Soyapango Centro',     tipo: 'Presión', valor: 42.5, unidad: 'PSI',   bateria: 72, activo: true,  lectura: 'Hace 3 min' },
+  { id: 4, nombre: 'Sensor F-002', zona: 'Soyapango Centro',     tipo: 'Flujo',   valor: 12.8, unidad: 'L/min', bateria: 15, activo: false, lectura: 'Hace 45 min' },
+  { id: 5, nombre: 'Sensor T-003', zona: 'Plan del Pino',        tipo: 'Presión', valor: 18.4, unidad: 'PSI',   bateria: 60, activo: true,  lectura: 'Hace 5 min' },
+  { id: 6, nombre: 'Sensor T-004', zona: 'Ciudad Delgado Centro', tipo: 'Presión', valor: 35.0, unidad: 'PSI',   bateria: 82, activo: true,  lectura: 'Hace 2 min' },
 ];
 
 function batteryColor(pct: number) {

@@ -21,6 +21,8 @@ import { ConfigProvider } from './context/ConfigContext';
 import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ConfirmProvider } from './components/ConfirmDialog';
+import SensorNotificationBanner from './components/SensorNotificationBanner';
+import SobreNosotros from './Pages/SobreNosotros';
 
 function ChatBotGuard() {
   const location = useLocation();
@@ -43,6 +45,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-aqua-dark text-ink font-sans">
       <BubbleBackground />
+      <SensorNotificationBanner />
       <Sidebar
         isAdmin={user?.rol === 'admin'}
         mobileOpen={mobileNavOpen}
@@ -102,6 +105,9 @@ export default function App() {
           } />
           <Route path="/configuracion" element={
             <ProtectedRoute><AdminLayout><Configuracion /></AdminLayout></ProtectedRoute>
+          } />
+          <Route path="/sobre-nosotros" element={
+            <AdminLayout><SobreNosotros /></AdminLayout>
           } />
 
           {/* Página de bienvenida PÚBLICA: con barra lateral y topbar, sin exigir login */}

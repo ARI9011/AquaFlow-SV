@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
+import AquaFlowLogo from '../components/AquaFlowLogo';
 import axios from 'axios';
 import VerifyModal from '../components/VerifyModal';
 import BubbleBackground from '../components/BubbleBackground';
@@ -246,11 +247,9 @@ export default function Login() {
         >
           <div className="relative z-10 w-full max-w-[360px] mx-auto">
 
-            {/* LOGO */}
+            {/* LOGO OFICIAL AQUAFLOW SV */}
             <div className="flex items-center gap-3 mb-10 group">
-              <div className="w-12 h-12 bg-ink/[0.03] border border-aqua-cyan/20 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-aqua-cyan/10 group-hover:border-aqua-cyan/50 transition-all duration-500">
-                💧
-              </div>
+              <AquaFlowLogo size={46} variant="cyan" />
               <div>
                 <h1 className="text-2xl font-black tracking-tighter text-ink leading-none">AquaFlow <span className="text-aqua-cyan">SV</span></h1>
                 <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-1">Monitoreo Hídrico</p>
