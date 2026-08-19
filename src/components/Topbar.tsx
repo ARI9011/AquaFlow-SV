@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
+import AdminCrown from './AdminCrown';
 
 // Mapa de rutas -> clave de traducción (los textos viven en src/i18n.ts)
 const PAGE_KEYS: Record<string, string> = {
@@ -139,7 +140,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
               <User size={14} />
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-black text-ink leading-none">{user?.Usuario ?? 'Usuario'}</p>
+              <p className="text-xs font-black text-ink leading-none flex items-center gap-1">
+                {user?.Usuario ?? 'Usuario'}
+                {user?.rol === 'admin' && <AdminCrown size={10} />}
+              </p>
               <p className="text-[9px] text-gray-500 mt-0.5">{user?.rol === 'admin' ? 'Admin' : 'Técnico'}</p>
             </div>
             <ChevronDown size={13} className={`text-gray-500 transition-transform flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -152,7 +156,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
                   <User size={15} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-black text-ink truncate">{user?.Usuario ?? 'Usuario'}</p>
+                  <p className="text-sm font-black text-ink truncate flex items-center gap-1">
+                    {user?.Usuario ?? 'Usuario'}
+                    {user?.rol === 'admin' && <AdminCrown size={11} />}
+                  </p>
                   <div className="flex items-center gap-1 mt-0.5">
                     {user?.rol === 'admin'
                       ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">Administrador</span></>

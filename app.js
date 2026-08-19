@@ -817,7 +817,13 @@ function verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario) {
 
 // GET todas las alertas (cualquier usuario autenticado)
 app.get('/api/alertas', requireAuth, (req, res) => {
-    db.query('SELECT * FROM alertas ORDER BY creado_en DESC', (err, rows) => {
+    const sql = `
+        SELECT a.*, u.rol AS usuario_rol
+        FROM alertas a
+        LEFT JOIN usuarios u ON u.Usuario = a.usuario
+        ORDER BY a.creado_en DESC
+    `;
+    db.query(sql, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -852,9 +858,10 @@ app.delete('/api/alertas/:id', requireAdmin, (req, res) => {
 app.get('/api/reportes', requireAuth, (req, res) => {
     const sql = `
         SELECT r.id, r.tipo, r.zona, r.sector, r.descripcion, r.estado, r.prioridad,
-               r.usuario_id, r.usuario, r.creado_en,
+               r.usuario_id, r.usuario, r.creado_en, u.rol AS usuario_rol,
                (SELECT COUNT(*) FROM comentarios_reportes cr WHERE cr.reporte_id = r.id) AS total_comentarios
         FROM reportes r
+        LEFT JOIN usuarios u ON u.id = r.usuario_id
         ORDER BY r.creado_en DESC
     `;
     db.query(sql, (err, rows) => {

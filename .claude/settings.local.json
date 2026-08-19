@@ -111,7 +111,8 @@
       "Bash(curl -s -c /tmp/qaV.txt http://localhost:3000/auth/register -X POST -H \"Content-Type: application/json\" -d '{\"nombre\":\"QA Visual\",\"email\":\"qa.visual.test@example.com\",\"password\":\"TestPass123\"}')",
       "Bash(\"/c/wamp64/bin/mysql/mysql8.4.7/bin/mysql.exe\" -uroot -h 127.0.0.1 aquaflow_sv -e \"UPDATE usuarios SET rol='admin' WHERE Correo='qa.visual.test@example.com';\")",
       "Bash(curl -s -c /tmp/qaV.txt -b /tmp/qaV.txt http://localhost:3000/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"qa.visual.test@example.com\",\"password\":\"TestPass123\"}')",
-      "Bash(node shot4.js)"
+      "Bash(node shot4.js)",
+      "Read(//c/wamp64/bin/mysql/**)"
     ]
   }
 }

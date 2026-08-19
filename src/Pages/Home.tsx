@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import ParticleFlowHero from '../components/ParticleFlowHero';
 import LoginRequiredModal from '../components/LoginRequiredModal';
+import AdminCrown from '../components/AdminCrown';
 
 function useInView<T extends HTMLElement>(threshold = 0.2) {
   const ref = useRef<T | null>(null);
@@ -167,8 +168,9 @@ export default function Home() {
             <span className="text-[10px] font-bold text-ink/80">Alertas de presión en tiempo real</span>
           </div>
 
-          <p className="text-aqua-cyan/70 text-[11px] uppercase tracking-[0.3em] font-bold mb-2">
+          <p className="text-aqua-cyan/70 text-[11px] uppercase tracking-[0.3em] font-bold mb-2 flex items-center gap-1.5">
             {saludoActual()}{user ? `, ${user.Usuario.split(' ')[0]}` : ''}
+            {user?.rol === 'admin' && <AdminCrown size={12} />}
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-ink leading-[1.05] mb-4">
             El agua del Gran San Salvador,<span className="gradient-text"> monitoreada en vivo.</span>

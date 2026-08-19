@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { UserPlus, Trash2, Edit2, User, X, ShieldCheck, UserCheck, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useConfirm } from '../components/ConfirmDialog';
+import AdminCrown from '../components/AdminCrown';
 
 interface UsuarioRow {
   ID: number;
@@ -169,7 +170,10 @@ export default function Usuarios() {
                           <User size={16} />
                         </div>
                         <div>
-                          <p className="font-bold text-ink text-sm">{user.Usuario}</p>
+                          <p className="font-bold text-ink text-sm flex items-center gap-1">
+                            {user.Usuario}
+                            {user.rol === 'admin' && <AdminCrown size={11} />}
+                          </p>
                           <p className="text-[10px] text-gray-500">{user.Correo}</p>
                         </div>
                       </div>

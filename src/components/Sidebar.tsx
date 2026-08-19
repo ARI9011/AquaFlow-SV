@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import AquaFlowLogo from './AquaFlowLogo';
+import AdminCrown from './AdminCrown';
 
 interface NavItemProps {
   icon: any;
@@ -177,7 +178,10 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
               <UserIcon size={14} className="text-aqua-cyan" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-black text-ink truncate">{user.Usuario}</p>
+              <p className="text-xs font-black text-ink truncate flex items-center gap-1">
+                {user.Usuario}
+                {user.rol === 'admin' && <AdminCrown size={11} />}
+              </p>
               <div className="flex items-center gap-1 mt-0.5">
                 {user.rol === 'admin'
                   ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">Administrador</span></>

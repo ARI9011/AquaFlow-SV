@@ -6,6 +6,7 @@ import {
 import axios from 'axios';
 import { useConfirm } from '../components/ConfirmDialog';
 import { useConfig } from '../context/ConfigContext';
+import AdminCrown from '../components/AdminCrown';
 
 const SEV_STYLE: Record<string, { text: string; bg: string; label: string; cardTop: string }> = {
   critica: { text: '#ef4444', bg: 'rgba(239,68,68,0.08)',  label: 'Crítica', cardTop: 'card-top-red'   },
@@ -42,6 +43,7 @@ interface Alerta {
   estado: 'activa' | 'suspendida' | 'resuelta';
   total_reportes: number;
   usuario: string;
+  usuario_rol?: string;
   creado_en: string;
   actualizado_en: string;
   resuelta_en: string | null;
@@ -348,7 +350,7 @@ export default function Alertas() {
                             </span>
                             <span className="flex items-center gap-1">
                               <Users size={10} />
-                              {alerta.total_reportes} reportes · último de <strong className="text-gray-400">{alerta.usuario}</strong>
+                              {alerta.total_reportes} reportes · último de <strong className="text-gray-400 inline-flex items-center gap-1">{alerta.usuario}{alerta.usuario_rol === 'admin' && <AdminCrown size={10} />}</strong>
                             </span>
                             <span className="flex items-center gap-1"><Clock size={10} />{timeAgo(alerta.actualizado_en ?? alerta.creado_en)}</span>
                           </div>
@@ -484,7 +486,10 @@ export default function Alertas() {
                   <Iniciales nombre={c.usuario} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <span className="text-sm font-bold text-ink">{c.usuario}</span>
+                      <span className="text-sm font-bold text-ink flex items-center gap-1">
+                        {c.usuario}
+                        {c.rol === 'admin' && <AdminCrown size={11} />}
+                      </span>
                       {c.rol === 'admin' && (
                         <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-aqua-cyan bg-aqua-cyan/10 px-1.5 py-0.5 rounded-md border border-aqua-cyan/20">
                           <ShieldCheck size={9} /> Admin

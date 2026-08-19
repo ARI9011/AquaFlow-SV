@@ -8,6 +8,7 @@ import {
   Droplets, Zap, Plus, Edit2, Trash2, MessageSquare,
   ChevronDown, ChevronUp, Send, X,
 } from 'lucide-react';
+import AdminCrown from '../components/AdminCrown';
 
 /* ── Tipos ─────────────────────────────────────────────────────────── */
 interface Reporte {
@@ -20,6 +21,7 @@ interface Reporte {
   prioridad: 'alta' | 'media' | 'baja';
   usuario_id: number;
   usuario: string;
+  usuario_rol?: string;
   creado_en: string | Date;
   total_comentarios: number;
 }
@@ -257,7 +259,10 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
               <div className="flex-1 bg-ink/[0.02] border border-ink/[0.05] rounded-xl px-3 py-2">
                 <div className="flex items-center justify-between mb-1 gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[11px] font-black text-ink truncate">{c.usuario}</span>
+                    <span className="text-[11px] font-black text-ink truncate flex items-center gap-1">
+                      {c.usuario}
+                      {c.rol === 'admin' && <AdminCrown size={10} />}
+                    </span>
                     {c.rol === 'admin' && (
                       <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md bg-aqua-cyan/15 text-aqua-cyan border border-aqua-cyan/20 flex-shrink-0">
                         Admin
@@ -546,8 +551,8 @@ export default function Reportes() {
                           <Clock size={10} className="text-gray-600" />
                           <span>{fmtDate(r.creado_en)}</span>
                         </div>
-                        <div className="text-[10px] text-gray-500">
-                          Por: <span className="text-ink/80 font-bold">{r.usuario}</span>
+                        <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                          Por: <span className="text-ink/80 font-bold inline-flex items-center gap-1">{r.usuario}{r.usuario_rol === 'admin' && <AdminCrown size={10} />}</span>
                         </div>
                       </div>
                     </div>
