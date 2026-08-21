@@ -679,7 +679,7 @@ app.post('/api/chat', async (req, res) => {
 
     try {
         const result = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
                 ...messages.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),

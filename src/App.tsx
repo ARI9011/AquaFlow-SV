@@ -21,6 +21,7 @@ import { ConfigProvider } from './context/ConfigContext';
 import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ConfirmProvider } from './components/ConfirmDialog';
+import { ToastProvider } from './components/Toast';
 import SensorNotificationBanner from './components/SensorNotificationBanner';
 import SobreNosotros from './Pages/SobreNosotros';
 
@@ -74,6 +75,7 @@ export default function App() {
       <AccessibilityProvider>
       <ConfigProvider>
       <ConfirmProvider>
+      <ToastProvider>
       {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
       <Router>
         <ChatBotGuard />
@@ -115,6 +117,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </ToastProvider>
       </ConfirmProvider>
       </ConfigProvider>
       </AccessibilityProvider>

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import AquaFlowLogo from './AquaFlowLogo';
 import AdminCrown from './AdminCrown';
+import { useToast } from './Toast';
 
 interface NavItemProps {
   icon: any;
@@ -63,10 +64,14 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
   const location  = useLocation();
   const { user, logout } = useAuth();
   const { t } = useLang();
+  const showToast = useToast();
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
+    onCloseMobile?.();
+    navigate('/', { replace: true });
     await logout();
+    showToast('Sesión cerrada correctamente');
   };
 
   const go = (path: string) => {

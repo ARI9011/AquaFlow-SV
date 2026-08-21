@@ -4,6 +4,7 @@ import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu, LogIn } from 'lucid
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import AdminCrown from './AdminCrown';
+import { useToast } from './Toast';
 
 // Mapa de rutas -> clave de traducción (los textos viven en src/i18n.ts)
 const PAGE_KEYS: Record<string, string> = {
@@ -27,13 +28,15 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { t, lang, toggleLang } = useLang();
+  const showToast = useToast();
   const key = PAGE_KEYS[location.pathname] ?? 'default';
   const page = { title: t(`page.${key}.title`), sub: t(`page.${key}.sub`) };
 
   const handleLogout = async () => {
     setDropdownOpen(false);
+    navigate('/', { replace: true });
     await logout();
-    // No forzamos ir al login: si estaba en un apartado, ProtectedRoute mostrará el aviso.
+    showToast('Sesión cerrada correctamente');
   };
 
   const closeAll = () => { setDropdownOpen(false); setBellOpen(false); };
