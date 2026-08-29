@@ -12,11 +12,16 @@ const LEYENDA = [
   { estado: 'Crítico', color: '#ef4444', rango: '< 25 PSI'  },
 ];
 
+// El basemap de Esri solo tiene teselas reales hasta el zoom 16 (a partir de ahí
+// devuelve una tesela de aviso "Map data not yet available" en vez de mapa real).
+const ZOOM_MAX_TESELAS = 16;
+
 function BoundsFitter() {
   const map = useMap();
   useEffect(() => {
     map.setMaxBounds([[13.55, -89.40], [13.90, -88.95]]);
     map.setMinZoom(11);
+    map.setMaxZoom(ZOOM_MAX_TESELAS);
   }, [map]);
   return null;
 }
@@ -158,14 +163,16 @@ export default function Mapa() {
             <MapContainer
               center={[13.7350, -89.1620]}
               zoom={12}
+              maxZoom={ZOOM_MAX_TESELAS}
               preferCanvas={true}
               style={{ height: '100%', width: '100%', background: 'var(--color-aqua-dark)' }}
               scrollWheelZoom={true}
             >
               <BoundsFitter />
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, DeLorme, NAVTEQ'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={ZOOM_MAX_TESELAS}
                 keepBuffer={4}
                 updateWhenIdle={false}
                 updateWhenZooming={false}

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from './api/axiosConfig';
 import Login from './Pages/Login';
 import Home from './Pages/Home';
 import Dashboard from './Pages/Dashboard';
@@ -25,6 +26,14 @@ import { ToastProvider } from './components/Toast';
 import SensorNotificationBanner from './components/SensorNotificationBanner';
 import SobreNosotros from './Pages/SobreNosotros';
 
+interface AlertaResumen {
+  id: number;
+  tipo: string;
+  zona: string;
+  descripcion: string;
+  creado_en: string;
+}
+
 function ChatBotGuard() {
   const location = useLocation();
   if (location.pathname === '/login') return null;
@@ -43,6 +52,28 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [alertasActivas, setAlertasActivas] = useState<AlertaResumen[]>([]);
+
+  useEffect(() => {
+    if (!user) { setAlertasActivas([]); return; }
+    let cancelado = false;
+    const cargarAlertas = () => {
+      axios.get('/api/alertas')
+        .then(({ data }) => {
+          if (cancelado || !Array.isArray(data)) return;
+          setAlertasActivas(
+            data
+              .filter((a: any) => a.estado === 'activa')
+              .sort((a: any, b: any) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime())
+          );
+        })
+        .catch(() => { /* se mantiene el último valor conocido */ });
+    };
+    cargarAlertas();
+    const id = setInterval(cargarAlertas, 60000);
+    return () => { cancelado = true; clearInterval(id); };
+  }, [user]);
+
   return (
     <div className="flex min-h-screen bg-aqua-dark text-ink font-sans">
       <BubbleBackground />
@@ -51,11 +82,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         isAdmin={user?.rol === 'admin'}
         mobileOpen={mobileNavOpen}
         onCloseMobile={() => setMobileNavOpen(false)}
+        alertCount={alertasActivas.length}
       />
       <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0" style={{ position: 'relative', zIndex: 1 }}>
         {/* Skip link: primer elemento tabulable, permite saltar el menú */}
         <a href="#contenido-principal" className="skip-link">Saltar al contenido principal</a>
-        <Topbar onMenuClick={() => setMobileNavOpen(true)} />
+        <Topbar onMenuClick={() => setMobileNavOpen(true)} alertas={alertasActivas} />
         <main id="contenido-principal" tabIndex={-1} role="main"
           className="flex-1 p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar">
           {children}
@@ -83,10 +115,12 @@ export default function App() {
           {/* Ruta pública */}
           <Route path="/login" element={<Login />} />
 
-          {/* Rutas privadas con guard de autenticación */}
+          {/* "Inicio" es pública, igual que "/": Home ya bloquea cada sección por su cuenta con irA() */}
           <Route path="/inicio" element={
-            <ProtectedRoute><AdminLayout><Home /></AdminLayout></ProtectedRoute>
+            <AdminLayout><Home /></AdminLayout>
           } />
+
+          {/* Rutas privadas con guard de autenticación */}
           <Route path="/dashboard" element={
             <ProtectedRoute><AdminLayout><Dashboard /></AdminLayout></ProtectedRoute>
           } />

@@ -27,6 +27,11 @@ const ZONE_COLORS: Record<string, string> = {
   'Ciudad Delgado': '#f59e0b',
 };
 
+// Los nombres de zona tienen espacios ("Plan del Pino"), pero un id de SVG no
+// puede tenerlos: un url(#pg-Plan del Pino) sin comillas es una referencia
+// inválida y el navegador descarta el degradado, dejando esa área en negro.
+const idZona = (nombre: string) => nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
 const FLOW_DATA = ZONAS_VERDADERAS.map(z => ({
   zona: z.nombre.replace(' Centro', ''),
   flujo: z.flujo,
@@ -75,7 +80,7 @@ export default function Dashboard() {
       .then(res => {
         if (Array.isArray(res.data)) {
           const total = res.data.length;
-          const pendientes = res.data.filter((r: any) => r.estado === 'Pendiente' || !r.estado).length;
+          const pendientes = res.data.filter((r: any) => r.estado === 'pendiente' || !r.estado).length;
           setReportesInfo({ total, pendientes });
         }
       })
@@ -85,7 +90,7 @@ export default function Dashboard() {
     axios.get('/api/alertas')
       .then(res => {
         if (Array.isArray(res.data)) {
-          const activas = res.data.filter((a: any) => a.estado === 'Activa' || a.estado === 'Pendiente').length;
+          const activas = res.data.filter((a: any) => a.estado === 'activa').length;
           setAlertasInfo({ 
             total: activas, 
             sub: activas > 0 ? `${activas} requieren revisión` : 'Sin alertas críticas' 
@@ -203,7 +208,7 @@ export default function Dashboard() {
             <AreaChart data={PRESSURE_DATA} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
               <defs>
                 {Object.entries(ZONE_COLORS).map(([name, color]) => (
-                  <linearGradient key={name} id={`pg-${name}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient key={name} id={`pg-${idZona(name)}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor={color} stopOpacity={0.28} />
                     <stop offset="95%" stopColor={color} stopOpacity={0.02} />
                   </linearGradient>
@@ -215,7 +220,7 @@ export default function Dashboard() {
               <Tooltip content={<PressureTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.05)' }} />
               {Object.entries(ZONE_COLORS).map(([name, color]) => (
                 <Area key={name} type="monotone" dataKey={name}
-                  stroke={color} strokeWidth={2} fill={`url(#pg-${name})`}
+                  stroke={color} strokeWidth={2} fill={`url(#pg-${idZona(name)})`}
                   dot={false} activeDot={{ r: 3, strokeWidth: 0 }} />
               ))}
             </AreaChart>

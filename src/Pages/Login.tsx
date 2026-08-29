@@ -128,8 +128,10 @@ export default function Login() {
     onError: () => setError('Inicio de sesión con Google cancelado.'),
   });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Cuenta admin autoreclamada pendiente de verificar (ver /auth/login -> requiresAdminVerification)
+  const [adminVerifyEmail, setAdminVerifyEmail] = useState<string | null>(null);
+
+  const intentarLogin = async () => {
     if (isLocked || loading) return;
     setError(''); setLoading(true);
 
@@ -144,7 +146,9 @@ export default function Login() {
       const data = err.response?.data ?? {};
       const status = err.response?.status;
 
-      if (status === 429) {
+      if (status === 403 && data.requiresAdminVerification) {
+        setAdminVerifyEmail(loginEmail);
+      } else if (status === 429) {
         // El servidor indica bloqueo
         const retryAfter = data.retryAfter ?? LOCKOUT_SECONDS;
         setLockedUntil(Date.now() + retryAfter * 1000);
@@ -171,6 +175,11 @@ export default function Login() {
     }
   };
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    intentarLogin();
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setSuccess('');
@@ -187,19 +196,15 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const isAdmin = isAdminEmail(registerEmail);
-      await axios.post('/auth/register', {
+      const { data } = await axios.post('/auth/register', {
         nombre: registerName,
         email:  registerEmail,
         password: registerPassword,
       });
-      setSuccess(
-        '¡Cuenta creada exitosamente!' +
-        (isAdmin ? ' Acceso de Administrador activado.' : '')
-      );
+      setSuccess(data.message ?? '¡Cuenta creada exitosamente!');
       setRegisterName(''); setRegisterEmail('');
       setRegisterPassword(''); setRegisterConfirmPassword('');
-      setTimeout(() => { setIsLogin(true); setSuccess(''); }, 2000);
+      setTimeout(() => { setIsLogin(true); setSuccess(''); }, data.isAdmin ? 4000 : 2000);
     } catch (err: any) {
       setError(err.response?.data?.error ?? 'Error al registrar. Intenta de nuevo.');
     } finally {
@@ -215,6 +220,13 @@ export default function Login() {
           email={verifyEmail}
           onVerified={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/inicio'); }}
           onClose={() => { setVerifyEmail(null); if (pendingUser) setUser(pendingUser); navigate('/inicio'); }}
+        />
+      )}
+      {adminVerifyEmail && (
+        <VerifyModal
+          email={adminVerifyEmail}
+          onVerified={() => { setAdminVerifyEmail(null); intentarLogin(); }}
+          onClose={() => setAdminVerifyEmail(null)}
         />
       )}
       {/* Halo ambiental de fondo */}

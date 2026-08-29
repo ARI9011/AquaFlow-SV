@@ -30,12 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = async () => {
+    // Se limpia de inmediato (antes de la llamada de red) para que cualquier ruta
+    // protegida que siga montada deje de estarlo en el mismo render que la navegación
+    // manual del que llama, y así ProtectedRoute nunca alcanza a redirigir con su
+    // propio aviso de "inicia sesión" de por medio.
+    setUser(null);
     try {
       await axios.post('/auth/logout');
     } catch {
       // ignorar errores de red
     }
-    setUser(null);
   };
 
   return (

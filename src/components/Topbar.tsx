@@ -19,9 +19,25 @@ const PAGE_KEYS: Record<string, string> = {
   '/configuracion':  'config',
 };
 
-const ALERTS_COUNT = 3;
+interface AlertaResumen {
+  id: number;
+  tipo: string;
+  zona: string;
+  descripcion: string;
+  creado_en: string;
+}
 
-export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
+function timeAgo(iso: string) {
+  const diffMs = Date.now() - new Date(iso.replace(' ', 'T')).getTime();
+  const min = Math.floor(diffMs / 60000);
+  if (min < 1) return 'Hace instantes';
+  if (min < 60) return `Hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `Hace ${h} h`;
+  return `Hace ${Math.floor(h / 24)} d`;
+}
+
+export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: () => void; alertas?: AlertaResumen[] }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bellOpen, setBellOpen]         = useState(false);
   const location = useLocation();
@@ -31,11 +47,12 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const showToast = useToast();
   const key = PAGE_KEYS[location.pathname] ?? 'default';
   const page = { title: t(`page.${key}.title`), sub: t(`page.${key}.sub`) };
+  const alertsCount = alertas.length;
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setDropdownOpen(false);
+    logout(); // limpia el usuario de inmediato; el POST de logout sigue en segundo plano
     navigate('/', { replace: true });
-    await logout();
     showToast('Sesión cerrada correctamente');
   };
 
@@ -88,13 +105,13 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <div className="relative">
           <button
             onClick={() => { setBellOpen(v => !v); setDropdownOpen(false); }}
-            aria-label={`Notificaciones, ${ALERTS_COUNT} alertas`}
+            aria-label={`Notificaciones, ${alertsCount} alertas`}
             className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-ink/15 transition-all text-gray-400 hover:text-ink"
           >
             <Bell size={16} aria-hidden="true" />
-            {ALERTS_COUNT > 0 && (
+            {alertsCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-ink text-[9px] font-black rounded-full flex items-center justify-center shadow-lg">
-                {ALERTS_COUNT}
+                {alertsCount}
               </span>
             )}
           </button>
@@ -103,18 +120,17 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <div className="absolute right-0 mt-2 w-72 bg-[var(--color-aqua-panel)] border border-ink/10 rounded-2xl shadow-2xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-ink/[0.06] flex items-center justify-between">
                 <span className="text-sm font-black text-ink">Alertas recientes</span>
-                <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black">{ALERTS_COUNT} activas</span>
+                <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black">{alertsCount} activas</span>
               </div>
-              {[
-                { text: 'Presión crítica en Plan del Pino', time: 'Hace 5 min', color: 'bg-red-500' },
-                { text: 'Sensor F-002 desconectado',       time: 'Hace 18 min', color: 'bg-amber-500' },
-                { text: 'Flujo bajo en Soyapango',         time: 'Hace 1 h',   color: 'bg-amber-500' },
-              ].map((a, i) => (
-                <div key={i} className="px-4 py-3 flex items-start gap-3 hover:bg-ink/[0.03] border-b border-ink/[0.04] last:border-0 transition-colors cursor-pointer">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${a.color}`} />
+              {alertsCount === 0 && (
+                <div className="px-4 py-6 text-center text-xs text-gray-500 font-medium">Sin alertas activas</div>
+              )}
+              {alertas.slice(0, 3).map((a) => (
+                <div key={a.id} className="px-4 py-3 flex items-start gap-3 hover:bg-ink/[0.03] border-b border-ink/[0.04] last:border-0 transition-colors cursor-pointer">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5 bg-red-500" />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-ink/90 truncate">{a.text}</p>
-                    <p className="text-[10px] text-gray-600 mt-0.5">{a.time}</p>
+                    <p className="text-xs font-bold text-ink/90 truncate">{a.descripcion || `${a.tipo} en ${a.zona}`}</p>
+                    <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(a.creado_en)}</p>
                   </div>
                 </div>
               ))}

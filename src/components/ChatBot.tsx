@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 type Role = 'user' | 'assistant';
 interface Message { role: Role; content: string; }
@@ -46,16 +48,28 @@ const BotAvatar = ({ size = 'sm' }: { size?: 'sm' | 'xs' }) => (
   </div>
 );
 
-/* ══════════════════════════════════════ */
 export default function ChatBot() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [open, setOpen]     = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: '¡Hola! Soy AquaBot, tu asistente de AquaFlow SV. ¿En qué puedo ayudarte hoy?' },
   ]);
   const [input, setInput]   = useState('');
   const [loading, setLoading] = useState(false);
+  const [limiteAlcanzado, setLimiteAlcanzado] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
+
+  // Si el usuario inicia sesión mientras el chat está abierto, se levanta el límite.
+  useEffect(() => {
+    if (user) setLimiteAlcanzado(false);
+  }, [user]);
+
+  const irALogin = () => {
+    setOpen(false);
+    navigate('/login');
+  };
 
   useEffect(() => {
     if (open) {
@@ -66,7 +80,7 @@ export default function ChatBot() {
 
   const send = async () => {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || limiteAlcanzado) return;
     const newMessages: Message[] = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
     setInput('');
@@ -76,11 +90,15 @@ export default function ChatBot() {
         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
       });
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-    } catch {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Ocurrió un error al conectar con el servidor. Intenta de nuevo.',
-      }]);
+    } catch (err: any) {
+      if (err?.response?.status === 403 && err.response.data?.requiresLogin) {
+        setLimiteAlcanzado(true);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Ocurrió un error al conectar con el servidor. Intenta de nuevo.',
+        }]);
+      }
     } finally {
       setLoading(false);
     }
@@ -163,6 +181,23 @@ export default function ChatBot() {
                 </div>
               </div>
             )}
+
+            {limiteAlcanzado && (
+              <div className="flex gap-2 justify-start">
+                <div className="mt-1"><BotAvatar size="xs" /></div>
+                <div className="max-w-[85%] px-3.5 py-3 rounded-2xl rounded-bl-sm bg-amber-500/10 border border-amber-500/25 space-y-2.5">
+                  <p className="text-sm text-ink/90 leading-relaxed">
+                    Alcanzaste el límite de mensajes gratuitos de AquaBot. Inicia sesión o regístrate para seguir chateando sin límite.
+                  </p>
+                  <button
+                    onClick={irALogin}
+                    className="w-full py-2 rounded-lg bg-aqua-cyan text-aqua-dark text-xs font-black uppercase tracking-wide hover:bg-aqua-cyan/80 transition-colors"
+                  >
+                    Iniciar sesión / Registrarme
+                  </button>
+                </div>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
 
@@ -174,13 +209,13 @@ export default function ChatBot() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Escribe tu pregunta..."
-              disabled={loading}
+              placeholder={limiteAlcanzado ? 'Inicia sesión para continuar...' : 'Escribe tu pregunta...'}
+              disabled={loading || limiteAlcanzado}
               className="flex-1 bg-ink/5 border border-ink/10 rounded-xl px-3 py-2 text-sm text-ink placeholder-gray-600 outline-none focus:border-aqua-cyan/40 disabled:opacity-50 transition-colors"
             />
             <button
               onClick={send}
-              disabled={!input.trim() || loading}
+              disabled={!input.trim() || loading || limiteAlcanzado}
               className="w-9 h-9 rounded-xl bg-aqua-cyan text-aqua-dark flex items-center justify-center hover:bg-aqua-cyan/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0"
             >
               <SendIcon />

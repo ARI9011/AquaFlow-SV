@@ -57,9 +57,10 @@ interface SidebarProps {
   isAdmin?: boolean;
   mobileOpen?: boolean;
   onCloseMobile?: () => void;
+  alertCount?: number;
 }
 
-export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMobile }: SidebarProps) {
+export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMobile, alertCount = 0 }: SidebarProps) {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, logout } = useAuth();
@@ -67,10 +68,10 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
   const showToast = useToast();
   const [collapsed, setCollapsed] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     onCloseMobile?.();
+    logout(); // limpia el usuario de inmediato; el POST de logout sigue en segundo plano
     navigate('/', { replace: true });
-    await logout();
     showToast('Sesión cerrada correctamente');
   };
 
@@ -158,7 +159,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
           )}
           <div className="space-y-0.5">
             <NavItem icon={FileText}  label={t('nav.reportes')}      active={location.pathname === '/reportes'}     onClick={() => go('/reportes')}     collapsed={effectiveCollapsed} />
-            <NavItem icon={Bell}      label={t('nav.alertas')}       badge={3} active={location.pathname === '/alertas'} onClick={() => go('/alertas')} collapsed={effectiveCollapsed} />
+            <NavItem icon={Bell}      label={t('nav.alertas')}       badge={alertCount} active={location.pathname === '/alertas'} onClick={() => go('/alertas')} collapsed={effectiveCollapsed} />
             <NavItem icon={Settings}  label={t('nav.configuracion')} active={location.pathname === '/configuracion'} onClick={() => go('/configuracion')} collapsed={effectiveCollapsed} />
           </div>
         </div>

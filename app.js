@@ -11,6 +11,12 @@ const eventos = require('./eventos');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
+// Nunca debe salir del servidor: ni en la sesión ni en las respuestas JSON.
+const sanearUsuario = (usuario) => {
+    const { Contra, ...resto } = usuario;
+    return resto;
+};
+
 const ADMIN_EMAILS = [
     'arielgarciacdb@gmail.com',
     'axelfernandolopez267@gmail.com',
@@ -65,9 +71,10 @@ async function enviarCorreoVerificacion(email, nombre, codigo) {
 function emitirCodigo(email, nombre) {
     const codigo = generarCodigo();
     verifyCodes.set(email, { code: codigo, expires: Date.now() + 10 * 60 * 1000, intentos: 0 });
-    enviarCorreoVerificacion(email, nombre, codigo)
-        .then(() => console.log('📧 Código de verificación enviado a', email))
-        .catch((e) => console.error('❌ Error enviando correo a', email, '-', e.message));
+    const envio = enviarCorreoVerificacion(email, nombre, codigo);
+    envio.then(() => console.log('📧 Código de verificación enviado a', email))
+         .catch((e) => console.error('❌ Error enviando correo a', email, '-', e.message));
+    return envio; // el caller puede esperarlo si necesita confirmar el envío real
 }
 
 const app = express();
@@ -86,10 +93,12 @@ function requireAdmin(req, res, next) {
 // ── Rate limiting para login (por email, en memoria) ─────────────────
 const loginAttempts = new Map(); 
 
+const VENTANA_INACTIVIDAD_MS = 15 * 60 * 1000; // sin intentos nuevos en este tiempo, ya no hace falta recordarlo
+
 function cleanExpiredAttempts() {
     const now = Date.now();
     for (const [email, record] of loginAttempts.entries()) {
-        if (record.lockUntil < now && record.count === 0) loginAttempts.delete(email);
+        if (record.lockUntil < now && (now - record.lastAttempt) > VENTANA_INACTIVIDAD_MS) loginAttempts.delete(email);
     }
 }
 setInterval(cleanExpiredAttempts, 5 * 60 * 1000); // limpiar cada 5 min
@@ -152,14 +161,27 @@ app.post('/auth/login', (req, res) => {
         );
 
         if (passwordOk) {
+            // Cuentas admin creadas por autoregistro (no por Google ni por otro admin) deben
+            // demostrar que controlan ese correo antes de recibir sesión con privilegios de admin.
+            const yaVerificado = usuario.verificado === 1 || usuario.verificado === true;
+            if (usuario.rol === 'admin' && !yaVerificado) {
+                emitirCodigo(email, usuario.Usuario);
+                return res.status(403).json({
+                    error: 'Debes verificar tu correo para completar el acceso como administrador.',
+                    requiresAdminVerification: true,
+                });
+            }
+
             loginAttempts.delete(email); // Limpiar intentos al ingresar correctamente
-            req.session.user = usuario;
+            const usuarioSeguro = sanearUsuario(usuario);
+            req.session.user = usuarioSeguro;
             console.log('✅ Login exitoso:', email, '| Rol:', usuario.rol);
-            return res.json({ success: true, user: usuario });
+            return res.json({ success: true, user: usuarioSeguro });
         }
 
         // Credenciales incorrectas: registrar intento fallido
         record.count++;
+        record.lastAttempt = now;
         if (record.count >= 3) {
             record.lockUntil = Date.now() + 60 * 1000; // bloquear 60 segundos
         }
@@ -205,11 +227,12 @@ app.post('/auth/google', async (req, res) => {
             // El usuario ya existe -> iniciar sesión
             if (results.length > 0) {
                 const usuario = results[0];
-                req.session.user = usuario;
+                const usuarioSeguro = sanearUsuario(usuario);
+                req.session.user = usuarioSeguro;
                 console.log('✅ Login Google:', email, '| Rol:', usuario.rol);
                 const yaVerificado = usuario.verificado === 1 || usuario.verificado === true;
                 if (!yaVerificado) emitirCodigo(email, usuario.Usuario || nombre);
-                return res.json({ success: true, user: usuario, needsVerification: !yaVerificado });
+                return res.json({ success: true, user: usuarioSeguro, needsVerification: !yaVerificado });
             }
 
             // Usuario nuevo -> crearlo automáticamente y enviar código de verificación
@@ -270,8 +293,9 @@ app.post('/auth/resend-code', (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email requerido' });
     const nombre = (req.session.user && req.session.user.Usuario) || email.split('@')[0];
-    emitirCodigo(email, nombre);
-    return res.json({ success: true, message: 'Código reenviado' });
+    emitirCodigo(email, nombre)
+        .then(() => res.json({ success: true, message: 'Código reenviado' }))
+        .catch(() => res.status(502).json({ error: 'No se pudo enviar el correo. Intenta de nuevo más tarde.' }));
 });
 
 // --- LÓGICA DE REGISTRO (Ajustada a tu SQL) ---
@@ -282,20 +306,33 @@ app.post('/auth/register', (req, res) => {
         return res.status(400).json({ error: 'Todos los campos son requeridos' });
     }
 
-    const rol = esCorreoAdmin(email) ? 'admin' : 'user';
+    const esAdmin = esCorreoAdmin(email);
+    const rol = esAdmin ? 'admin' : 'user';
 
     db.query('SELECT id FROM usuarios WHERE Correo = ?', [email], (errCheck, rows) => {
         if (errCheck) return res.status(500).json({ error: 'Error en servidor' });
         if (rows.length > 0) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo electrónico.' });
 
         const hashedPassword = bcrypt.hashSync(password, 10);
-        const sql = 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
+        // Nadie puede demostrar solo con el formulario que es dueño de un correo de la lista de
+        // admins, así que esas cuentas se crean sin verificar: no podrán iniciar sesión como
+        // admin hasta confirmar el código que se les envía a ese correo (ver /auth/login).
+        const sql = esAdmin
+            ? 'INSERT INTO usuarios (Usuario, Correo, Contra, rol, verificado) VALUES (?, ?, ?, ?, 0)'
+            : 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
         db.query(sql, [nombre, email, hashedPassword, rol], (err, result) => {
             if (err) {
                 console.error('Register query error:', err);
                 return res.status(500).json({ error: 'Error al registrar. Intenta de nuevo.' });
             }
-            return res.json({ success: true, message: 'Usuario registrado exitosamente', isAdmin: rol === 'admin' });
+            if (esAdmin) emitirCodigo(email, nombre);
+            return res.json({
+                success: true,
+                message: esAdmin
+                    ? 'Cuenta creada. Te enviamos un código a tu correo: deberás verificarlo antes de poder iniciar sesión como administrador.'
+                    : 'Usuario registrado exitosamente',
+                isAdmin: esAdmin,
+            });
         });
     });
 });
@@ -337,6 +374,11 @@ app.listen(PORT, () => {
     console.log(`🚀 AquaFlow SV corriendo en http://localhost:${PORT}`);
     const key = process.env.GROQ_API_KEY;
     console.log(`🔑 GROQ_API_KEY: ${key ? key.substring(0, 10) + '...' : 'NO ENCONTRADA ❌'}`);
+
+    // Migración: columna de verificación por email. DEFAULT 1 para que las cuentas ya
+    // existentes (creadas antes de este cambio) sigan pudiendo iniciar sesión sin problema;
+    // solo las cuentas admin autoregistradas se insertan explícitamente con verificado = 0.
+    ensureColumnAdded('usuarios', 'verificado', 'verificado TINYINT(1) NOT NULL DEFAULT 1');
 
     // Crear tabla de comentarios si no existe
     const sqlTable = `
@@ -670,11 +712,26 @@ Instrucciones:
 - Sé amable, profesional y útil.
 - Si no sabes algo específico del sistema, indícalo honestamente.`;
 
+// Visitantes sin sesión pueden probar el chat, pero con un límite; para uso ilimitado deben iniciar sesión.
+const CHAT_PROMPTS_GRATIS = 5;
+
 app.post('/api/chat', async (req, res) => {
     const { messages } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
         return res.status(400).json({ error: 'Se requiere el array de mensajes' });
+    }
+
+    if (!req.session.user) {
+        const usados = req.session.chatPromptsUsados || 0;
+        if (usados >= CHAT_PROMPTS_GRATIS) {
+            return res.status(403).json({
+                error: 'Alcanzaste el límite de mensajes gratuitos de AquaBot.',
+                requiresLogin: true,
+                limit: CHAT_PROMPTS_GRATIS,
+            });
+        }
+        req.session.chatPromptsUsados = usados + 1;
     }
 
     try {

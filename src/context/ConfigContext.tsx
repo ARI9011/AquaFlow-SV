@@ -56,12 +56,17 @@ interface ConfigContextType {
 
 const ConfigContext = createContext<ConfigContextType | null>(null);
 
+function numOrDefault(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 function normalizeSistema(raw: any): SistemaConfig {
   return {
     auto_refresh: !!raw.auto_refresh,
-    intervalo: Number(raw.intervalo) || SISTEMA_DEFAULT.intervalo,
-    umbral_presion: Number(raw.umbral_presion) || SISTEMA_DEFAULT.umbral_presion,
-    umbral_flujo: Number(raw.umbral_flujo) || SISTEMA_DEFAULT.umbral_flujo,
+    intervalo: numOrDefault(raw.intervalo, SISTEMA_DEFAULT.intervalo),
+    umbral_presion: numOrDefault(raw.umbral_presion, SISTEMA_DEFAULT.umbral_presion),
+    umbral_flujo: numOrDefault(raw.umbral_flujo, SISTEMA_DEFAULT.umbral_flujo),
   };
 }
 
@@ -87,7 +92,12 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   useEffect(() => { aplicarTemaAlDOM(notificaciones.tema); }, [notificaciones.tema]);
 
   const fetchConfig = useCallback(() => {
-    if (!user) { setConfigLoading(false); return; }
+    if (!user) {
+      setSistema(SISTEMA_DEFAULT);
+      setNotificaciones(prev => ({ ...NOTIFICACIONES_DEFAULT, tema: prev.tema }));
+      setConfigLoading(false);
+      return;
+    }
     setConfigLoading(true);
     axios.get('/api/configuracion')
       .then(({ data }) => {

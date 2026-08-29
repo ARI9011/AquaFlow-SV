@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Cpu, AlertTriangle, CheckCircle2, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface EstadoPiloto {
   conectado: boolean;
@@ -10,6 +11,7 @@ interface EstadoPiloto {
 }
 
 export default function SensorNotificationBanner() {
+  const { user } = useAuth();
   const [notificacion, setNotificacion] = useState<{
     id: number;
     tipo: 'conexion' | 'desconexion' | 'alerta';
@@ -18,6 +20,10 @@ export default function SensorNotificationBanner() {
   } | null>(null);
 
   useEffect(() => {
+    // El stream requiere sesión iniciada; sin ella el servidor responde 401
+    // y no tiene sentido reintentar (p. ej. en la página pública de inicio).
+    if (!user) return;
+
     let es: EventSource | null = null;
     let reintento: ReturnType<typeof setTimeout> | null = null;
     let cerrado = false;
@@ -87,7 +93,7 @@ export default function SensorNotificationBanner() {
       if (reintento) clearTimeout(reintento);
       es?.close();
     };
-  }, []);
+  }, [user]);
 
   // Ocultar notificación automáticamente tras 7 segundos
   useEffect(() => {

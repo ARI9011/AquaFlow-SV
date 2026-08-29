@@ -1,10 +1,3 @@
-/*
- * AquaFlow SV — Nodo de telemetría (Arduino Mega 2560)
- * Lee pulsos del sensor de flujo (YF-S201), calcula litros,
- * muestra en LCD I2C y controla el relé.
- *
- * Migrado desde electroalltest1.ino para PlatformIO / VS Code.
- */
 
 #include <Arduino.h>
 #include <Wire.h>
