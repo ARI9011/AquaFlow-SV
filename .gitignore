@@ -3,3 +3,6 @@ dist/
 *.log
 .env
 package-lock
+
+# Salida de compilación de PlatformIO (se regenera con `pio run`, no aporta nada versionada)
+firmware/.pio/

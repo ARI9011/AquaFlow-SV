@@ -487,6 +487,19 @@ const TABLAS_SISTEMA = [
             );
         },
     },
+    {
+        // historial del chat con AquaBot, por usuario logueado (los anónimos no
+        // persisten nada — su conversación vive solo en memoria del navegador).
+        nombre: 'chat_mensajes',
+        sql: `CREATE TABLE IF NOT EXISTS chat_mensajes (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            usuario_id  INT NOT NULL,
+            rol         ENUM('user','assistant') NOT NULL,
+            contenido   TEXT NOT NULL,
+            creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_usuario (usuario_id, creado_en)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    },
 ];
 
 // la tabla reportes de antes tenía otras columnas (Usuario, Zona, Cometario).
@@ -815,11 +828,49 @@ app.post('/api/chat', async (req, res) => {
             temperature: 0.7,
         });
 
-        res.json({ reply: result.choices[0].message.content });
+        const reply = result.choices[0].message.content;
+
+        // Solo se guarda el mensaje nuevo del usuario (el último del array, el resto
+        // ya se había guardado en llamadas anteriores) y la respuesta del bot — no
+        // todo el array completo, porque el frontend reenvía el historial entero
+        // en cada request para darle contexto a la IA.
+        if (req.session.user) {
+            const userId = req.session.user.id || req.session.user.ID;
+            const ultimoMensaje = messages[messages.length - 1];
+            db.query(
+                'INSERT INTO chat_mensajes (usuario_id, rol, contenido) VALUES (?, ?, ?), (?, ?, ?)',
+                [userId, 'user', ultimoMensaje.content, userId, 'assistant', reply],
+                (err) => { if (err) console.error('Error guardando mensaje de chat:', err.message); }
+            );
+        }
+
+        res.json({ reply });
     } catch (err) {
         console.error('Error Groq:', err.message);
         res.status(500).json({ error: err.message || 'Error desconocido' });
     }
+});
+
+// historial del chat guardado (solo usuarios con sesión)
+app.get('/api/chat/historial', requireAuth, (req, res) => {
+    const userId = req.session.user.id || req.session.user.ID;
+    db.query(
+        'SELECT rol, contenido, creado_en FROM chat_mensajes WHERE usuario_id = ? ORDER BY creado_en ASC',
+        [userId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Error al cargar el historial del chat' });
+            res.json(rows);
+        }
+    );
+});
+
+// "nueva conversación": borra el historial guardado para empezar de cero
+app.delete('/api/chat/historial', requireAuth, (req, res) => {
+    const userId = req.session.user.id || req.session.user.ID;
+    db.query('DELETE FROM chat_mensajes WHERE usuario_id = ?', [userId], (err) => {
+        if (err) return res.status(500).json({ error: 'Error al borrar el historial del chat' });
+        res.json({ success: true });
+    });
 });
 
 // traducción de la interfaz (ES -> EN) vía DeepL, con caché en BD compartida

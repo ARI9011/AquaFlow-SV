@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { RotateCcw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useA11y } from '../context/AccessibilityContext';
 import { useLang } from '../context/LanguageContext';
+import { useConfirm } from './ConfirmDialog';
 
 type Role = 'user' | 'assistant';
 interface Message { role: Role; content: string; }
@@ -47,20 +49,39 @@ export default function ChatBot() {
   const { user } = useAuth();
   const { setChatAbierto } = useA11y();
   const { t, lang } = useLang();
+  const confirmDialog = useConfirm();
   const [open, setOpen]     = useState(false);
   const [saludoBoton] = useState(() => SALUDOS_BOTON[Math.floor(Math.random() * SALUDOS_BOTON.length)]);
 
   // avisamos si está abierto para esconder el botón de accesibilidad
   useEffect(() => { setChatAbierto(open); }, [open, setChatAbierto]);
   useEffect(() => () => setChatAbierto(false), [setChatAbierto]);
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: t('¡Hola! Soy AquaBot, tu asistente de AquaFlow SV. ¿En qué puedo ayudarte hoy?') },
-  ]);
+
+  // Vacío = se muestra el saludo (calculado al vuelo con t(), no guardado en el
+  // estado) en vez de un mensaje fijo — así si cambias de idioma a medio chat,
+  // el saludo se actualiza solo igual que el resto de la página.
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
   const [input, setInput]   = useState('');
   const [loading, setLoading] = useState(false);
   const [limiteAlcanzado, setLimiteAlcanzado] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
+
+  // Con sesión: carga la conversación guardada de esa persona. Sin sesión (o al
+  // cerrarla): la conversación es solo de este navegador, en memoria.
+  useEffect(() => {
+    if (!user) { setMessages([]); return; }
+    setCargandoHistorial(true);
+    axios.get('/api/chat/historial')
+      .then(({ data }) => {
+        if (Array.isArray(data)) {
+          setMessages(data.map((m: any) => ({ role: m.rol, content: m.contenido })));
+        }
+      })
+      .catch(() => { /* se queda vacío, no es grave */ })
+      .finally(() => setCargandoHistorial(false));
+  }, [user]);
 
   // si inicia sesión con el chat abierto, se quita el límite
   useEffect(() => {
@@ -70,6 +91,19 @@ export default function ChatBot() {
   const irALogin = () => {
     setOpen(false);
     navigate('/login');
+  };
+
+  const nuevaConversacion = async () => {
+    const ok = await confirmDialog({
+      message: t('¿Empezar una conversación nueva? Se borrará el historial guardado de este chat.'),
+      danger: true,
+    });
+    if (!ok) return;
+    if (user) {
+      try { await axios.delete('/api/chat/historial'); } catch { /* se intenta de nuevo la próxima vez */ }
+    }
+    setMessages([]);
+    setLimiteAlcanzado(false);
   };
 
   useEffect(() => {
@@ -154,14 +188,34 @@ export default function ChatBot() {
               <p className="font-black text-sm text-ink leading-none">AquaBot</p>
               <p className="text-[10px] text-aqua-cyan/80 font-medium">{t('Asistente IA')} · AquaFlow SV</p>
             </div>
-            <div className="ml-auto flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] text-green-400 font-medium">{t('En línea')}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[10px] text-green-400 font-medium">{t('En línea')}</span>
+              </div>
+              {messages.length > 0 && (
+                <button
+                  onClick={nuevaConversacion}
+                  title={t('Nueva conversación')}
+                  aria-label={t('Nueva conversación')}
+                  className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-500 hover:text-aqua-cyan hover:bg-aqua-cyan/10 transition-colors flex-shrink-0"
+                >
+                  <RotateCcw size={13} />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Mensajes */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+            {!cargandoHistorial && messages.length === 0 && (
+              <div className="flex gap-2 justify-start">
+                <div className="mt-1"><BotAvatar size="xs" /></div>
+                <div className="max-w-[78%] px-3 py-2 rounded-2xl text-sm leading-relaxed bg-ink/5 text-ink rounded-bl-sm border border-ink/5">
+                  <p>{t('¡Hola! Soy AquaBot, tu asistente de AquaFlow SV. ¿En qué puedo ayudarte hoy?')}</p>
+                </div>
+              </div>
+            )}
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
