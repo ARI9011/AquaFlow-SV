@@ -32,17 +32,17 @@ export default function Login() {
     if (!authLoading && user) navigate('/inicio', { replace: true });
   }, [user, authLoading, navigate]);
 
-  /* ── Formulario ── */
+  /* Formulario */
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  /* ── Login ── */
+  /* Login */
   const [loginEmail,    setLoginEmail]    = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  /* ── Rate limit ── */
+  /* Rate limit */
   const [attempts,   setAttempts]   = useState(0);     
   const [lockedUntil, setLockedUntil] = useState(0);    
 
@@ -58,7 +58,7 @@ export default function Login() {
     return () => clearInterval(t);
   }, [isLocked, lockedUntil]);
 
-  /* ── Registro ── */
+  /* Registro */
   const [registerName,            setRegisterName]            = useState('');
   const [registerEmail,           setRegisterEmail]           = useState('');
   const [registerPassword,        setRegisterPassword]        = useState('');
@@ -72,7 +72,7 @@ export default function Login() {
   ];
   const isAdminEmail = (email: string) => ADMIN_EMAILS.includes(email.toLowerCase());
 
-  /* ── Suaviza el cruce del panel diagonal ── */
+  /* Suaviza el cruce del panel diagonal */
   const diagonalPanelRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function Login() {
   };
 
 
-  /* ── Handlers ── */
+  /* Handlers */
   // Correo pendiente de verificación (muestra el modal de código)
   const [verifyEmail, setVerifyEmail] = useState<string | null>(null);
   // Usuario de Google en espera: NO se marca la sesión hasta cerrar/verificar el modal
@@ -212,7 +212,7 @@ export default function Login() {
     }
   };
 
-  /* ── UI ── */
+  /* UI */
   return (
     <div className="h-screen w-screen bg-black font-sans selection:bg-aqua-cyan/30 text-ink relative overflow-hidden">
       {verifyEmail && (
@@ -250,7 +250,7 @@ export default function Login() {
           <BubbleBackground count={42} variant="absolute" />
         </div>
 
-        {/* ── FORMULARIO: se desliza al lado opuesto del panel diagonal ── */}
+        {/* FORMULARIO: se desliza al lado opuesto del panel diagonal */}
         <div
           className={`absolute top-0 left-0 w-full md:w-[42%] h-full flex flex-col justify-center px-6 sm:px-8 py-10 overflow-y-auto custom-scrollbar ${
             isLogin ? 'md:left-0' : 'md:left-[58%]'
@@ -269,7 +269,7 @@ export default function Login() {
             </div>
 
             <div key={isLogin ? 'login' : 'register'} className="auth-form-transition">
-              {/* ── FORMULARIO LOGIN ── */}
+              {/* FORMULARIO LOGIN */}
               {isLogin ? (
                 <div className="space-y-6">
                   <div className="text-center mb-2">
@@ -368,7 +368,7 @@ export default function Login() {
                 </div>
 
               ) : (
-                /* ── FORMULARIO REGISTRO ── */
+                /* FORMULARIO REGISTRO */
                 <div className="space-y-6">
                   <div className="text-center mb-2">
                     <h2 className="text-2xl font-black text-ink tracking-tight">Crear Cuenta</h2>
@@ -493,7 +493,7 @@ export default function Login() {
           </div>
         </div>
 
-        {/* ── PANEL DIAGONAL: flujo de partículas, cambia de lado entre login/registro ── */}
+        {/* PANEL DIAGONAL: flujo de partículas, cambia de lado entre login/registro */}
         <div
           ref={diagonalPanelRef}
           className={`hidden md:block absolute top-0 h-full md:w-[58%] bg-black z-10 overflow-hidden ${

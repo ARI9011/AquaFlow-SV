@@ -5,7 +5,7 @@ import { useA11y } from '../context/AccessibilityContext';
 
 export default function AccessibilityPanel() {
   const [abierto, setAbierto] = useState(false);
-  const { fontScale, highContrast, aumentarTexto, reducirTexto, resetTexto, toggleContraste } = useA11y();
+  const { fontScale, highContrast, aumentarTexto, reducirTexto, resetTexto, toggleContraste, chatAbierto } = useA11y();
 
   const [narrador, setNarrador] = useState(false);
   const [soportaVoz, setSoportaVoz] = useState(true);
@@ -62,8 +62,11 @@ export default function AccessibilityPanel() {
     };
   }, [narrador]);
 
+  // se oculta si el chat está abierto, comparten la misma esquina
+  if (chatAbierto) return null;
+
   return (
-    <div data-a11y-panel className="fixed bottom-24 right-6 z-[900] flex flex-col items-end gap-3">
+    <div data-a11y-panel className="fixed bottom-32 right-4 sm:right-6 z-[900] flex flex-col items-end gap-3">
       {/* Panel expandible */}
       {abierto && (
         <div

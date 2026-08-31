@@ -147,7 +147,7 @@ export default function Usuarios() {
           </div>
         ) : users.length === 0 ? (
           <div className="p-16 flex flex-col items-center gap-3">
-            <Users size={32} className="text-gray-600 opacity-40" />
+            <img src="/aquabot-sin-datos.png" alt="" className="w-16 h-16 opacity-70" />
             <p className="text-sm font-bold text-gray-500">No hay usuarios registrados</p>
             <p className="text-xs text-gray-600">Crea el primer usuario con el botón "Nuevo usuario"</p>
           </div>

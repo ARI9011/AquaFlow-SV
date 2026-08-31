@@ -1,4 +1,4 @@
-import { Lock, LogIn, X } from 'lucide-react';
+import { LogIn, X } from 'lucide-react';
 
 interface Props {
   seccion?: string;             
@@ -25,8 +25,8 @@ export default function LoginRequiredModal({ seccion, onIniciarSesion, onCancela
         </button>
 
         <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 rounded-2xl bg-aqua-cyan/15 flex items-center justify-center">
-            <Lock className="text-aqua-cyan" size={30} />
+          <div className="w-16 h-16 rounded-2xl bg-aqua-cyan/15 flex items-center justify-center overflow-hidden">
+            <img src="/aquabot-alerta-detectada.png" alt="" className="w-full h-full object-contain p-1.5" />
           </div>
         </div>
 

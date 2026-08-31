@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const db = require('./db');
+const dbp = db.promise(); // solo para el arranque, para que los logs salgan en orden
 const cors = require('cors');
 const Groq = require('groq-sdk');
 const bcrypt = require('bcryptjs');
@@ -11,7 +12,7 @@ const eventos = require('./eventos');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
-// Nunca debe salir del servidor: ni en la sesión ni en las respuestas JSON.
+// que no salga del server ni en la sesión ni en el json de respuesta
 const sanearUsuario = (usuario) => {
     const { Contra, ...resto } = usuario;
     return resto;
@@ -34,11 +35,11 @@ const mailer = nodemailer.createTransport({
 });
 
 if (!process.env.SMTP_USER || !process.env.SMTP_PASS || process.env.SMTP_USER.includes('tu_correo')) {
-    console.warn('⚠️  SMTP sin configurar: pon SMTP_USER y SMTP_PASS (contraseña de aplicación de Gmail) en .env. Los correos NO se enviarán.');
+    console.warn('SMTP sin configurar: pon SMTP_USER y SMTP_PASS (contraseña de aplicación de Gmail) en .env. Los correos NO se enviarán.');
 } else {
     mailer.verify()
-        .then(() => console.log('📮 SMTP listo — correos de verificación habilitados'))
-        .catch((e) => console.error('❌ SMTP inválido:', e.message, '— revisa SMTP_USER / SMTP_PASS (contraseña de aplicación de 16 dígitos, sin espacios)'));
+        .then(() => console.log('SMTP listo — correos de verificación habilitados'))
+        .catch((e) => console.error('SMTP inválido:', e.message, '— revisa SMTP_USER / SMTP_PASS (contraseña de aplicación de 16 dígitos, sin espacios)'));
 }
 
 const verifyCodes = new Map();
@@ -50,13 +51,14 @@ async function enviarCorreoVerificacion(email, nombre, codigo) {
         <div style="background:#0d2137;padding:22px;text-align:center">
           <span style="color:#00f2ea;font-size:22px;font-weight:800">AquaFlow <span style="color:#fff">SV</span></span>
         </div>
-        <div style="padding:26px;color:#1b2735">
+        <div style="padding:26px;color:#1b2735;text-align:center">
+          <img src="cid:aquabot-mascota" alt="AquaBot" width="72" height="72" style="display:block;margin:0 auto 14px" />
           <h2 style="margin:0 0 8px">¡Bienvenido/a, ${nombre}!</h2>
-          <p style="color:#475569">Tu cuenta se creó correctamente usando tu cuenta de Google. Para verificarla, ingresa el siguiente código en la aplicación:</p>
+          <p style="color:#475569;text-align:left">Tu cuenta se creó correctamente usando tu cuenta de Google. Para verificarla, ingresa el siguiente código en la aplicación:</p>
           <div style="text-align:center;margin:22px 0">
             <span style="display:inline-block;font-size:30px;letter-spacing:8px;font-weight:800;color:#0d2137;background:#e0f7f5;border:1px solid #9be3dd;border-radius:10px;padding:12px 22px">${codigo}</span>
           </div>
-          <p style="color:#64748b;font-size:13px">Este código expira en 10 minutos. Si no fuiste tú, puedes ignorar este correo.</p>
+          <p style="color:#64748b;font-size:13px;text-align:left">Este código expira en 10 minutos. Si no fuiste tú, puedes ignorar este correo.</p>
         </div>
         <div style="background:#f2f7fb;padding:14px;text-align:center;color:#94a3b8;font-size:12px">AquaFlow SV · Monitoreo Hídrico</div>
       </div>`;
@@ -64,7 +66,14 @@ async function enviarCorreoVerificacion(email, nombre, codigo) {
         from: `"AquaFlow SV" <${process.env.SMTP_USER}>`,
         to: email,
         subject: 'Verifica tu cuenta de AquaFlow SV',
-        html
+        html,
+        attachments: [{
+            filename: 'aquabot.png',
+            path: path.join(__dirname, 'Public', 'aquabot-principal.png'),
+            cid: 'aquabot-mascota', // referenciado en el <img src="cid:..."> de arriba
+            contentType: 'image/png',
+            contentDisposition: 'inline', // sin esto, algunos clientes de correo lo muestran como adjunto en vez de incrustado
+        }],
     });
 }
 
@@ -72,8 +81,8 @@ function emitirCodigo(email, nombre) {
     const codigo = generarCodigo();
     verifyCodes.set(email, { code: codigo, expires: Date.now() + 10 * 60 * 1000, intentos: 0 });
     const envio = enviarCorreoVerificacion(email, nombre, codigo);
-    envio.then(() => console.log('📧 Código de verificación enviado a', email))
-         .catch((e) => console.error('❌ Error enviando correo a', email, '-', e.message));
+    envio.then(() => console.log('Código de verificación enviado a', email))
+         .catch((e) => console.error('Error enviando correo a', email, '-', e.message));
     return envio; // el caller puede esperarlo si necesita confirmar el envío real
 }
 
@@ -90,8 +99,8 @@ function requireAdmin(req, res, next) {
     next();
 }
 
-// ── Rate limiting para login (por email, en memoria) ─────────────────
-const loginAttempts = new Map(); 
+// rate limiting de login, por email, todo en memoria
+const loginAttempts = new Map();
 
 const VENTANA_INACTIVIDAD_MS = 15 * 60 * 1000; // sin intentos nuevos en este tiempo, ya no hace falta recordarlo
 
@@ -130,7 +139,7 @@ app.get('/api/usuarios', requireAuth, requireAdmin, (req, res) => {
     });
 });
 
-// --- LÓGICA DE LOGIN (con rate limiting) ---
+// login normal
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
@@ -161,8 +170,7 @@ app.post('/auth/login', (req, res) => {
         );
 
         if (passwordOk) {
-            // Cuentas admin creadas por autoregistro (no por Google ni por otro admin) deben
-            // demostrar que controlan ese correo antes de recibir sesión con privilegios de admin.
+            // si se autoregistró como admin (no por Google ni creado por otro admin), primero verifica el correo
             const yaVerificado = usuario.verificado === 1 || usuario.verificado === true;
             if (usuario.rol === 'admin' && !yaVerificado) {
                 emitirCodigo(email, usuario.Usuario);
@@ -175,11 +183,11 @@ app.post('/auth/login', (req, res) => {
             loginAttempts.delete(email); // Limpiar intentos al ingresar correctamente
             const usuarioSeguro = sanearUsuario(usuario);
             req.session.user = usuarioSeguro;
-            console.log('✅ Login exitoso:', email, '| Rol:', usuario.rol);
+            console.log('Login exitoso:', email, '| Rol:', usuario.rol);
             return res.json({ success: true, user: usuarioSeguro });
         }
 
-        // Credenciales incorrectas: registrar intento fallido
+        // mal la clave, contamos el intento
         record.count++;
         record.lastAttempt = now;
         if (record.count >= 3) {
@@ -204,13 +212,13 @@ app.post('/auth/login', (req, res) => {
     });
 });
 
-// --- LOGIN CON GOOGLE (OAuth) ---
+// login con Google
 app.post('/auth/google', async (req, res) => {
     const { access_token } = req.body;
     if (!access_token) return res.status(400).json({ error: 'Token de Google requerido' });
 
     try {
-        // Obtener el perfil del usuario desde Google con el access_token
+        // le pedimos el perfil a Google con el token
         const gRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
             headers: { Authorization: `Bearer ${access_token}` }
         });
@@ -224,18 +232,18 @@ app.post('/auth/google', async (req, res) => {
         db.query('SELECT * FROM usuarios WHERE Correo = ?', [email], (err, results) => {
             if (err) return res.status(500).json({ error: 'Error en servidor' });
 
-            // El usuario ya existe -> iniciar sesión
+            // ya existe, lo logueamos
             if (results.length > 0) {
                 const usuario = results[0];
                 const usuarioSeguro = sanearUsuario(usuario);
                 req.session.user = usuarioSeguro;
-                console.log('✅ Login Google:', email, '| Rol:', usuario.rol);
+                console.log('Login Google:', email, '| Rol:', usuario.rol);
                 const yaVerificado = usuario.verificado === 1 || usuario.verificado === true;
                 if (!yaVerificado) emitirCodigo(email, usuario.Usuario || nombre);
                 return res.json({ success: true, user: usuarioSeguro, needsVerification: !yaVerificado });
             }
 
-            // Usuario nuevo -> crearlo automáticamente y enviar código de verificación
+            // no existe, se crea solo y le mandamos el código
             const rol = esCorreoAdmin(email) ? 'admin' : 'user';
             const placeholder = bcrypt.hashSync('google-' + Date.now(), 10);
             db.query(
@@ -245,7 +253,7 @@ app.post('/auth/google', async (req, res) => {
                     if (err2) return res.status(500).json({ error: 'Error al crear el usuario' });
                     const nuevo = { ID: result.insertId, id: result.insertId, Usuario: nombre, Correo: email, rol };
                     req.session.user = nuevo;
-                    console.log('🆕 Usuario Google creado:', email);
+                    console.log('Usuario Google creado:', email);
                     emitirCodigo(email, nombre);
                     return res.json({ success: true, user: nuevo, needsVerification: true });
                 }
@@ -257,7 +265,7 @@ app.post('/auth/google', async (req, res) => {
     }
 });
 
-// --- VERIFICAR CÓDIGO DE CUENTA ---
+// verificar código
 app.post('/auth/verify-code', (req, res) => {
     const { email, code } = req.body;
     if (!email || !code) return res.status(400).json({ error: 'Email y código requeridos' });
@@ -280,15 +288,15 @@ app.post('/auth/verify-code', (req, res) => {
 
     verifyCodes.delete(email);
     if (req.session.user) req.session.user.verificado = 1;
-    // Persistir en BD si existe la columna 'verificado' (si no existe, solo se informa)
+    // se guarda en BD si la columna 'verificado' existe
     db.query('UPDATE usuarios SET verificado = 1 WHERE Correo = ?', [email], (e) => {
         if (e) console.log('(info) columna "verificado" no disponible aún:', e.code);
     });
-    console.log('✔️  Cuenta verificada:', email);
+    console.log('Cuenta verificada:', email);
     return res.json({ success: true, message: 'Cuenta verificada correctamente' });
 });
 
-// --- REENVIAR CÓDIGO ---
+// reenviar código
 app.post('/auth/resend-code', (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email requerido' });
@@ -298,7 +306,7 @@ app.post('/auth/resend-code', (req, res) => {
         .catch(() => res.status(502).json({ error: 'No se pudo enviar el correo. Intenta de nuevo más tarde.' }));
 });
 
-// --- LÓGICA DE REGISTRO (Ajustada a tu SQL) ---
+// registro
 app.post('/auth/register', (req, res) => {
     const { nombre, email, password } = req.body;
 
@@ -314,9 +322,8 @@ app.post('/auth/register', (req, res) => {
         if (rows.length > 0) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo electrónico.' });
 
         const hashedPassword = bcrypt.hashSync(password, 10);
-        // Nadie puede demostrar solo con el formulario que es dueño de un correo de la lista de
-        // admins, así que esas cuentas se crean sin verificar: no podrán iniciar sesión como
-        // admin hasta confirmar el código que se les envía a ese correo (ver /auth/login).
+        // cualquiera puede poner un correo de admin en el form, por eso se crea sin verificar
+        // hasta que confirme el código que le llega ahí
         const sql = esAdmin
             ? 'INSERT INTO usuarios (Usuario, Correo, Contra, rol, verificado) VALUES (?, ?, ?, ?, 0)'
             : 'INSERT INTO usuarios (Usuario, Correo, Contra, rol) VALUES (?, ?, ?, ?)';
@@ -337,52 +344,28 @@ app.post('/auth/register', (req, res) => {
     });
 });
 
-// Migraciones ligeras de esquema: este servidor MySQL no soporta la cláusula
-// IF EXISTS / IF NOT EXISTS en ADD/DROP COLUMN, así que se verifica a mano.
-function ensureColumnDropped(table, column) {
-    db.query(
+// MySQL no soporta IF EXISTS en ADD/DROP COLUMN, toca verificar a mano
+async function ensureColumnDropped(table, column) {
+    const [rows] = await dbp.query(
         `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
-        [table, column],
-        (err, rows) => {
-            if (err) return console.error(`Error verificando columna ${table}.${column}:`, err.message);
-            if (rows[0].n > 0) {
-                db.query(`ALTER TABLE ${table} DROP COLUMN ${column}`, (errDrop) => {
-                    if (errDrop) console.error(`Error eliminando columna ${table}.${column}:`, errDrop.message);
-                });
-            }
-        }
+        [table, column]
     );
+    if (rows[0].n > 0) await dbp.query(`ALTER TABLE ${table} DROP COLUMN ${column}`);
 }
 
-function ensureColumnAdded(table, column, definitionSql) {
-    db.query(
+async function ensureColumnAdded(table, column, definitionSql) {
+    const [rows] = await dbp.query(
         `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
-        [table, column],
-        (err, rows) => {
-            if (err) return console.error(`Error verificando columna ${table}.${column}:`, err.message);
-            if (rows[0].n === 0) {
-                db.query(`ALTER TABLE ${table} ADD COLUMN ${definitionSql}`, (errAdd) => {
-                    if (errAdd) console.error(`Error agregando columna ${table}.${column}:`, errAdd.message);
-                });
-            }
-        }
+        [table, column]
     );
+    if (rows[0].n === 0) await dbp.query(`ALTER TABLE ${table} ADD COLUMN ${definitionSql}`);
 }
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 AquaFlow SV corriendo en http://localhost:${PORT}`);
-    const key = process.env.GROQ_API_KEY;
-    console.log(`🔑 GROQ_API_KEY: ${key ? key.substring(0, 10) + '...' : 'NO ENCONTRADA ❌'}`);
-
-    // Migración: columna de verificación por email. DEFAULT 1 para que las cuentas ya
-    // existentes (creadas antes de este cambio) sigan pudiendo iniciar sesión sin problema;
-    // solo las cuentas admin autoregistradas se insertan explícitamente con verificado = 0.
-    ensureColumnAdded('usuarios', 'verificado', 'verificado TINYINT(1) NOT NULL DEFAULT 1');
-
-    // Crear tabla de comentarios si no existe
-    const sqlTable = `
-        CREATE TABLE IF NOT EXISTS comentarios_alertas (
+// todas las tablas se crean en orden y se imprimen juntas al final
+const TABLAS_SISTEMA = [
+    {
+        nombre: 'comentarios_alertas',
+        sql: `CREATE TABLE IF NOT EXISTS comentarios_alertas (
             id          INT AUTO_INCREMENT PRIMARY KEY,
             usuario_id  INT NOT NULL,
             usuario     VARCHAR(100) NOT NULL,
@@ -390,135 +373,176 @@ app.listen(PORT, () => {
             contenido   TEXT NOT NULL,
             creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP,
             editado_en  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `;
-    db.query(sqlTable, (err) => {
-        if (err) console.error('Error creando tabla comentarios:', err.message);
-        else console.log('✅ Tabla comentarios_alertas lista');
-    });
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    },
+    {
+        nombre: 'reportes',
+        antes: migrarReportesEsquemaViejo,
+        sql: `CREATE TABLE IF NOT EXISTS reportes (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            tipo        VARCHAR(100) NOT NULL,
+            zona        VARCHAR(100) NOT NULL,
+            sector      VARCHAR(100) NOT NULL,
+            descripcion TEXT NOT NULL,
+            estado      ENUM('pendiente','en proceso','resuelto') DEFAULT 'pendiente',
+            prioridad   ENUM('alta','media','baja') DEFAULT 'media',
+            usuario_id  INT NOT NULL,
+            usuario     VARCHAR(100) NOT NULL,
+            creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    },
+    {
+        nombre: 'comentarios_reportes',
+        sql: `CREATE TABLE IF NOT EXISTS comentarios_reportes (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            reporte_id  INT NOT NULL,
+            usuario_id  INT NOT NULL,
+            usuario     VARCHAR(100) NOT NULL,
+            rol         VARCHAR(20)  NOT NULL DEFAULT 'user',
+            contenido   TEXT NOT NULL,
+            creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    },
+    {
+        nombre: 'alertas',
+        sql: `CREATE TABLE IF NOT EXISTS alertas (
+            id             INT AUTO_INCREMENT PRIMARY KEY,
+            tipo           VARCHAR(100) NOT NULL,
+            zona           VARCHAR(100) NOT NULL,
+            sector         VARCHAR(100) NOT NULL,
+            descripcion    TEXT NOT NULL,
+            severidad      ENUM('critica','alta','media') DEFAULT 'media',
+            estado         ENUM('activa','suspendida','resuelta') DEFAULT 'activa',
+            total_reportes INT NOT NULL DEFAULT 0,
+            usuario        VARCHAR(100) NOT NULL,
+            creado_en      DATETIME DEFAULT CURRENT_TIMESTAMP,
+            actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            resuelta_en    DATETIME NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+        despues: reconciliarAlertasExistentes,
+    },
+    {
+        nombre: 'configuracion_sistema',
+        sql: `CREATE TABLE IF NOT EXISTS configuracion_sistema (
+            id                INT PRIMARY KEY DEFAULT 1,
+            auto_refresh      TINYINT(1) NOT NULL DEFAULT 1,
+            intervalo         INT NOT NULL DEFAULT 30,
+            umbral_presion    DECIMAL(6,2) NOT NULL DEFAULT 25,
+            umbral_flujo      DECIMAL(6,2) NOT NULL DEFAULT 8,
+            actualizado_en    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+        despues: async () => {
+            await dbp.query('INSERT IGNORE INTO configuracion_sistema (id) VALUES (1)');
+            // esto ya no se usa, se quita si sigue ahí
+            await ensureColumnDropped('configuracion_sistema', 'sesion_expiracion');
+        },
+    },
+    {
+        nombre: 'configuracion_notificaciones',
+        sql: `CREATE TABLE IF NOT EXISTS configuracion_notificaciones (
+            usuario_id     INT PRIMARY KEY,
+            notif_alertas  TINYINT(1) NOT NULL DEFAULT 1,
+            notif_reportes TINYINT(1) NOT NULL DEFAULT 1,
+            notif_sensores TINYINT(1) NOT NULL DEFAULT 0,
+            tema           VARCHAR(10) NOT NULL DEFAULT 'oscuro',
+            actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+        // por si la tabla es vieja y no tiene la columna 'tema'
+        despues: () => ensureColumnAdded('configuracion_notificaciones', 'tema', "tema VARCHAR(10) NOT NULL DEFAULT 'oscuro'"),
+    },
+    {
+        nombre: 'lecturas_sensores',
+        sql: `CREATE TABLE IF NOT EXISTS lecturas_sensores (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            dispositivo VARCHAR(50) NOT NULL,
+            caudal      DECIMAL(6,2) NULL,
+            estado      VARCHAR(20) NULL,
+            rele        TINYINT(1) NULL,
+            creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    },
+];
 
-    db.query(`CREATE TABLE IF NOT EXISTS reportes (
-        id          INT AUTO_INCREMENT PRIMARY KEY,
-        tipo        VARCHAR(100) NOT NULL,
-        zona        VARCHAR(100) NOT NULL,
-        sector      VARCHAR(100) NOT NULL,
-        descripcion TEXT NOT NULL,
-        estado      ENUM('pendiente','en proceso','resuelto') DEFAULT 'pendiente',
-        prioridad   ENUM('alta','media','baja') DEFAULT 'media',
-        usuario_id  INT NOT NULL,
-        usuario     VARCHAR(100) NOT NULL,
-        creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
-        if (err) console.error('Error creando tabla reportes:', err.message);
-        else console.log('✅ Tabla reportes lista');
-    });
+// la tabla reportes de antes tenía otras columnas (Usuario, Zona, Cometario).
+// si la detecta así y está vacía, la recrea sola; si ya tiene datos, no la toca y solo avisa.
+async function migrarReportesEsquemaViejo() {
+    const [tablas] = await dbp.query(
+        `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reportes'`
+    );
+    if (tablas[0].n === 0) return; // no existe todavía: la crea el CREATE TABLE normal
 
-    db.query(`CREATE TABLE IF NOT EXISTS comentarios_reportes (
-        id          INT AUTO_INCREMENT PRIMARY KEY,
-        reporte_id  INT NOT NULL,
-        usuario_id  INT NOT NULL,
-        usuario     VARCHAR(100) NOT NULL,
-        rol         VARCHAR(20)  NOT NULL DEFAULT 'user',
-        contenido   TEXT NOT NULL,
-        creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
-        if (err) console.error('Error creando tabla comentarios_reportes:', err.message);
-        else console.log('✅ Tabla comentarios_reportes lista');
-    });
+    const [cols] = await dbp.query(
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reportes'`
+    );
+    const nombres = cols.map(c => c.COLUMN_NAME);
+    const esEsquemaViejo = nombres.includes('Cometario') && !nombres.includes('tipo');
+    if (!esEsquemaViejo) return;
 
-    db.query(`CREATE TABLE IF NOT EXISTS alertas (
-        id             INT AUTO_INCREMENT PRIMARY KEY,
-        tipo           VARCHAR(100) NOT NULL,
-        zona           VARCHAR(100) NOT NULL,
-        sector         VARCHAR(100) NOT NULL,
-        descripcion    TEXT NOT NULL,
-        severidad      ENUM('critica','alta','media') DEFAULT 'media',
-        estado         ENUM('activa','suspendida','resuelta') DEFAULT 'activa',
-        total_reportes INT NOT NULL DEFAULT 0,
-        usuario        VARCHAR(100) NOT NULL,
-        creado_en      DATETIME DEFAULT CURRENT_TIMESTAMP,
-        actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        resuelta_en    DATETIME NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
-        if (err) console.error('Error creando tabla alertas:', err.message);
-        else {
-            console.log('✅ Tabla alertas lista');
-            reconciliarAlertasExistentes();
+    const [filas] = await dbp.query('SELECT COUNT(*) AS n FROM reportes');
+    if (filas[0].n > 0) {
+        console.log(`   reportes tiene el esquema viejo y ${filas[0].n} fila(s) — no se toca automáticamente, migra los datos a mano`);
+        return;
+    }
+    await dbp.query('DROP TABLE reportes');
+    console.log('   reportes tenía el esquema viejo y estaba vacía — recreada con el esquema actual');
+}
+
+async function prepararBaseDeDatos() {
+    console.log('\nBase de datos');
+
+    try {
+        const conn = await dbp.getConnection();
+        conn.release();
+        console.log('   conexión MySQL');
+    } catch (err) {
+        console.log(`   conexión MySQL — ERROR: ${err.message}`);
+    }
+
+    // default 1 para no romper las cuentas que ya existían antes de esto
+    await ensureColumnAdded('usuarios', 'verificado', 'verificado TINYINT(1) NOT NULL DEFAULT 1');
+
+    for (const tabla of TABLAS_SISTEMA) {
+        try {
+            if (tabla.antes) await tabla.antes();
+            await dbp.query(tabla.sql);
+            if (tabla.despues) await tabla.despues();
+            console.log(`   ${tabla.nombre}`);
+        } catch (err) {
+            console.log(`   ${tabla.nombre} — ERROR: ${err.message}`);
         }
-    });
+    }
+    console.log('Base de datos lista\n');
+}
 
-    // Configuración del sistema: una sola fila (id=1), editable solo por admin
-    db.query(`CREATE TABLE IF NOT EXISTS configuracion_sistema (
-        id                INT PRIMARY KEY DEFAULT 1,
-        auto_refresh      TINYINT(1) NOT NULL DEFAULT 1,
-        intervalo         INT NOT NULL DEFAULT 30,
-        umbral_presion    DECIMAL(6,2) NOT NULL DEFAULT 25,
-        umbral_flujo      DECIMAL(6,2) NOT NULL DEFAULT 8,
-        actualizado_en    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
-        if (err) return console.error('Error creando tabla configuracion_sistema:', err.message);
-        console.log('✅ Tabla configuracion_sistema lista');
-        db.query('INSERT IGNORE INTO configuracion_sistema (id) VALUES (1)', (err2) => {
-            if (err2) console.error('Error inicializando configuracion_sistema:', err2.message);
-        });
-        // Migración: la expiración de sesión configurable se retiró (nunca tuvo efecto real).
-        ensureColumnDropped('configuracion_sistema', 'sesion_expiracion');
-    });
+// por si ya había reportes suficientes antes de que existiera esta lógica
+async function reconciliarAlertasExistentes() {
+    const [grupos] = await dbp.query(
+        `SELECT zona FROM reportes WHERE estado != 'resuelto' GROUP BY zona HAVING COUNT(*) >= ?`,
+        [UMBRAL_ALERTA]
+    );
+    for (const { zona } of grupos) {
+        const [rows] = await dbp.query(
+            `SELECT sector, descripcion, usuario FROM reportes
+             WHERE zona = ? AND estado != 'resuelto' ORDER BY creado_en DESC LIMIT 1`,
+            [zona]
+        );
+        if (!rows.length) continue;
+        const r = rows[0];
+        verificarUmbralAlerta(zona, r.sector, r.descripcion, r.usuario);
+    }
+}
 
-    // Preferencias de notificaciones (y apariencia) por usuario
-    db.query(`CREATE TABLE IF NOT EXISTS configuracion_notificaciones (
-        usuario_id     INT PRIMARY KEY,
-        notif_alertas  TINYINT(1) NOT NULL DEFAULT 1,
-        notif_reportes TINYINT(1) NOT NULL DEFAULT 1,
-        notif_sensores TINYINT(1) NOT NULL DEFAULT 0,
-        tema           VARCHAR(10) NOT NULL DEFAULT 'oscuro',
-        actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
-        if (err) return console.error('Error creando tabla configuracion_notificaciones:', err.message);
-        console.log('✅ Tabla configuracion_notificaciones lista');
-        // Migración: si la tabla ya existía de una versión anterior sin la columna 'tema', se agrega.
-        ensureColumnAdded('configuracion_notificaciones', 'tema', "tema VARCHAR(10) NOT NULL DEFAULT 'oscuro'");
-    });
+const PORT = 3000;
+app.listen(PORT, async () => {
+    console.log(`AquaFlow SV corriendo en http://localhost:${PORT}`);
+    const key = process.env.GROQ_API_KEY;
+    console.log(`GROQ_API_KEY: ${key ? key.substring(0, 10) + '...' : 'NO ENCONTRADA'}`);
 
-    // Historial de lecturas de sensores físicos (por ahora solo el sensor de flujo piloto del Arduino)
-    db.query(`CREATE TABLE IF NOT EXISTS lecturas_sensores (
-        id          INT AUTO_INCREMENT PRIMARY KEY,
-        dispositivo VARCHAR(50) NOT NULL,
-        caudal      DECIMAL(6,2) NULL,
-        estado      VARCHAR(20) NULL,
-        rele        TINYINT(1) NULL,
-        creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`, (err) => {
-        if (err) return console.error('Error creando tabla lecturas_sensores:', err.message);
-        console.log('✅ Tabla lecturas_sensores lista');
-    });
+    await prepararBaseDeDatos();
 
-    // Puente con el Arduino por puerto serie (detecta el dispositivo solo, reintenta si se desconecta)
+    // arranca el puente con el Arduino
     sensoresArduino.iniciar();
 });
-
-// Al arrancar, revisa reportes que ya cumplían el umbral antes de que existiera esta lógica.
-function reconciliarAlertasExistentes() {
-    db.query(
-        `SELECT tipo, zona FROM reportes WHERE estado != 'resuelto' GROUP BY tipo, zona HAVING COUNT(*) >= ?`,
-        [UMBRAL_ALERTA],
-        (err, grupos) => {
-            if (err) return console.error('Error al reconciliar alertas:', err.message);
-            grupos.forEach(({ tipo, zona }) => {
-                db.query(
-                    `SELECT sector, descripcion, usuario FROM reportes
-                     WHERE tipo = ? AND zona = ? AND estado != 'resuelto' ORDER BY creado_en DESC LIMIT 1`,
-                    [tipo, zona],
-                    (err2, rows) => {
-                        if (err2 || !rows.length) return;
-                        const r = rows[0];
-                        verificarUmbralAlerta(tipo, zona, r.sector, r.descripcion, r.usuario);
-                    }
-                );
-            });
-        }
-    );
-}
 
 app.get('/api/user-info', (req, res) => {
     if (req.session.user) {
@@ -534,7 +558,7 @@ app.post('/auth/logout', (req, res) => {
     });
 });
 
-// --- CRUD USUARIOS (solo admin) ---
+// crud de usuarios, solo admin
 app.post('/api/usuarios', requireAdmin, (req, res) => {
     const { Usuario, Correo, Contra, rol } = req.body;
     if (!Usuario || !Correo || !Contra) return res.status(400).json({ error: 'Todos los campos son requeridos' });
@@ -571,13 +595,12 @@ app.put('/api/usuarios/:id', requireAdmin, (req, res) => {
     }
 });
 
-// --- SENSOR PILOTO (Arduino por puerto serie) ---
+// sensor piloto, el Arduino conectado por USB
 app.get('/api/sensores/piloto', requireAuth, (req, res) => {
     res.json(sensoresArduino.obtenerEstado());
 });
 
-// Streaming en vivo (Server-Sent Events): empuja el estado al instante en que cambia,
-// sin que el navegador tenga que estar preguntando en un intervalo fijo.
+// SSE: avisa al instante en vez de que el navegador esté preguntando cada rato
 app.get('/api/sensores/piloto/stream', requireAuth, (req, res) => {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -590,9 +613,8 @@ app.get('/api/sensores/piloto/stream', requireAuth, (req, res) => {
     req.on('close', desuscribir);
 });
 
-// Streams genéricos para "Reportes" y "Alertas" — usados cuando en Configuración
-// se elige "Tiempo real" en vez de un intervalo fijo. Solo avisan que hubo un
-// cambio; el navegador vuelve a pedir la lista con el mismo endpoint GET de siempre.
+// mismo streaming para reportes y alertas, solo avisa que algo cambió y el
+// front vuelve a pedir la lista de siempre
 function registrarStream(ruta, canal) {
     app.get(ruta, requireAuth, (req, res) => {
         res.writeHead(200, {
@@ -608,7 +630,7 @@ function registrarStream(ruta, canal) {
 registrarStream('/api/reportes/stream', 'reportes');
 registrarStream('/api/alertas/stream', 'alertas');
 
-// Historial reciente (para graficar tendencia); por defecto últimas 8 horas.
+// últimas 8 horas, para la gráfica de tendencia
 app.get('/api/sensores/piloto/historial', requireAuth, (req, res) => {
     db.query(
         `SELECT caudal, estado, rele, creado_en FROM lecturas_sensores
@@ -621,9 +643,8 @@ app.get('/api/sensores/piloto/historial', requireAuth, (req, res) => {
     );
 });
 
-// --- CONFIGURACIÓN ---
-// GET: cualquier usuario autenticado (el técnico necesita el intervalo/auto_refresh
-// del sistema para su propio polling, aunque no pueda editarlo).
+// configuración
+// GET es para cualquier usuario logueado, el técnico necesita el intervalo aunque no pueda editarlo
 app.get('/api/configuracion', requireAuth, (req, res) => {
     const userId = req.session.user.id || req.session.user.ID;
     db.query('SELECT auto_refresh, intervalo, umbral_presion, umbral_flujo FROM configuracion_sistema WHERE id = 1', (err, sisRows) => {
@@ -658,7 +679,7 @@ app.put('/api/configuracion/notificaciones', requireAuth, (req, res) => {
     );
 });
 
-// PUT: tema visual (claro/oscuro) del propio usuario — se aplica al instante, no depende del botón "Guardar"
+// tema claro/oscuro, se aplica al toque, no espera el botón Guardar
 app.put('/api/configuracion/tema', requireAuth, (req, res) => {
     const userId = req.session.user.id || req.session.user.ID;
     const tema = req.body.tema === 'claro' ? 'claro' : 'oscuro';
@@ -679,7 +700,7 @@ app.put('/api/configuracion/sistema', requireAdmin, (req, res) => {
     const intervaloNum = Number(intervalo);
     const presionNum   = Number(umbral_presion);
     const flujoNum     = Number(umbral_flujo);
-    // 0 es un valor especial: significa "tiempo real" (sin intervalo, vía streaming) en vez de sondeo.
+    // 0 = tiempo real (streaming), no sondeo
     if (!Number.isFinite(intervaloNum) || intervaloNum < 0) return res.status(400).json({ error: 'Intervalo inválido' });
     if (!Number.isFinite(presionNum) || presionNum < 0) return res.status(400).json({ error: 'Umbral de presión inválido' });
     if (!Number.isFinite(flujoNum) || flujoNum < 0) return res.status(400).json({ error: 'Umbral de flujo inválido' });
@@ -694,7 +715,7 @@ app.put('/api/configuracion/sistema', requireAdmin, (req, res) => {
     );
 });
 
-// --- CHAT IA ---
+// chat con IA
 const SYSTEM_PROMPT = `Eres AquaBot, el asistente inteligente de AquaFlow SV, un sistema de monitoreo de redes de agua potable para el Gran San Salvador, El Salvador.
 
 Tu rol es ayudar a operadores y administradores a entender el sistema, interpretar datos y resolver dudas.
@@ -712,7 +733,7 @@ Instrucciones:
 - Sé amable, profesional y útil.
 - Si no sabes algo específico del sistema, indícalo honestamente.`;
 
-// Visitantes sin sesión pueden probar el chat, pero con un límite; para uso ilimitado deben iniciar sesión.
+// sin sesión hay límite de mensajes, con sesión no
 const CHAT_PROMPTS_GRATIS = 5;
 
 app.post('/api/chat', async (req, res) => {
@@ -752,9 +773,8 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// ── COMENTARIOS DE ALERTAS ──────────────────────────────────────────
-
-// GET todos los comentarios (cualquier usuario autenticado)
+// comentarios de alertas
+// GET todos (cualquier usuario logueado)
 app.get('/api/comentarios', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: 'No autenticado' });
     db.query('SELECT * FROM comentarios_alertas ORDER BY creado_en DESC', (err, rows) => {
@@ -763,7 +783,7 @@ app.get('/api/comentarios', (req, res) => {
     });
 });
 
-// POST nuevo comentario (cualquier usuario autenticado)
+// POST nuevo comentario
 app.post('/api/comentarios', (req, res) => {
     if (!req.session.user) return res.status(401).json({ error: 'No autenticado' });
     const { contenido } = req.body;
@@ -804,8 +824,6 @@ app.delete('/api/comentarios/:id', (req, res) => {
     });
 });
 
-// ────────────────────────────────────────────────────────────────────
-
 app.delete('/api/usuarios/:id', requireAdmin, (req, res) => {
     const { id } = req.params;
     if (req.session.user.id == id) return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
@@ -815,8 +833,9 @@ app.delete('/api/usuarios/:id', requireAdmin, (req, res) => {
     });
 });
 
-// ── ALERTAS AUTOMÁTICAS POR ZONA ──────────────────────────────────────
-const UMBRAL_ALERTA = 5; // reportes de la misma zona + tipo para generar alerta
+// alertas automáticas por zona
+const UMBRAL_ALERTA = 5; // reportes activos en la zona (cualquier tipo)
+const TIPO_ALERTA_MIXTA = 'Varios problemas'; // cuando no son todos del mismo tipo
 
 function calcularSeveridad(total) {
     if (total >= 10) return 'critica';
@@ -824,32 +843,33 @@ function calcularSeveridad(total) {
     return 'media';
 }
 
-// Revisa si los reportes activos de una zona+tipo alcanzaron el umbral y
-// crea o actualiza la alerta correspondiente con los datos del reporte.
-function verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario) {
+// cuenta los reportes activos de la zona (sin ver el tipo) y crea o actualiza
+// la alerta; si todos son del mismo tipo lo muestra, si no, "Varios problemas"
+function verificarUmbralAlerta(zona, sector, descripcion, usuario) {
     db.query(
-        `SELECT COUNT(*) AS total FROM reportes WHERE tipo = ? AND zona = ? AND estado != 'resuelto'`,
-        [tipo, zona],
-        (err, rows) => {
+        `SELECT tipo, COUNT(*) AS n FROM reportes WHERE zona = ? AND estado != 'resuelto' GROUP BY tipo`,
+        [zona],
+        (err, filas) => {
             if (err) return console.error('Error al contar reportes para alerta:', err.message);
-            const total = rows[0].total;
+            const total = filas.reduce((acc, f) => acc + f.n, 0);
             if (total < UMBRAL_ALERTA) return;
 
+            const tipo = filas.length === 1 ? filas[0].tipo : TIPO_ALERTA_MIXTA;
             const severidad = calcularSeveridad(total);
 
             db.query(
-                `SELECT id, estado FROM alertas WHERE tipo = ? AND zona = ? AND estado IN ('activa','suspendida')
+                `SELECT id, estado FROM alertas WHERE zona = ? AND estado IN ('activa','suspendida')
                  ORDER BY FIELD(estado, 'activa', 'suspendida') LIMIT 1`,
-                [tipo, zona],
+                [zona],
                 (err2, existentes) => {
                     if (err2) return console.error('Error al buscar alerta existente:', err2.message);
 
                     if (existentes.length > 0) {
-                        // Si está suspendida, se respeta la decisión del admin y solo se actualiza el conteo.
+                        // si está suspendida no se reactiva sola, solo se actualiza el conteo
                         const alerta = existentes[0];
                         db.query(
-                            'UPDATE alertas SET total_reportes = ?, severidad = ?, descripcion = ?, usuario = ? WHERE id = ?',
-                            [total, severidad, descripcion, usuario, alerta.id],
+                            'UPDATE alertas SET tipo = ?, total_reportes = ?, severidad = ?, descripcion = ?, usuario = ? WHERE id = ?',
+                            [tipo, total, severidad, descripcion, usuario, alerta.id],
                             (err3) => {
                                 if (err3) return console.error('Error al actualizar alerta:', err3.message);
                                 eventos.emitir('alertas');
@@ -910,7 +930,7 @@ app.delete('/api/alertas/:id', requireAdmin, (req, res) => {
     });
 });
 
-// ── REPORTES ──────────────────────────────────────────────────────────
+// reportes
 
 app.get('/api/reportes', requireAuth, (req, res) => {
     const sql = `
@@ -939,7 +959,7 @@ app.post('/api/reportes', requireAuth, (req, res) => {
         [tipo, zona, sector, descripcion, validPrioridad, userId, usuario],
         (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
-            verificarUmbralAlerta(tipo, zona, sector, descripcion, usuario);
+            verificarUmbralAlerta(zona, sector, descripcion, usuario);
             eventos.emitir('reportes');
             res.json({ id: result.insertId });
         }

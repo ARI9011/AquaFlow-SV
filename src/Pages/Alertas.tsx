@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Bell, AlertTriangle, CheckCircle, Clock, Droplets, Zap, MessageSquare, Send,
-  Pencil, Trash2, ShieldCheck, History, PauseCircle, PlayCircle, MapPin, Users, X,
+  Pencil, Trash2, ShieldCheck, History, PauseCircle, PlayCircle, MapPin, Users, X, FileText,
 } from 'lucide-react';
 import axios from 'axios';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -94,6 +95,7 @@ function Iniciales({ nombre }: { nombre: string }) {
 }
 
 export default function Alertas() {
+  const navigate = useNavigate();
   const [alertas, setAlertas]         = useState<Alerta[]>([]);
   const [loadingAlertas, setLoadingA] = useState(true);
   const [filtro, setFiltro]           = useState('todos');
@@ -124,8 +126,7 @@ export default function Alertas() {
     return () => clearInterval(id);
   }, [pollingMs]);
 
-  // Modo "Tiempo real": el servidor avisa por streaming apenas algo cambia,
-  // en vez de esperar a un intervalo fijo.
+  // tiempo real: el server avisa por streaming en vez de esperar el intervalo
   useEffect(() => {
     if (!tiempoReal) return;
     const es = new EventSource('/api/alertas/stream');
@@ -239,7 +240,7 @@ export default function Alertas() {
       <div>
         <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Sistema de Monitoreo</p>
         <h2 className="text-3xl font-black tracking-tighter gradient-text">Alertas del Sistema</h2>
-        <p className="text-sm text-gray-500 mt-1">Se genera una alerta automática cuando una zona acumula 5 o más reportes del mismo problema</p>
+        <p className="text-sm text-gray-500 mt-1">Se genera una alerta automática cuando una zona acumula 5 o más reportes activos, sin importar el tipo</p>
       </div>
 
       {accionError && (
@@ -280,8 +281,8 @@ export default function Alertas() {
         </div>
       ) : !loadingAlertas ? (
         <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
-            <CheckCircle size={16} className="text-green-400" />
+          <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img src="/aquabot-servicio-estable.png" alt="" className="w-full h-full object-contain p-0.5" />
           </div>
           <div>
             <p className="text-sm font-black text-green-400">Sin alertas activas</p>
@@ -354,6 +355,12 @@ export default function Alertas() {
                             </span>
                             <span className="flex items-center gap-1"><Clock size={10} />{timeAgo(alerta.actualizado_en ?? alerta.creado_en)}</span>
                           </div>
+                          <button
+                            onClick={() => navigate(`/reportes?zona=${encodeURIComponent(alerta.zona)}`)}
+                            className="mt-3 flex items-center gap-1.5 text-[11px] font-bold text-aqua-cyan hover:text-aqua-cyan/70 transition-colors"
+                          >
+                            <FileText size={12} /> Ver los {alerta.total_reportes} reportes de esta alerta
+                          </button>
                         </div>
 
                         {isAdmin && (
@@ -477,7 +484,7 @@ export default function Alertas() {
           <div className="space-y-4">
             {comentarios.length === 0 ? (
               <div className="text-center py-8 text-gray-600">
-                <MessageSquare size={28} className="mx-auto mb-3 opacity-30" />
+                <img src="/aquabot-sin-datos.png" alt="" className="w-14 h-14 mx-auto mb-3 opacity-60" />
                 <p className="text-sm">Aún no hay comentarios. ¡Sé el primero en comentar!</p>
               </div>
             ) : (

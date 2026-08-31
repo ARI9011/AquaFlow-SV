@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
@@ -10,7 +11,7 @@ import {
 } from 'lucide-react';
 import AdminCrown from '../components/AdminCrown';
 
-/* ── Tipos ─────────────────────────────────────────────────────────── */
+// tipos
 interface Reporte {
   id: number;
   tipo: string;
@@ -36,7 +37,7 @@ interface Comentario {
   creado_en: string | Date;
 }
 
-/* ── Datos estáticos ─────────────────────────────────────────────── */
+// datos fijos
 const ZONAS_MAP: Record<string, string> = {
   'Cuscatancingo Centro':  'Cuscatancingo',
   'Soyapango Centro':     'Soyapango',
@@ -79,7 +80,7 @@ function fmtDate(val: string | Date) {
   } catch { return String(val); }
 }
 
-/* ── Modal crear / editar reporte ─────────────────────────────────── */
+// modal para crear/editar reporte
 interface ModalProps {
   initial?: Partial<Reporte>;
   isAdmin: boolean;
@@ -202,7 +203,7 @@ function ReporteModal({ initial, isAdmin, saving, onSave, onClose }: ModalProps)
   );
 }
 
-/* ── Sección de comentarios ────────────────────────────────────────── */
+// sección de comentarios
 interface CommentProps {
   reporteId: number;
   userId: number;
@@ -306,12 +307,17 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
   );
 }
 
-/* ── Página principal ────────────────────────────────────────────────── */
 export default function Reportes() {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   const confirmDialog = useConfirm();
   const { pollingMs, tiempoReal } = useConfig();
+
+  // si llegas desde una alerta, esto filtra la lista al tipo/zona que la generó
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tipoRelacionado = searchParams.get('tipo');
+  const zonaRelacionada = searchParams.get('zona');
+  const quitarFiltroAlerta = () => setSearchParams({});
 
   const [reportes,   setReportes]   = useState<Reporte[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -321,6 +327,7 @@ export default function Reportes() {
   const [editingR,   setEditingR]   = useState<Reporte | null>(null);
   const [saving,     setSaving]     = useState(false);
   const [errorMsg,   setErrorMsg]   = useState('');
+  const [creadoMsg,  setCreadoMsg]  = useState(false);
 
   const fetchReportes = useCallback((silent = false) => {
     if (!silent) setLoading(true);
@@ -332,15 +339,14 @@ export default function Reportes() {
 
   useEffect(() => { fetchReportes(); }, [fetchReportes]);
 
-  // Auto-refresh según el intervalo configurado por el admin en Configuración (sin mostrar el spinner de carga).
+  // refresca sola con el intervalo de Configuración, sin mostrar el spinner
   useEffect(() => {
     if (!pollingMs) return;
     const id = setInterval(() => fetchReportes(true), pollingMs);
     return () => clearInterval(id);
   }, [pollingMs, fetchReportes]);
 
-  // Modo "Tiempo real": el servidor avisa por streaming apenas algo cambia,
-  // en vez de esperar a un intervalo fijo.
+  // tiempo real: el server avisa por streaming en vez de esperar el intervalo
   useEffect(() => {
     if (!tiempoReal) return;
     const es = new EventSource('/api/reportes/stream');
@@ -348,13 +354,16 @@ export default function Reportes() {
     return () => es.close();
   }, [tiempoReal, fetchReportes]);
 
-  /* ── Derivados ─────────────────────────────────────────────────── */
+  // valores derivados
   const pendientes = reportes.filter(r => r.estado === 'pendiente').length;
   const enProceso  = reportes.filter(r => r.estado === 'en proceso').length;
   const resueltos  = reportes.filter(r => r.estado === 'resuelto').length;
-  const filtrados  = filtro === 'todos' ? reportes : reportes.filter(r => r.estado === filtro);
+  const filtrados  = reportes
+    .filter(r => filtro === 'todos' || r.estado === filtro)
+    .filter(r => !zonaRelacionada || r.zona === zonaRelacionada)
+    .filter(r => !tipoRelacionado || r.tipo === tipoRelacionado);
 
-  /* ── Handlers ──────────────────────────────────────────────────── */
+  // handlers
   const openCreate = () => { setEditingR(null); setShowModal(true); };
   const openEdit   = (r: Reporte) => { setEditingR(r); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setEditingR(null); };
@@ -381,6 +390,8 @@ export default function Reportes() {
           total_comentarios: 0,
         };
         setReportes(prev => [nuevo, ...prev]);
+        setCreadoMsg(true);
+        setTimeout(() => setCreadoMsg(false), 4000);
       }
       closeModal();
     } catch (err: any) {
@@ -411,7 +422,7 @@ export default function Reportes() {
     ));
   }, []);
 
-  /* ── Render ────────────────────────────────────────────────────── */
+  // render
   const KPIS = [
     { label: 'Pendientes', value: pendientes, sub: 'Sin atender',      color: 'text-amber-400', bg: 'bg-amber-500/10', top: 'card-top-amber', icon: Clock       },
     { label: 'En Proceso', value: enProceso,  sub: 'Siendo atendidos', color: 'text-aqua-cyan', bg: 'bg-aqua-cyan/10', top: 'card-top-cyan',  icon: Zap         },
@@ -451,6 +462,31 @@ export default function Reportes() {
           Nuevo Reporte
         </button>
       </div>
+
+      {/* Filtro heredado de una alerta */}
+      {zonaRelacionada && (
+        <div className="bg-aqua-cyan/10 border border-aqua-cyan/30 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">
+            Mostrando reportes {tipoRelacionado && <>de <strong className="text-aqua-cyan">{tipoRelacionado}</strong> </>}
+            en <strong className="text-aqua-cyan">{zonaRelacionada}</strong> — los que generaron esa alerta.
+          </p>
+          <button onClick={quitarFiltroAlerta} className="text-[11px] font-bold text-aqua-cyan hover:text-aqua-cyan/70 flex-shrink-0 whitespace-nowrap">
+            Ver todos los reportes
+          </button>
+        </div>
+      )}
+
+      {/* Confirmación de reporte creado */}
+      {creadoMsg && (
+        <div className="bg-aqua-cyan/10 border border-aqua-cyan/30 rounded-xl px-4 py-3 flex items-center gap-3">
+          <img src="/aquabot-reporte-recibido.png" alt="" className="w-9 h-9 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-aqua-cyan">¡Reporte recibido!</p>
+            <p className="text-xs text-gray-500">Gracias por avisar, tu reporte ya está en la lista.</p>
+          </div>
+          <button onClick={() => setCreadoMsg(false)} className="text-aqua-cyan hover:text-aqua-cyan/70 flex-shrink-0"><X size={14} /></button>
+        </div>
+      )}
 
       {/* Error */}
       {errorMsg && (
@@ -498,7 +534,7 @@ export default function Reportes() {
         </div>
       ) : filtrados.length === 0 ? (
         <div className="portal-card p-10 text-center">
-          <FileText size={28} className="mx-auto mb-3 text-gray-600" />
+          <img src="/aquabot-sin-datos.png" alt="" className="w-16 h-16 mx-auto mb-3 opacity-70" />
           <p className="text-sm font-bold text-gray-500">No hay reportes con este filtro.</p>
           {filtro === 'todos' && (
             <button onClick={openCreate} className="mt-3 text-xs font-bold text-aqua-cyan hover:underline">

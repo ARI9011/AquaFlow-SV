@@ -1,6 +1,5 @@
-// Puente por puerto serie con el Arduino (sensor de flujo piloto).
-// Detecta el dispositivo automáticamente por su chip USB (VID de Arduino LLC = 2341)
-// y reintenta la conexión solo si se desconecta o si aún no se encontró.
+// puente por puerto serie con el Arduino, lo detecta solo por el VID (2341) y
+// reintenta si se cae la conexión
 const { SerialPort, ReadlineParser } = require('serialport');
 const db = require('./db');
 
@@ -31,8 +30,7 @@ function guardarLecturaEnHistorial() {
     );
 }
 
-// Envía el estado actual a todos los navegadores conectados por streaming (SSE),
-// solo si cambió algo respecto a lo último emitido (evita tráfico innecesario).
+// solo manda si cambió algo respecto a lo último que se envió
 function emitirEstadoSiCambio() {
     const estado = obtenerEstado();
     const serializado = JSON.stringify(estado);
@@ -67,12 +65,12 @@ async function intentarConectar() {
 
     const sp = new SerialPort({ path: info.path, baudRate: BAUD_RATE }, (err) => {
         if (err) { console.error('No se pudo abrir el puerto del Arduino:', err.message); return; }
-        console.log(`✅ Arduino conectado en ${info.path}`);
+        console.log(`Arduino conectado en ${info.path}`);
         emitirEstadoSiCambio();
     });
 
     sp.on('close', () => {
-        console.log('⚠️  Se perdió la conexión con el Arduino');
+        console.log('Se perdió la conexión con el Arduino');
         puerto = null;
         emitirEstadoSiCambio();
     });
@@ -92,8 +90,7 @@ function iniciar() {
     intentarConectar();
     setInterval(intentarConectar, REINTENTO_MS);
     setInterval(guardarLecturaEnHistorial, GUARDAR_HISTORIAL_MS);
-    // Si el Arduino deja de mandar datos (se desconecta sin cerrar el puerto limpiamente),
-    // esto detecta el vencimiento y avisa a los clientes aunque no llegue ningún evento nuevo.
+    // por si el Arduino se desconecta sin cerrar el puerto bien, así igual se marca como desconectado
     setInterval(emitirEstadoSiCambio, REVISAR_VENCIMIENTO_MS);
 }
 
@@ -110,8 +107,7 @@ function obtenerEstado() {
     };
 }
 
-// Registra una respuesta HTTP (ya configurada como text/event-stream) para recibir
-// el estado al instante en que cambie. Devuelve una función para desuscribirse.
+// engancha una respuesta SSE ya abierta, devuelve función para desuscribirse
 function suscribir(res) {
     clientesSSE.add(res);
     res.write(`data: ${JSON.stringify(obtenerEstado())}\n\n`);

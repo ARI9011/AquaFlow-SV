@@ -1,10 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-// Gestiona las preferencias de accesibilidad de la app:
-// - Tamaño de texto (escala global)
-// - Alto contraste
-// Ambas se guardan en localStorage y se aplican como clases/variables en <html>.
+// tamaño de texto y alto contraste, se guardan en localStorage y se aplican en <html>
 
 interface A11yCtx {
   fontScale: number;          // 1 = normal, 1.15, 1.3, ...
@@ -13,6 +10,10 @@ interface A11yCtx {
   reducirTexto: () => void;
   resetTexto: () => void;
   toggleContraste: () => void;
+  // el botón de accesibilidad y el del chat comparten esquina, esto es para
+  // que el ChatBot avise cuándo esconder el de accesibilidad
+  chatAbierto: boolean;
+  setChatAbierto: (v: boolean) => void;
 }
 
 const A11yContext = createContext<A11yCtx>({
@@ -22,6 +23,8 @@ const A11yContext = createContext<A11yCtx>({
   reducirTexto: () => {},
   resetTexto: () => {},
   toggleContraste: () => {},
+  chatAbierto: false,
+  setChatAbierto: () => {},
 });
 
 const MIN = 0.9;
@@ -36,14 +39,15 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [highContrast, setHighContrast] = useState<boolean>(
     () => localStorage.getItem('a11y_contrast') === '1'
   );
+  const [chatAbierto, setChatAbierto] = useState(false);
 
-  // Aplica el tamaño de texto en la raíz (afecta todos los rem/em)
+  // esto afecta todos los rem/em de golpe
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontScale * 100}%`;
     localStorage.setItem('a11y_font', String(fontScale));
   }, [fontScale]);
 
-  // Aplica/quita la clase de alto contraste en <html>
+  // pone o quita la clase en <html>
   useEffect(() => {
     document.documentElement.classList.toggle('high-contrast', highContrast);
     localStorage.setItem('a11y_contrast', highContrast ? '1' : '0');
@@ -56,7 +60,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 
   return (
     <A11yContext.Provider
-      value={{ fontScale, highContrast, aumentarTexto, reducirTexto, resetTexto, toggleContraste }}
+      value={{ fontScale, highContrast, aumentarTexto, reducirTexto, resetTexto, toggleContraste, chatAbierto, setChatAbierto }}
     >
       {children}
     </A11yContext.Provider>

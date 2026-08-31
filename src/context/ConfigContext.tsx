@@ -83,7 +83,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [sistema, setSistema] = useState<SistemaConfig>(SISTEMA_DEFAULT);
   const [notificaciones, setNotificaciones] = useState<NotificacionesConfig>(() => {
-    // Aplica de inmediato el último tema conocido (localStorage) para evitar parpadeo mientras carga el backend.
+    // usa el tema cacheado mientras carga el backend, para que no parpadee
     const cache = (typeof localStorage !== 'undefined' && localStorage.getItem(TEMA_STORAGE_KEY) === 'claro') ? 'claro' : 'oscuro';
     return { ...NOTIFICACIONES_DEFAULT, tema: cache };
   });
@@ -130,7 +130,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     try {
       await axios.put('/api/configuracion/tema', { tema });
     } catch {
-      // El tema ya se aplicó visualmente y quedó cacheado localmente; se reintentará guardar en el próximo cambio.
+      // ya se aplicó visualmente y quedó cacheado, se reintenta guardar en el próximo cambio
     }
   };
 

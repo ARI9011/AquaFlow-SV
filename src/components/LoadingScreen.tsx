@@ -80,7 +80,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
         }}
       />
 
-      {/* ── Branding con Logo Oficial ── */}
+      {/* Branding con Logo Oficial */}
       <div className="mb-8 text-center relative z-10 flex flex-col items-center">
         <AquaFlowLogo size={64} variant="cyan" />
         <h1 className="text-4xl font-black tracking-tighter text-ink mt-3">
@@ -94,7 +94,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
         </p>
       </div>
 
-      {/* ── Glass SVG ── */}
+      {/* Glass SVG */}
       <div className="relative z-10">
         <svg width="130" height="160" viewBox="0 0 100 145">
           <defs>
@@ -118,7 +118,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
           {/* Glass background tint */}
           <polygon points={GLASS_PTS} fill="url(#glassBg)" />
 
-          {/* ── Water fill (wave, clipped to glass) ── */}
+          {/* Water fill (wave, clipped to glass) */}
           {waterH > 1 && (
             <g clipPath="url(#glassClip)">
               {/* Outer <g>: vertical position driven by React state */}
@@ -131,7 +131,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
             </g>
           )}
 
-          {/* ── Bubbles (clipped to glass only) ── */}
+          {/* Bubbles (clipped to glass only) */}
           {waterH > 18 && (
             <g clipPath="url(#glassClip)">
               <circle cx="34" cy={GLASS_BOT - 6}  r="2.2" fill="rgba(0,242,234,0.45)" className="bubble-a" />
@@ -140,7 +140,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
             </g>
           )}
 
-          {/* ── Glass outline ── */}
+          {/* Glass outline */}
           <polygon
             points={GLASS_PTS}
             fill="none"
@@ -177,7 +177,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
         </svg>
       </div>
 
-      {/* ── Percentage + status ── */}
+      {/* Percentage + status */}
       <div className="mt-8 text-center relative z-10">
         <p className="text-5xl font-black font-mono leading-none" style={{ color: 'var(--color-aqua-cyan)' }}>
           {fillPct}

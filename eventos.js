@@ -1,8 +1,6 @@
-// Hub genérico de streaming (Server-Sent Events): avisa a los navegadores conectados
-// que algo cambió en un canal (p. ej. "reportes" o "alertas"), sin depender de un
-// intervalo de sondeo. El mensaje es solo una señal para "vuelve a pedir los datos",
-// no manda el dato en sí — así no hay que duplicar la lógica de cada endpoint GET.
-const canales = new Map(); // nombre de canal -> Set de respuestas HTTP abiertas
+// avisa por SSE que algo cambió en un canal (reportes, alertas...), no manda
+// el dato en sí, el front vuelve a pedirlo con el GET normal
+const canales = new Map(); // canal -> Set de respuestas HTTP abiertas
 
 function suscribir(canal, res) {
     if (!canales.has(canal)) canales.set(canal, new Set());

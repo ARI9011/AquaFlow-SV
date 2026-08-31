@@ -11,7 +11,7 @@
   --color-ink: #ffffff;
 }
 
-/* ── Modo claro ──────────────────────────────────────────────────────
+/* Modo claro
    En vez de un solo tono casi-blanco repetido en todas las superficies
    (lo que aplanaba la interfaz), cada capa tiene su propio nivel de luz:
    el lienzo de fondo lleva un tinte azul-grisáceo visible, y topbar/sidebar,
@@ -127,7 +127,7 @@ h1, h2, h3, h4, h5, h6 {
 .bubble-b { animation: bubbleB 1.9s ease-in 1.35s infinite; }
 .bubble-c { animation: bubbleC 3.2s ease-in 0.1s  infinite; }
 
-/* ── Revelado al hacer scroll (usado en src/Pages/Home.tsx) ── */
+/* Revelado al hacer scroll (usado en src/Pages/Home.tsx) */
 .reveal {
   opacity: 0;
   transform: translateY(28px);
@@ -144,7 +144,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .float-slow { animation: floatSlow 5s ease-in-out infinite; }
 
-/* ── Auth split-panel (login/registro) ── */
+/* Auth split-panel (login/registro) */
 @keyframes authFadeSlide {
   from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to   { opacity: 1; transform: translateY(0)    scale(1);     }
@@ -223,8 +223,8 @@ h1, h2, h3, h4, h5, h6 {
   color: #00f2ea !important;
 }
 
-/* ── Mapa en modo claro: los controles de Leaflet estaban fijos en oscuro
-   sin importar el tema, y quedaban como una isla oscura sobre una página clara. ── */
+/* Mapa en modo claro: los controles de Leaflet estaban fijos en oscuro
+   sin importar el tema, y quedaban como una isla oscura sobre una página clara. */
 :root[data-theme="light"] .leaflet-popup-content-wrapper {
   background: #ffffff !important;
   color: #16232b !important;
@@ -248,7 +248,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 :root[data-theme="light"] .leaflet-control-attribution a { color: rgba(8,145,178,0.75) !important; }
 :root[data-theme="light"] .leaflet-control-attribution a:hover { color: #0891b2 !important; }
-/* ── Google Translate widget: ocultar barra superior y estilizar el selector ── */
+/* Google Translate widget: ocultar barra superior y estilizar el selector */
 .goog-te-banner-frame,
 .skiptranslate iframe.goog-te-banner-frame {
   display: none !important;
