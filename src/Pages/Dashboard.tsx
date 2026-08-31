@@ -72,7 +72,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLang();
   const [reportesInfo, setReportesInfo] = useState({ total: 12, pendientes: 2 });
-  const [alertasInfo, setAlertasInfo]   = useState({ total: 1, sub: 'Presión crítica' });
+  const [alertasInfo, setAlertasInfo]   = useState({ total: 1 });
 
   useEffect(() => {
     // Cargar datos de reportes reales
@@ -91,10 +91,7 @@ export default function Dashboard() {
       .then(res => {
         if (Array.isArray(res.data)) {
           const activas = res.data.filter((a: any) => a.estado === 'activa').length;
-          setAlertasInfo({ 
-            total: activas, 
-            sub: activas > 0 ? `${activas} requieren revisión` : 'Sin alertas críticas' 
-          });
+          setAlertasInfo({ total: activas });
         }
       })
       .catch(() => { /* mantener fallback elegante */ });
@@ -104,43 +101,43 @@ export default function Dashboard() {
   const alertasCount    = ZONAS_VERDADERAS.filter(z => z.estado === 'Alerta' || z.estado === 'Crítico').length;
 
   const KPIS = [
-    { 
-      label: t('dash.kpi.zonas'), 
-      value: String(ZONAS_VERDADERAS.length), 
-      sub: `${operativasCount} ${t('dash.kpi.zonas.sub')}`, 
-      icon: Wifi, 
-      accent: 'text-aqua-cyan',  
-      bg: 'bg-aqua-cyan/10',  
+    {
+      label: t('Zonas Monitoreadas'),
+      value: String(ZONAS_VERDADERAS.length),
+      sub: `${operativasCount} ${t('operativas')}`,
+      icon: Wifi,
+      accent: 'text-aqua-cyan',
+      bg: 'bg-aqua-cyan/10',
       top: 'card-top-cyan',
       route: '/mapa'
     },
-    { 
-      label: t('dash.kpi.sensores'),    
-      value: '5/6', 
-      sub: t('dash.kpi.sensores.sub'),  
-      icon: Activity,      
-      accent: 'text-green-400',  
-      bg: 'bg-green-500/10',  
+    {
+      label: t('Sensores Activos'),
+      value: '5/6',
+      sub: t('1 piloto USB en vivo'),
+      icon: Activity,
+      accent: 'text-green-400',
+      bg: 'bg-green-500/10',
       top: 'card-top-green',
       route: '/sensores'
     },
-    { 
-      label: t('dash.kpi.reportes'), 
-      value: String(reportesInfo.total),  
-      sub: `${reportesInfo.pendientes} ${t('dash.kpi.reportes.sub')}`,         
-      icon: FileText,      
-      accent: 'text-blue-400',   
-      bg: 'bg-blue-500/10',   
+    {
+      label: t('Reportes Ciudadanos'),
+      value: String(reportesInfo.total),
+      sub: `${reportesInfo.pendientes} ${t('pendientes')}`,
+      icon: FileText,
+      accent: 'text-blue-400',
+      bg: 'bg-blue-500/10',
       top: 'card-top-blue',
       route: '/reportes'
     },
-    { 
-      label: t('dash.kpi.alertas'),     
-      value: String(alertasInfo.total),   
-      sub: alertasInfo.sub,      
-      icon: AlertTriangle, 
-      accent: 'text-amber-400',  
-      bg: 'bg-amber-500/10',  
+    {
+      label: t('Alertas Activas'),
+      value: String(alertasInfo.total),
+      sub: alertasInfo.total > 0 ? `${alertasInfo.total} ${t('requieren revisión')}` : t('Sin alertas críticas'),
+      icon: AlertTriangle,
+      accent: 'text-amber-400',
+      bg: 'bg-amber-500/10',
       top: 'card-top-amber',
       route: '/alertas'
     },
@@ -153,17 +150,17 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">
-            {t('dash.region')}
+            {t('Gran San Salvador · El Salvador')}
           </p>
           <h2 className="text-3xl font-black tracking-tighter gradient-text leading-tight">
-            {t('dash.title')}
+            {t('Sistema de Monitoreo Hídrico')}
           </h2>
         </div>
         <div className="text-right flex-shrink-0">
           <Clock />
           <div className="flex items-center justify-end gap-1.5 mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-[10px] text-green-400 font-bold tracking-widest uppercase">{t('dash.live')}</span>
+            <span className="text-[10px] text-green-400 font-bold tracking-widest uppercase">{t('Datos en vivo')}</span>
           </div>
         </div>
       </div>
@@ -175,7 +172,7 @@ export default function Dashboard() {
             key={k.label} 
             onClick={() => navigate(k.route)}
             className={`portal-card ${k.top} p-5 flex items-start gap-3 hover:scale-[1.02] cursor-pointer transition-all duration-200 group`}
-            title={`Ir a ${k.label}`}
+            title={`${t('Ir a')} ${k.label}`}
           >
             <div className={`w-10 h-10 rounded-xl ${k.bg} flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-aqua-cyan/20 transition-colors`}>
               <k.icon size={18} className={k.accent} />
@@ -196,12 +193,12 @@ export default function Dashboard() {
         <div className="xl:col-span-3 portal-card p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Tendencia de Presión</p>
-              <h3 className="text-sm font-black text-ink mt-0.5">Últimas 6 horas · PSI por zona real</h3>
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">{t('Tendencia de Presión')}</p>
+              <h3 className="text-sm font-black text-ink mt-0.5">{t('Últimas 6 horas · PSI por zona real')}</h3>
             </div>
             <div className="flex items-center gap-1.5 bg-ink/[0.03] border border-ink/[0.06] px-3 py-1.5 rounded-full flex-shrink-0">
               <Gauge size={11} className="text-aqua-cyan" />
-              <span className="text-[10px] text-gray-400 font-bold">35–55 PSI normal</span>
+              <span className="text-[10px] text-gray-400 font-bold">{t('35–55 PSI normal')}</span>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={190}>
@@ -239,14 +236,14 @@ export default function Dashboard() {
         <div className="xl:col-span-2 portal-card p-5 flex flex-col">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Estado Actual</p>
-              <h3 className="text-sm font-black text-ink mt-0.5">Presión por zona</h3>
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">{t('Estado Actual')}</p>
+              <h3 className="text-sm font-black text-ink mt-0.5">{t('Presión por zona')}</h3>
             </div>
-            <button 
+            <button
               onClick={() => navigate('/mapa')}
               className="text-[11px] font-bold text-aqua-cyan hover:underline"
             >
-              Ver mapa →
+              {t('Ver mapa →')}
             </button>
           </div>
           <div className="space-y-4 flex-1">
@@ -261,7 +258,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                       <span className="text-xs font-black" style={{ color: z.color }}>{z.presion} PSI</span>
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${st.pill}`}>{z.estado}</span>
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${st.pill}`}>{t(z.estado)}</span>
                     </div>
                   </div>
                   <div className="w-full bg-ink/[0.05] rounded-full h-1.5">
@@ -274,11 +271,11 @@ export default function Dashboard() {
           <div className="mt-4 pt-3 border-t border-ink/[0.04] grid grid-cols-2 gap-2">
             <div className="bg-green-500/[0.07] border border-green-500/15 rounded-xl p-3 text-center">
               <p className="text-xl font-black text-green-400">{operativasCount}</p>
-              <p className="text-[10px] text-gray-500 font-bold mt-0.5">Operativas</p>
+              <p className="text-[10px] text-gray-500 font-bold mt-0.5">{t('Operativas')}</p>
             </div>
             <div className="bg-amber-500/[0.07] border border-amber-500/15 rounded-xl p-3 text-center">
               <p className="text-xl font-black text-amber-400">{alertasCount}</p>
-              <p className="text-[10px] text-gray-500 font-bold mt-0.5">En Alerta / Críticas</p>
+              <p className="text-[10px] text-gray-500 font-bold mt-0.5">{t('En Alerta / Críticas')}</p>
             </div>
           </div>
         </div>
@@ -290,8 +287,8 @@ export default function Dashboard() {
         {/* Bar Chart de Flujo */}
         <div className="xl:col-span-2 portal-card p-5">
           <div className="mb-4">
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Caudal Actual</p>
-            <h3 className="text-sm font-black text-ink mt-0.5">Flujo por zona · L/min</h3>
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">{t('Caudal Actual')}</p>
+            <h3 className="text-sm font-black text-ink mt-0.5">{t('Flujo por zona · L/min')}</h3>
           </div>
           <ResponsiveContainer width="100%" height={155}>
             <BarChart data={FLOW_DATA} margin={{ top: 2, right: 4, left: -26, bottom: 0 }}>
@@ -310,12 +307,12 @@ export default function Dashboard() {
         <div className="xl:col-span-3 portal-card overflow-hidden">
           <div className="px-5 py-4 border-b border-ink/[0.04] flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Resumen Operativo Real</p>
-              <h3 className="text-sm font-black text-ink mt-0.5">Todas las zonas monitoreadas</h3>
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">{t('Resumen Operativo Real')}</p>
+              <h3 className="text-sm font-black text-ink mt-0.5">{t('Todas las zonas monitoreadas')}</h3>
             </div>
             <div className="flex items-center gap-1.5">
               <Droplets size={13} className="text-aqua-cyan" />
-              <span className="text-[10px] text-aqua-cyan font-bold">{ZONAS_VERDADERAS.length} zonas</span>
+              <span className="text-[10px] text-aqua-cyan font-bold">{ZONAS_VERDADERAS.length} {t('zonas')}</span>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -323,7 +320,7 @@ export default function Dashboard() {
               <thead>
                 <tr className="border-b border-ink/[0.04] bg-ink/[0.015]">
                   {['Zona', 'Presión', 'Flujo', 'Estado'].map(h => (
-                    <th key={h} className="px-5 py-2.5 text-[10px] uppercase font-black tracking-widest text-gray-600 whitespace-nowrap">{h}</th>
+                    <th key={h} className="px-5 py-2.5 text-[10px] uppercase font-black tracking-widest text-gray-600 whitespace-nowrap">{t(h)}</th>
                   ))}
                 </tr>
               </thead>
@@ -351,7 +348,7 @@ export default function Dashboard() {
                         <span className="text-xs text-gray-600 ml-1">L/min</span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${st.pill}`}>{z.estado}</span>
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${st.pill}`}>{t(z.estado)}</span>
                       </td>
                     </tr>
                   );

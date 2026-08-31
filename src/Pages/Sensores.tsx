@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Droplets, Zap, Wifi, AlertTriangle, CheckCircle, Battery, Clock, Cpu } from 'lucide-react';
+import { useLang } from '../context/LanguageContext';
 
 interface EstadoPiloto {
   conectado: boolean;
@@ -15,6 +16,7 @@ function segundosDesde(iso: string | null) {
 }
 
 function SensorPilotoCard() {
+  const { t } = useLang();
   const [datos, setDatos] = useState<EstadoPiloto | null>(null);
   const [, forzarRender] = useState(0);
 
@@ -70,37 +72,37 @@ function SensorPilotoCard() {
               <Cpu size={16} className={conectado ? 'text-aqua-cyan' : 'text-red-400'} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-black text-ink truncate">Sensor de Flujo (Arduino piloto)</p>
-              <p className="text-[10px] text-gray-500 font-bold truncate">Conectado por USB · sin zona asignada</p>
+              <p className="text-sm font-black text-ink truncate">{t('Sensor de Flujo (Arduino piloto)')}</p>
+              <p className="text-[10px] text-gray-500 font-bold truncate">{t('Conectado por USB · sin zona asignada')}</p>
             </div>
           </div>
           {conectado
             ? <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-full flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">En vivo</span>
+                <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">{t('En vivo')}</span>
               </div>
             : <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-full flex-shrink-0">
                 <AlertTriangle size={10} className="text-red-400" />
-                <span className="text-[9px] font-black text-red-400 uppercase tracking-wide">Desconectado</span>
+                <span className="text-[9px] font-black text-red-400 uppercase tracking-wide">{t('Desconectado')}</span>
               </div>
           }
         </div>
 
         <div className="bg-ink/[0.03] border border-ink/[0.05] rounded-xl px-4 py-3 mb-3 text-center">
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Flujo</p>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{t('Flujo')}</p>
           <p className="text-3xl font-black" style={{ color: conectado ? 'var(--color-aqua-cyan)' : '#6b7280' }}>
             {conectado && datos?.caudal != null ? datos.caudal.toFixed(2) : '—'}
             <span className="text-sm text-gray-500 ml-1 font-bold">L/min</span>
           </p>
           {conectado && datos?.estado && (
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">{datos.estado}</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">{t(datos.estado)}</p>
           )}
         </div>
 
         <div className="flex items-center gap-1.5 pt-0.5">
           <Clock size={10} className="text-gray-600" />
           <span className="text-[10px] text-gray-500">
-            {conectado && segundos != null ? `Actualizado hace ${segundos}s` : 'Sin datos recientes del dispositivo'}
+            {conectado && segundos != null ? `${t('Actualizado hace')} ${segundos}s` : t('Sin datos recientes del dispositivo')}
           </span>
         </div>
       </div>
@@ -124,6 +126,7 @@ function batteryColor(pct: number) {
 }
 
 function SensorCard({ s }: { s: typeof SENSORES[0] }) {
+  const { t } = useLang();
   const bat = batteryColor(s.bateria);
   const TipoIcon = s.tipo === 'Flujo' ? Zap : Droplets;
   return (
@@ -146,18 +149,18 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
           {s.activo
             ? <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-full flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">Activo</span>
+                <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">{t('Activo')}</span>
               </div>
             : <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-full flex-shrink-0">
                 <AlertTriangle size={10} className="text-red-400" />
-                <span className="text-[9px] font-black text-red-400 uppercase tracking-wide">Inactivo</span>
+                <span className="text-[9px] font-black text-red-400 uppercase tracking-wide">{t('Inactivo')}</span>
               </div>
           }
         </div>
 
         {/* Valor principal */}
         <div className="bg-ink/[0.03] border border-ink/[0.05] rounded-xl px-4 py-3 mb-3 text-center">
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{s.tipo}</p>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{t(s.tipo)}</p>
           <p className="text-3xl font-black" style={{ color: s.activo ? 'var(--color-aqua-cyan)' : '#6b7280' }}>
             {s.valor}
             <span className="text-sm text-gray-500 ml-1 font-bold">{s.unidad}</span>
@@ -170,7 +173,7 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1">
                 <Battery size={11} className={bat.text} />
-                <span className="text-[10px] text-gray-500 font-bold">Batería</span>
+                <span className="text-[10px] text-gray-500 font-bold">{t('Batería')}</span>
               </div>
               <span className={`text-[11px] font-black ${bat.text}`}>{s.bateria}%</span>
             </div>
@@ -180,7 +183,7 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
           </div>
           <div className="flex items-center gap-1.5 pt-0.5">
             <Clock size={10} className="text-gray-600" />
-            <span className="text-[10px] text-gray-500">{s.lectura}</span>
+            <span className="text-[10px] text-gray-500">{t(s.lectura)}</span>
           </div>
         </div>
       </div>
@@ -189,6 +192,7 @@ function SensorCard({ s }: { s: typeof SENSORES[0] }) {
 }
 
 export default function Sensores() {
+  const { t } = useLang();
   const [filtro, setFiltro] = useState<'todos' | 'activos' | 'inactivos'>('todos');
 
   const activos   = SENSORES.filter(s => s.activo).length;
@@ -205,9 +209,9 @@ export default function Sensores() {
   ];
 
   const FILTERS = [
-    { key: 'todos',     label: `Todos (${SENSORES.length})` },
-    { key: 'activos',   label: `Activos (${activos})` },
-    { key: 'inactivos', label: `Inactivos (${inactivos})` },
+    { key: 'todos',     label: 'Todos',     count: SENSORES.length },
+    { key: 'activos',   label: 'Activos',   count: activos },
+    { key: 'inactivos', label: 'Inactivos', count: inactivos },
   ] as const;
 
   return (
@@ -215,14 +219,14 @@ export default function Sensores() {
 
       {/* Cabecera */}
       <div>
-        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Dispositivos IoT</p>
-        <h2 className="text-3xl font-black tracking-tighter gradient-text">Sensores de Medición</h2>
-        <p className="text-sm text-gray-500 mt-1">Monitoreo en tiempo real de la red de sensores</p>
+        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">{t('Dispositivos IoT')}</p>
+        <h2 className="text-3xl font-black tracking-tighter gradient-text">{t('Sensores de Medición')}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t('Monitoreo en tiempo real de la red de sensores')}</p>
       </div>
 
       {/* Dispositivo real conectado */}
       <div>
-        <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2">Dispositivo real</p>
+        <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2">{t('Dispositivo real')}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <SensorPilotoCard />
         </div>
@@ -230,7 +234,7 @@ export default function Sensores() {
 
       {/* KPI Cards */}
       <div>
-      <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2">Red simulada (datos de ejemplo)</p>
+      <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2">{t('Red simulada (datos de ejemplo)')}</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {KPIS.map((k) => (
           <div key={k.label} className={`portal-card ${k.border} p-5 flex items-center gap-4`}>
@@ -239,8 +243,8 @@ export default function Sensores() {
             </div>
             <div className="min-w-0">
               <p className="text-2xl font-black text-ink">{k.value}</p>
-              <p className="text-[11px] font-bold text-gray-500 truncate">{k.label}</p>
-              <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
+              <p className="text-[11px] font-bold text-gray-500 truncate">{t(k.label)}</p>
+              <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{t(k.sub)}</p>
             </div>
           </div>
         ))}
@@ -248,7 +252,7 @@ export default function Sensores() {
 
       {/* Filtros */}
       <div className="flex gap-2 flex-wrap">
-        {FILTERS.map(({ key, label }) => (
+        {FILTERS.map(({ key, label, count }) => (
           <button
             key={key}
             onClick={() => setFiltro(key)}
@@ -258,7 +262,7 @@ export default function Sensores() {
                 : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-ink'
             }`}
           >
-            {label}
+            {t(label)} ({count})
           </button>
         ))}
       </div>
@@ -267,8 +271,8 @@ export default function Sensores() {
       {filtrados.length === 0 ? (
         <div className="portal-card p-10 text-center">
           <Wifi size={28} className="mx-auto mb-3 text-gray-600" />
-          <p className="text-sm font-bold text-gray-500">No hay sensores con este filtro.</p>
-          <p className="text-xs text-gray-600 mt-1">Prueba con otra categoría.</p>
+          <p className="text-sm font-bold text-gray-500">{t('No hay sensores con este filtro.')}</p>
+          <p className="text-xs text-gray-600 mt-1">{t('Prueba con otra categoría.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

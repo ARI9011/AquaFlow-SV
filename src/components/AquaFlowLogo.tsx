@@ -1,3 +1,5 @@
+import { useLang } from '../context/LanguageContext';
+
 interface AquaFlowLogoProps {
   size?: number;
   className?: string;
@@ -11,6 +13,7 @@ export default function AquaFlowLogo({
   variant = 'cyan',
   showText = false
 }: AquaFlowLogoProps) {
+  const { t } = useLang();
 
   // Definición de colores según variantes
   // variant='cyan': gota cyan, nodos azul oscuro, ondas cyan
@@ -130,7 +133,7 @@ export default function AquaFlowLogo({
             AquaFlow <span className="text-aqua-cyan">SV</span>
           </span>
           <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-            Monitoreo Hídrico IoT
+            {t('Monitoreo Hídrico IoT')}
           </span>
         </div>
       )}

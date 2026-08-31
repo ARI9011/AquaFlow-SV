@@ -7,6 +7,7 @@ import {
 import axios from 'axios';
 import { useConfirm } from '../components/ConfirmDialog';
 import { useConfig } from '../context/ConfigContext';
+import { useLang } from '../context/LanguageContext';
 import AdminCrown from '../components/AdminCrown';
 
 const SEV_STYLE: Record<string, { text: string; bg: string; label: string; cardTop: string }> = {
@@ -110,6 +111,7 @@ export default function Alertas() {
   const [accionError, setAccionError] = useState('');
   const confirmDialog = useConfirm();
   const { pollingMs, tiempoReal } = useConfig();
+  const { t } = useLang();
 
   useEffect(() => {
     axios.get('/api/user-info', { withCredentials: true })
@@ -161,7 +163,7 @@ export default function Alertas() {
   };
 
   const eliminarAlerta = async (id: number) => {
-    const ok = await confirmDialog({ message: '¿Eliminar esta alerta? Esta acción no se puede deshacer.', danger: true });
+    const ok = await confirmDialog({ message: t('¿Eliminar esta alerta? Esta acción no se puede deshacer.'), danger: true });
     if (!ok) return;
     try {
       await axios.delete(`/api/alertas/${id}`, { withCredentials: true });
@@ -201,7 +203,7 @@ export default function Alertas() {
   };
 
   const eliminar = async (id: number) => {
-    const ok = await confirmDialog({ message: '¿Eliminar este comentario? Esta acción no se puede deshacer.', danger: true });
+    const ok = await confirmDialog({ message: t('¿Eliminar este comentario? Esta acción no se puede deshacer.'), danger: true });
     if (!ok) return;
     try {
       await axios.delete(`/api/comentarios/${id}`, { withCredentials: true });
@@ -224,10 +226,10 @@ export default function Alertas() {
   const alertasFiltradas = filtro === 'todos' ? gestionables : gestionables.filter(a => a.severidad === filtro);
 
   const FILTERS = [
-    { key: 'todos',   label: `Todos (${gestionables.length})` },
-    { key: 'critica', label: `Crítica (${critCount})` },
-    { key: 'alta',    label: `Alta (${altaCount})` },
-    { key: 'media',   label: `Media (${mediaCount})` },
+    { key: 'todos',   label: 'Todos',   count: gestionables.length },
+    { key: 'critica', label: 'Crítica', count: critCount },
+    { key: 'alta',    label: 'Alta',    count: altaCount },
+    { key: 'media',   label: 'Media',   count: mediaCount },
   ];
 
   const kpiCount = (key: string) =>
@@ -238,9 +240,9 @@ export default function Alertas() {
 
       {/* ENCABEZADO */}
       <div>
-        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Sistema de Monitoreo</p>
-        <h2 className="text-3xl font-black tracking-tighter gradient-text">Alertas del Sistema</h2>
-        <p className="text-sm text-gray-500 mt-1">Se genera una alerta automática cuando una zona acumula 5 o más reportes activos, sin importar el tipo</p>
+        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">{t('Sistema de Monitoreo')}</p>
+        <h2 className="text-3xl font-black tracking-tighter gradient-text">{t('Alertas del Sistema')}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t('Se genera una alerta automática cuando una zona acumula 5 o más reportes activos, sin importar el tipo')}</p>
       </div>
 
       {accionError && (
@@ -259,8 +261,8 @@ export default function Alertas() {
             </div>
             <div>
               <p className="text-2xl font-black text-ink">{kpiCount(k.key)}</p>
-              <p className="text-[11px] font-bold text-gray-500">{k.label}</p>
-              <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
+              <p className="text-[11px] font-bold text-gray-500">{t(k.label)}</p>
+              <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{t(k.sub)}</p>
             </div>
           </div>
         ))}
@@ -274,9 +276,9 @@ export default function Alertas() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black text-red-400">
-              {gestionables.length} alerta{gestionables.length !== 1 ? 's' : ''} activa{gestionables.length !== 1 ? 's' : ''} — requieren atención
+              {gestionables.length} {gestionables.length === 1 ? t('alerta activa') : t('alertas activas')} — {t('requieren atención')}
             </p>
-            <p className="text-xs text-gray-500">Resuelve cada incidencia para mantener el sistema estable.</p>
+            <p className="text-xs text-gray-500">{t('Resuelve cada incidencia para mantener el sistema estable.')}</p>
           </div>
         </div>
       ) : !loadingAlertas ? (
@@ -285,8 +287,8 @@ export default function Alertas() {
             <img src="/aquabot-servicio-estable.png" alt="" className="w-full h-full object-contain p-0.5" />
           </div>
           <div>
-            <p className="text-sm font-black text-green-400">Sin alertas activas</p>
-            <p className="text-xs text-gray-500">Todos los sistemas operan con normalidad.</p>
+            <p className="text-sm font-black text-green-400">{t('Sin alertas activas')}</p>
+            <p className="text-xs text-gray-500">{t('Todos los sistemas operan con normalidad.')}</p>
           </div>
         </div>
       ) : null}
@@ -295,19 +297,19 @@ export default function Alertas() {
       {loadingAlertas ? (
         <div className="portal-card p-10 text-center">
           <div className="w-6 h-6 border-2 border-aqua-cyan/30 border-t-aqua-cyan rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500 font-medium">Cargando alertas...</p>
+          <p className="text-sm text-gray-500 font-medium">{t('Cargando alertas...')}</p>
         </div>
       ) : gestionables.length > 0 && (
         <>
           <div className="flex gap-2 flex-wrap">
-            {FILTERS.map(({ key, label }) => (
+            {FILTERS.map(({ key, label, count }) => (
               <button key={key} onClick={() => setFiltro(key)}
                 className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
                   filtro === key
                     ? 'bg-aqua-cyan text-aqua-dark border-aqua-cyan'
                     : 'bg-ink/[0.03] text-gray-400 border-ink/[0.06] hover:border-ink/15 hover:text-ink'
                 }`}>
-                {label}
+                {t(label)} ({count})
               </button>
             ))}
           </div>
@@ -316,7 +318,7 @@ export default function Alertas() {
             {alertasFiltradas.length === 0 ? (
               <div className="portal-card p-10 text-center">
                 <CheckCircle size={28} className="mx-auto mb-3 text-gray-600" />
-                <p className="text-sm font-bold text-gray-500">No hay alertas con esta severidad actualmente.</p>
+                <p className="text-sm font-bold text-gray-500">{t('No hay alertas con esta severidad actualmente.')}</p>
               </div>
             ) : (
               alertasFiltradas.map((alerta) => {
@@ -337,21 +339,21 @@ export default function Alertas() {
                             <h3 className="font-black text-ink text-sm">{alerta.tipo}</h3>
                             <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full"
                               style={{ color: style.text, backgroundColor: style.bg }}>
-                              {style.label}
+                              {t(style.label)}
                             </span>
                             <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full ${eStyle.bg} ${eStyle.text}`}>
-                              {eStyle.label}
+                              {t(eStyle.label)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-400 leading-relaxed mb-3">{alerta.descripcion}</p>
                           <div className="flex flex-wrap gap-4 text-[10px] text-gray-500">
                             <span className="flex items-center gap-1">
                               <MapPin size={10} />
-                              Zona: <strong className="text-gray-400">{alerta.zona}, {alerta.sector}</strong>
+                              {t('Zona')}: <strong className="text-gray-400">{alerta.zona}, {alerta.sector}</strong>
                             </span>
                             <span className="flex items-center gap-1">
                               <Users size={10} />
-                              {alerta.total_reportes} reportes · último de <strong className="text-gray-400 inline-flex items-center gap-1">{alerta.usuario}{alerta.usuario_rol === 'admin' && <AdminCrown size={10} />}</strong>
+                              {alerta.total_reportes} {t('reportes')} · {t('último de')} <strong className="text-gray-400 inline-flex items-center gap-1">{alerta.usuario}{alerta.usuario_rol === 'admin' && <AdminCrown size={10} />}</strong>
                             </span>
                             <span className="flex items-center gap-1"><Clock size={10} />{timeAgo(alerta.actualizado_en ?? alerta.creado_en)}</span>
                           </div>
@@ -359,29 +361,29 @@ export default function Alertas() {
                             onClick={() => navigate(`/reportes?zona=${encodeURIComponent(alerta.zona)}`)}
                             className="mt-3 flex items-center gap-1.5 text-[11px] font-bold text-aqua-cyan hover:text-aqua-cyan/70 transition-colors"
                           >
-                            <FileText size={12} /> Ver los {alerta.total_reportes} reportes de esta alerta
+                            <FileText size={12} /> {t('Ver los')} {alerta.total_reportes} {t('reportes de esta alerta')}
                           </button>
                         </div>
 
                         {isAdmin && (
                           <div className="flex gap-1.5 flex-shrink-0">
                             {alerta.estado === 'activa' && (
-                              <button onClick={() => cambiarEstadoAlerta(alerta.id, 'suspendida')} title="Suspender alerta"
+                              <button onClick={() => cambiarEstadoAlerta(alerta.id, 'suspendida')} title={t('Suspender alerta')}
                                 className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-amber-400 hover:border-amber-500/30 flex items-center justify-center transition-all">
                                 <PauseCircle size={12} />
                               </button>
                             )}
                             {alerta.estado === 'suspendida' && (
-                              <button onClick={() => cambiarEstadoAlerta(alerta.id, 'activa')} title="Reactivar alerta"
+                              <button onClick={() => cambiarEstadoAlerta(alerta.id, 'activa')} title={t('Reactivar alerta')}
                                 className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-aqua-cyan hover:border-aqua-cyan/30 flex items-center justify-center transition-all">
                                 <PlayCircle size={12} />
                               </button>
                             )}
-                            <button onClick={() => cambiarEstadoAlerta(alerta.id, 'resuelta')} title="Marcar como resuelta"
+                            <button onClick={() => cambiarEstadoAlerta(alerta.id, 'resuelta')} title={t('Marcar como resuelta')}
                               className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-green-400 hover:border-green-500/30 flex items-center justify-center transition-all">
                               <CheckCircle size={12} />
                             </button>
-                            <button onClick={() => eliminarAlerta(alerta.id)} title="Eliminar alerta"
+                            <button onClick={() => eliminarAlerta(alerta.id)} title={t('Eliminar alerta')}
                               className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] text-gray-500 hover:text-red-400 hover:border-red-500/30 flex items-center justify-center transition-all">
                               <Trash2 size={12} />
                             </button>
@@ -404,23 +406,23 @@ export default function Alertas() {
             <History size={16} className="text-green-400" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-ink">Historial Reciente</h3>
-            <p className="text-[10px] text-gray-500 mt-0.5">Alertas resueltas recientemente</p>
+            <h3 className="font-bold text-base text-ink">{t('Historial Reciente')}</h3>
+            <p className="text-[10px] text-gray-500 mt-0.5">{t('Alertas resueltas recientemente')}</p>
           </div>
         </div>
         <div className="p-4 space-y-1">
           {resueltas.length === 0 ? (
-            <p className="text-sm text-gray-600 text-center py-4">Aún no hay alertas resueltas.</p>
+            <p className="text-sm text-gray-600 text-center py-4">{t('Aún no hay alertas resueltas.')}</p>
           ) : (
             resueltas.map((item) => (
               <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-ink/[0.02] transition-colors">
                 <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold text-ink/80">{item.tipo} resuelta</span>
+                  <span className="text-sm font-bold text-ink/80">{item.tipo} {t('resuelta')}</span>
                   <span className="text-gray-500 text-sm"> — {item.zona}, {item.sector}</span>
                 </div>
                 {isAdmin && (
-                  <button onClick={() => eliminarAlerta(item.id)} title="Eliminar del historial"
+                  <button onClick={() => eliminarAlerta(item.id)} title={t('Eliminar del historial')}
                     className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0">
                     <Trash2 size={12} />
                   </button>
@@ -440,8 +442,8 @@ export default function Alertas() {
               <MessageSquare size={16} className="text-aqua-cyan" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-ink">Comentarios del equipo</h3>
-              <p className="text-[10px] text-gray-500 mt-0.5">{comentarios.length} comentario{comentarios.length !== 1 ? 's' : ''}</p>
+              <h3 className="font-bold text-base text-ink">{t('Comentarios del equipo')}</h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">{comentarios.length} {comentarios.length === 1 ? t('comentario') : t('comentarios')}</p>
             </div>
           </div>
           {isAdmin && (
@@ -461,7 +463,7 @@ export default function Alertas() {
                   value={nuevoTexto}
                   onChange={e => setNuevoTexto(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) enviar(); }}
-                  placeholder="Escribe un comentario sobre esta alerta... (Ctrl+Enter para enviar)"
+                  placeholder={t('Escribe un comentario sobre esta alerta... (Ctrl+Enter para enviar)')}
                   rows={3}
                   className="w-full bg-ink/5 border border-ink/10 rounded-2xl px-4 py-3 text-sm text-ink placeholder-gray-600 outline-none focus:border-aqua-cyan/40 resize-none transition-colors"
                 />
@@ -473,7 +475,7 @@ export default function Alertas() {
                 <button onClick={enviar} disabled={!nuevoTexto.trim() || enviando}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-aqua-cyan text-aqua-dark text-sm font-bold hover:bg-aqua-cyan/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                   <Send size={14} />
-                  {enviando ? 'Enviando...' : 'Comentar'}
+                  {enviando ? t('Enviando...') : t('Comentar')}
                 </button>
               </div>
             </div>
@@ -485,7 +487,7 @@ export default function Alertas() {
             {comentarios.length === 0 ? (
               <div className="text-center py-8 text-gray-600">
                 <img src="/aquabot-sin-datos.png" alt="" className="w-14 h-14 mx-auto mb-3 opacity-60" />
-                <p className="text-sm">Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+                <p className="text-sm">{t('Aún no hay comentarios. ¡Sé el primero en comentar!')}</p>
               </div>
             ) : (
               comentarios.map(c => (
@@ -513,11 +515,11 @@ export default function Alertas() {
                         <div className="flex gap-2">
                           <button onClick={() => guardarEdicion(c.id)} disabled={guardando}
                             className="px-3 py-1.5 rounded-lg bg-aqua-cyan text-aqua-dark text-xs font-bold hover:bg-aqua-cyan/80 disabled:opacity-40 transition-all">
-                            {guardando ? 'Guardando...' : 'Guardar'}
+                            {guardando ? t('Guardando...') : t('Guardar')}
                           </button>
                           <button onClick={() => setEditandoId(null)}
                             className="px-3 py-1.5 rounded-lg bg-ink/5 text-gray-400 text-xs font-bold hover:bg-ink/10 transition-all">
-                            Cancelar
+                            {t('Cancelar')}
                           </button>
                         </div>
                       </div>
@@ -527,11 +529,11 @@ export default function Alertas() {
                   </div>
                   {isAdmin && editandoId !== c.id && (
                     <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1">
-                      <button onClick={() => { setEditandoId(c.id); setEditTexto(c.contenido); }} title="Editar"
+                      <button onClick={() => { setEditandoId(c.id); setEditTexto(c.contenido); }} title={t('Editar')}
                         className="p-1.5 rounded-lg text-gray-500 hover:text-aqua-cyan hover:bg-aqua-cyan/10 transition-all">
                         <Pencil size={14} />
                       </button>
-                      <button onClick={() => eliminar(c.id)} title="Eliminar"
+                      <button onClick={() => eliminar(c.id)} title={t('Eliminar')}
                         className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all">
                         <Trash2 size={14} />
                       </button>

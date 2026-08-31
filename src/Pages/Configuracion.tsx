@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, RefreshCw, Zap, Moon, Sun, Shield, Save, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
+import { useLang } from '../context/LanguageContext';
 
 const Toggle = ({ value, onChange, disabled = false }: {
   value: boolean; onChange: (v: boolean) => void; disabled?: boolean;
@@ -48,6 +49,7 @@ export default function Configuracion() {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   const { sistema, notificaciones, configLoading, tema, setTema, updateNotificaciones, updateSistema } = useConfig();
+  const { t } = useLang();
   const esOscuro = tema === 'oscuro';
 
   // Borrador local editable, sembrado desde el contexto cuando termina de cargar.
@@ -94,7 +96,7 @@ export default function Configuracion() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
-      setError('No se pudo guardar la configuración. Intenta de nuevo.');
+      setError(t('No se pudo guardar la configuración. Intenta de nuevo.'));
     } finally {
       setSaving(false);
     }
@@ -105,31 +107,31 @@ export default function Configuracion() {
 
       {/* ENCABEZADO */}
       <div>
-        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Panel de Control</p>
-        <h2 className="text-3xl font-black tracking-tighter gradient-text">Configuración</h2>
-        <p className="text-sm text-gray-500 mt-1">Personaliza las preferencias y umbrales de AquaFlow SV</p>
+        <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">{t('Panel de Control')}</p>
+        <h2 className="text-3xl font-black tracking-tighter gradient-text">{t('Configuración')}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t('Personaliza las preferencias y umbrales de AquaFlow SV')}</p>
       </div>
 
       {/* NOTIFICACIONES */}
-      <Section icon={Bell} title="Notificaciones" top="card-top-cyan">
-        <SettingRow label="Alertas del sistema" sub="Avisar cuando un sensor detecte valores críticos">
+      <Section icon={Bell} title={t('Notificaciones')} top="card-top-cyan">
+        <SettingRow label={t('Alertas del sistema')} sub={t('Avisar cuando un sensor detecte valores críticos')}>
           <Toggle value={notifAlertas} onChange={setNotifAlertas} disabled={configLoading} />
         </SettingRow>
-        <SettingRow label="Nuevos reportes ciudadanos" sub="Notificación al recibir un reporte de la comunidad">
+        <SettingRow label={t('Nuevos reportes ciudadanos')} sub={t('Notificación al recibir un reporte de la comunidad')}>
           <Toggle value={notifReportes} onChange={setNotifReportes} disabled={configLoading} />
         </SettingRow>
-        <SettingRow label="Estado de sensores" sub="Avisar cuando un sensor se desconecte o reconecte">
+        <SettingRow label={t('Estado de sensores')} sub={t('Avisar cuando un sensor se desconecte o reconecte')}>
           <Toggle value={notifSensores} onChange={setNotifSensores} disabled={configLoading} />
         </SettingRow>
       </Section>
 
       {/* APARIENCIA */}
-      <Section icon={esOscuro ? Moon : Sun} title="Apariencia" top="card-top-blue">
+      <Section icon={esOscuro ? Moon : Sun} title={t('Apariencia')} top="card-top-blue">
         <SettingRow
-          label={esOscuro ? 'Modo oscuro' : 'Modo claro'}
+          label={esOscuro ? t('Modo oscuro') : t('Modo claro')}
           sub={esOscuro
-            ? 'Optimizado para monitoreo nocturno y bajo consumo visual'
-            : 'Vista previa clara y cómoda para uso diurno'}
+            ? t('Optimizado para monitoreo nocturno y bajo consumo visual')
+            : t('Vista previa clara y cómoda para uso diurno')}
         >
           <Toggle value={esOscuro} onChange={(v) => setTema(v ? 'oscuro' : 'claro')} />
         </SettingRow>
@@ -138,11 +140,11 @@ export default function Configuracion() {
       {isAdmin && (
         <>
           {/* ACTUALIZACIÓN DE DATOS */}
-          <Section icon={RefreshCw} title="Actualización de datos" top="card-top-blue">
-            <SettingRow label="Actualización automática" sub="Refrescar Reportes y Alertas periódicamente para todos los usuarios">
+          <Section icon={RefreshCw} title={t('Actualización de datos')} top="card-top-blue">
+            <SettingRow label={t('Actualización automática')} sub={t('Refrescar Reportes y Alertas periódicamente para todos los usuarios')}>
               <Toggle value={autoRefresh} onChange={setAutoRefresh} disabled={configLoading} />
             </SettingRow>
-            <SettingRow label="Intervalo de actualización" sub="Cada cuánto se refrescan los datos en toda la plataforma">
+            <SettingRow label={t('Intervalo de actualización')} sub={t('Cada cuánto se refrescan los datos en toda la plataforma')}>
               <select
                 value={intervalo}
                 onChange={(e) => setIntervalo(e.target.value)}
@@ -151,18 +153,18 @@ export default function Configuracion() {
                   !autoRefresh ? 'opacity-40 cursor-not-allowed' : ''
                 }`}
               >
-                <option value="0">Tiempo real (sin intervalo)</option>
-                <option value="10">10 segundos</option>
-                <option value="30">30 segundos</option>
-                <option value="60">1 minuto</option>
-                <option value="300">5 minutos</option>
+                <option value="0">{t('Tiempo real (sin intervalo)')}</option>
+                <option value="10">10 {t('segundos')}</option>
+                <option value="30">30 {t('segundos')}</option>
+                <option value="60">1 {t('minuto')}</option>
+                <option value="300">5 {t('minutos')}</option>
               </select>
             </SettingRow>
           </Section>
 
           {/* UMBRALES DE ALERTA */}
-          <Section icon={Zap} title="Umbrales de alerta" top="card-top-amber">
-            <SettingRow label="Presión mínima aceptable" sub="Valor de referencia; aún no se genera desde sensores en vivo">
+          <Section icon={Zap} title={t('Umbrales de alerta')} top="card-top-amber">
+            <SettingRow label={t('Presión mínima aceptable')} sub={t('Valor de referencia; aún no se genera desde sensores en vivo')}>
               <div className="flex items-center gap-2">
                 <input type="number" value={umbralPresion} onChange={(e) => setUmbralPresion(e.target.value)}
                   disabled={configLoading}
@@ -171,7 +173,7 @@ export default function Configuracion() {
                 <span className="text-gray-500 text-sm">PSI</span>
               </div>
             </SettingRow>
-            <SettingRow label="Flujo mínimo aceptable" sub="Valor de referencia; aún no se genera desde sensores en vivo">
+            <SettingRow label={t('Flujo mínimo aceptable')} sub={t('Valor de referencia; aún no se genera desde sensores en vivo')}>
               <div className="flex items-center gap-2">
                 <input type="number" value={umbralFlujo} onChange={(e) => setUmbralFlujo(e.target.value)}
                   disabled={configLoading}
@@ -183,8 +185,8 @@ export default function Configuracion() {
           </Section>
 
           {/* SEGURIDAD */}
-          <Section icon={Shield} title="Seguridad" top="card-top-green">
-            <SettingRow label="Sesión activa" sub={`Sesión iniciada como ${user?.Usuario || 'Administrador'}`}>
+          <Section icon={Shield} title={t('Seguridad')} top="card-top-green">
+            <SettingRow label={t('Sesión activa')} sub={`${t('Sesión iniciada como')} ${user?.Usuario || t('Administrador')}`}>
               <span className="text-[10px] font-black uppercase px-3 py-1 rounded-lg bg-aqua-cyan/10 text-aqua-cyan border border-aqua-cyan/20">
                 Admin
               </span>
@@ -211,8 +213,8 @@ export default function Configuracion() {
           }`}
         >
           {saved
-            ? <><CheckCircle2 size={17} /> GUARDADO</>
-            : <><Save size={17} /> {saving ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}</>
+            ? <><CheckCircle2 size={17} /> {t('GUARDADO')}</>
+            : <><Save size={17} /> {saving ? t('GUARDANDO...') : t('GUARDAR CAMBIOS')}</>
           }
         </button>
       </div>

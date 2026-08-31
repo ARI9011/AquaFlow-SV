@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Cpu, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 
 interface EstadoPiloto {
   conectado: boolean;
@@ -12,6 +13,7 @@ interface EstadoPiloto {
 
 export default function SensorNotificationBanner() {
   const { user } = useAuth();
+  const { t } = useLang();
   const [notificacion, setNotificacion] = useState<{
     id: number;
     tipo: 'conexion' | 'desconexion' | 'alerta';
@@ -43,15 +45,15 @@ export default function SensorNotificationBanner() {
               setNotificacion({
                 id: Date.now(),
                 tipo: 'conexion',
-                titulo: '¡Modulo Arduino Conectado!',
-                mensaje: `Sensor de flujo activo. Caudal detectado: ${datos.caudal != null ? datos.caudal.toFixed(1) + ' L/min' : '0.0 L/min'}`
+                titulo: t('¡Modulo Arduino Conectado!'),
+                mensaje: `${t('Sensor de flujo activo. Caudal detectado:')} ${datos.caudal != null ? datos.caudal.toFixed(1) + ' L/min' : '0.0 L/min'}`
               });
             } else {
               setNotificacion({
                 id: Date.now(),
                 tipo: 'desconexion',
-                titulo: 'Modulo Arduino Desconectado',
-                mensaje: 'Se perdió la señal con el sensor USB piloto.'
+                titulo: t('Modulo Arduino Desconectado'),
+                mensaje: t('Se perdió la señal con el sensor USB piloto.')
               });
             }
           }
@@ -61,8 +63,8 @@ export default function SensorNotificationBanner() {
             setNotificacion({
               id: Date.now(),
               tipo: 'alerta',
-              titulo: 'Alerta en Sensor IoT',
-              mensaje: `Estado del sensor: ${datos.estado} (${datos.caudal != null ? datos.caudal.toFixed(1) : 0} L/min)`
+              titulo: t('Alerta en Sensor IoT'),
+              mensaje: `${t('Estado del sensor:')} ${t(datos.estado)} (${datos.caudal != null ? datos.caudal.toFixed(1) : 0} L/min)`
             });
           }
 
@@ -78,8 +80,8 @@ export default function SensorNotificationBanner() {
           setNotificacion({
             id: Date.now(),
             tipo: 'desconexion',
-            titulo: 'Conexión IoT Interrumpida',
-            mensaje: 'No se pudo mantener la comunicación en vivo con el Arduino.'
+            titulo: t('Conexión IoT Interrumpida'),
+            mensaje: t('No se pudo mantener la comunicación en vivo con el Arduino.')
           });
         }
         estadoPrevioConectado = false;
@@ -129,7 +131,7 @@ export default function SensorNotificationBanner() {
         <button
           onClick={() => setNotificacion(null)}
           className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
-          aria-label="Cerrar notificación"
+          aria-label={t('Cerrar notificación')}
         >
           <X size={15} />
         </button>

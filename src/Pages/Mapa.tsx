@@ -4,6 +4,7 @@ import { Globe, AlertTriangle, CheckCircle, Activity, MapPin } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import { ZONAS_VERDADERAS, ESTADO_STYLES, type ZonaMonitoreada } from '../data/zonas';
+import { useLang } from '../context/LanguageContext';
 
 const LEYENDA = [
   { estado: 'Óptimo',  color: '#22c55e', rango: '50–60 PSI' },
@@ -27,6 +28,7 @@ function BoundsFitter() {
 }
 
 const ZonaCard = ({ zona, onClick }: { zona: ZonaMonitoreada; onClick?: () => void }) => {
+  const { t } = useLang();
   const st = ESTADO_STYLES[zona.estado] || ESTADO_STYLES['Estable'];
   return (
     <div 
@@ -43,18 +45,18 @@ const ZonaCard = ({ zona, onClick }: { zona: ZonaMonitoreada; onClick?: () => vo
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-[11px]">
-            <span className="text-gray-500">Presión</span>
+            <span className="text-gray-500">{t('Presión')}</span>
             <span className="font-mono font-bold text-aqua-cyan">{zona.presion} PSI</span>
           </div>
           <div className="flex justify-between text-[11px]">
-            <span className="text-gray-500">Flujo</span>
+            <span className="text-gray-500">{t('Flujo')}</span>
             <span className="font-mono font-bold text-ink/80">{zona.flujo} L/m</span>
           </div>
           <div className="flex justify-between items-center text-[11px] pt-2 border-t border-ink/5">
-            <span className="text-gray-500">Estado</span>
+            <span className="text-gray-500">{t('Estado')}</span>
             <span className="font-black text-[10px] uppercase px-2 py-0.5 rounded-md"
               style={{ color: st.text, backgroundColor: st.bg }}>
-              {zona.estado}
+              {t(zona.estado)}
             </span>
           </div>
         </div>
@@ -64,6 +66,7 @@ const ZonaCard = ({ zona, onClick }: { zona: ZonaMonitoreada; onClick?: () => vo
 };
 
 export default function Mapa() {
+  const { t } = useLang();
   const [mapMounted, setMapMounted] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'operativas' | 'incidencias'>('todos');
   const navigate = useNavigate();
@@ -94,16 +97,16 @@ export default function Mapa() {
       {/* ENCABEZADO */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Gran San Salvador</p>
-          <h2 className="text-3xl font-black tracking-tighter gradient-text">Mapa de Zonas</h2>
-          <p className="text-sm text-gray-500 mt-1">Ubicación y estado en tiempo real de todas las zonas de monitoreo</p>
+          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">{t('Gran San Salvador')}</p>
+          <h2 className="text-3xl font-black tracking-tighter gradient-text">{t('Mapa de Zonas')}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t('Ubicación y estado en tiempo real de todas las zonas de monitoreo')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => navigate('/sensores')}
             className="px-3.5 py-2 rounded-xl bg-aqua-cyan/10 border border-aqua-cyan/20 hover:bg-aqua-cyan/20 text-aqua-cyan text-xs font-bold transition-all flex items-center gap-1.5"
           >
-            <Activity size={14} /> Ver Sensores IoT
+            <Activity size={14} /> {t('Ver Sensores IoT')}
           </button>
         </div>
       </div>
@@ -123,8 +126,8 @@ export default function Mapa() {
             </div>
             <div>
               <p className="text-2xl font-black text-ink">{k.value}</p>
-              <p className="text-[11px] font-bold text-gray-500">{k.label}</p>
-              <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{k.sub}</p>
+              <p className="text-[11px] font-bold text-gray-500">{t(k.label)}</p>
+              <p className={`text-[10px] font-bold mt-0.5 ${k.color}`}>{t(k.sub)}</p>
             </div>
           </div>
         ))}
@@ -138,16 +141,16 @@ export default function Mapa() {
               <Activity size={16} className="text-aqua-cyan" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-ink">Mapa Interactivo — San Salvador</h3>
-              <p className="text-[10px] text-gray-500 mt-0.5">Haz clic en los marcadores para ver detalles de cada zona</p>
+              <h3 className="font-bold text-base text-ink">{t('Mapa Interactivo — San Salvador')}</h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">{t('Haz clic en los marcadores para ver detalles de cada zona')}</p>
             </div>
           </div>
           {filtroEstado !== 'todos' && (
-            <button 
+            <button
               onClick={() => setFiltroEstado('todos')}
               className="text-xs font-bold text-aqua-cyan hover:underline"
             >
-              Mostrar todas
+              {t('Mostrar todas')}
             </button>
           )}
         </div>
@@ -156,7 +159,7 @@ export default function Mapa() {
             <div className="h-full flex items-center justify-center bg-[var(--color-aqua-dark)]">
               <div className="flex flex-col items-center gap-3 text-gray-500">
                 <div className="w-7 h-7 border-2 border-aqua-cyan/30 border-t-aqua-cyan rounded-full animate-spin" />
-                <span className="text-xs font-medium">Cargando mapa...</span>
+                <span className="text-xs font-medium">{t('Cargando mapa...')}</span>
               </div>
             </div>
           ) : (
@@ -201,21 +204,21 @@ export default function Mapa() {
                         </div>
                         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Presión</span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>{t('Presión')}</span>
                             <span style={{ fontWeight: 700, color: 'var(--color-aqua-cyan)', fontFamily: 'monospace' }}>{zona.presion} PSI</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Flujo</span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>{t('Flujo')}</span>
                             <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: 'monospace' }}>{zona.flujo} L/m</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Estado</span>
+                            <span style={{ color: 'rgba(255,255,255,0.4)' }}>{t('Estado')}</span>
                             <span style={{
                               fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em',
                               color: zona.color, background: ESTADO_STYLES[zona.estado]?.bg || 'rgba(0,242,234,0.13)',
                               padding: '2px 8px', borderRadius: '6px',
                             }}>
-                              {zona.estado}
+                              {t(zona.estado)}
                             </span>
                           </div>
                         </div>
@@ -233,8 +236,8 @@ export default function Mapa() {
       <div>
         <div className="flex items-center gap-2 mb-3">
           <MapPin size={15} className="text-aqua-cyan" />
-          <h3 className="font-bold text-ink text-base">Zonas Monitoreadas</h3>
-          <span className="text-[10px] text-gray-600 font-bold ml-1">{zonasFiltradas.length} zonas</span>
+          <h3 className="font-bold text-ink text-base">{t('Zonas Monitoreadas')}</h3>
+          <span className="text-[10px] text-gray-600 font-bold ml-1">{zonasFiltradas.length} {t('zonas')}</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {zonasFiltradas.map((zona) => <ZonaCard key={zona.id} zona={zona} />)}
@@ -248,19 +251,19 @@ export default function Mapa() {
             <Globe size={16} className="text-aqua-cyan" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-ink">Detalles de Ubicaciones Reales</h3>
-            <p className="text-[10px] text-gray-500 mt-0.5">Coordenadas exactas y lecturas dinámicas por zona</p>
+            <h3 className="font-bold text-base text-ink">{t('Detalles de Ubicaciones Reales')}</h3>
+            <p className="text-[10px] text-gray-500 mt-0.5">{t('Coordenadas exactas y lecturas dinámicas por zona')}</p>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-ink/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
               <tr>
-                <th className="px-6 py-4">Zona</th>
-                <th className="px-6 py-4">Coordenadas</th>
-                <th className="px-6 py-4 text-center">Presión</th>
-                <th className="px-6 py-4 text-center">Flujo</th>
-                <th className="px-6 py-4 text-center">Estado</th>
+                <th className="px-6 py-4">{t('Zona')}</th>
+                <th className="px-6 py-4">{t('Coordenadas')}</th>
+                <th className="px-6 py-4 text-center">{t('Presión')}</th>
+                <th className="px-6 py-4 text-center">{t('Flujo')}</th>
+                <th className="px-6 py-4 text-center">{t('Estado')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink/[0.03]">
@@ -283,7 +286,7 @@ export default function Mapa() {
                   <td className="px-6 py-5 text-center">
                     <span className="font-black text-[10px] uppercase px-3 py-1 rounded-lg"
                       style={{ color: ESTADO_STYLES[zona.estado]?.text, backgroundColor: ESTADO_STYLES[zona.estado]?.bg }}>
-                      {zona.estado}
+                      {t(zona.estado)}
                     </span>
                   </td>
                 </tr>
@@ -295,13 +298,13 @@ export default function Mapa() {
 
       {/* LEYENDA */}
       <div className="portal-card p-4">
-        <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-3 px-1">Leyenda de estados</p>
+        <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-3 px-1">{t('Leyenda de estados')}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {LEYENDA.map(item => (
             <div key={item.estado} className="flex items-center gap-2.5 bg-ink/[0.02] rounded-xl px-3 py-2.5">
               <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
               <div>
-                <p className="text-xs font-black text-ink">{item.estado}</p>
+                <p className="text-xs font-black text-ink">{t(item.estado)}</p>
                 <p className="text-[10px] text-gray-600 font-mono">{item.rango}</p>
               </div>
             </div>

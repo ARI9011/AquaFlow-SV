@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { UserPlus, Trash2, Edit2, User, X, ShieldCheck, UserCheck, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useConfirm } from '../components/ConfirmDialog';
+import { useLang } from '../context/LanguageContext';
 import AdminCrown from '../components/AdminCrown';
 
 interface UsuarioRow {
@@ -23,6 +24,7 @@ export default function Usuarios() {
   const [editingId, setEditingId]   = useState<number | null>(null);
   const [toast, setToast]           = useState<Toast | null>(null);
   const confirmDialog = useConfirm();
+  const { t } = useLang();
 
   const [formData, setFormData] = useState({
     Usuario: '',
@@ -67,27 +69,27 @@ export default function Usuarios() {
     try {
       if (editingId) {
         await axios.put(`/api/usuarios/${editingId}`, formData);
-        showToast('success', 'Usuario actualizado con éxito');
+        showToast('success', t('Usuario actualizado con éxito'));
       } else {
         await axios.post('/api/usuarios', formData);
-        showToast('success', 'Usuario registrado correctamente');
+        showToast('success', t('Usuario registrado correctamente'));
       }
       cerrarModal();
       fetchUsers();
     } catch (error: any) {
-      showToast('error', error.response?.data?.error || 'Error en la operación');
+      showToast('error', error.response?.data?.error || t('Error en la operación'));
     }
   };
 
   const handleEliminar = async (id: number) => {
-    const ok = await confirmDialog({ message: '¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.', danger: true });
+    const ok = await confirmDialog({ message: t('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.'), danger: true });
     if (!ok) return;
     try {
       await axios.delete(`/api/usuarios/${id}`);
       fetchUsers();
-      showToast('success', 'Usuario eliminado');
+      showToast('success', t('Usuario eliminado'));
     } catch (error: any) {
-      showToast('error', error.response?.data?.error || 'No se pudo eliminar el usuario');
+      showToast('error', error.response?.data?.error || t('No se pudo eliminar el usuario'));
     }
   };
 
@@ -114,15 +116,15 @@ export default function Usuarios() {
       {/* ENCABEZADO */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Administración</p>
-          <h2 className="text-3xl font-black tracking-tighter gradient-text">Gestión de Usuarios</h2>
-          <p className="text-sm text-gray-500 mt-1">Control de acceso para AquaFlow SV</p>
+          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">{t('Administración')}</p>
+          <h2 className="text-3xl font-black tracking-tighter gradient-text">{t('Gestión de Usuarios')}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t('Control de acceso para AquaFlow SV')}</p>
         </div>
         <button
           onClick={() => { setEditingId(null); setIsModalOpen(true); }}
           className="flex items-center justify-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/80 text-aqua-dark font-black px-5 py-2.5 rounded-2xl transition-all text-sm w-full sm:w-auto"
         >
-          <UserPlus size={16} /> Nuevo usuario
+          <UserPlus size={16} /> {t('Nuevo usuario')}
         </button>
       </div>
 
@@ -133,9 +135,9 @@ export default function Usuarios() {
             <Users size={16} className="text-aqua-cyan" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-ink">Directorio de usuarios</h3>
+            <h3 className="font-bold text-base text-ink">{t('Directorio de usuarios')}</h3>
             <p className="text-[10px] text-gray-500 mt-0.5">
-              {loading ? 'Cargando...' : `${users.length} usuario${users.length !== 1 ? 's' : ''} registrado${users.length !== 1 ? 's' : ''}`}
+              {loading ? t('Cargando...') : `${users.length} ${users.length === 1 ? t('usuario registrado') : t('usuarios registrados')}`}
             </p>
           </div>
         </div>
@@ -143,22 +145,22 @@ export default function Usuarios() {
         {loading ? (
           <div className="p-16 flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-aqua-cyan/30 border-t-aqua-cyan rounded-full animate-spin" />
-            <p className="text-xs text-gray-500 font-medium">Conectando con la base de datos...</p>
+            <p className="text-xs text-gray-500 font-medium">{t('Conectando con la base de datos...')}</p>
           </div>
         ) : users.length === 0 ? (
           <div className="p-16 flex flex-col items-center gap-3">
             <img src="/aquabot-sin-datos.png" alt="" className="w-16 h-16 opacity-70" />
-            <p className="text-sm font-bold text-gray-500">No hay usuarios registrados</p>
-            <p className="text-xs text-gray-600">Crea el primer usuario con el botón "Nuevo usuario"</p>
+            <p className="text-sm font-bold text-gray-500">{t('No hay usuarios registrados')}</p>
+            <p className="text-xs text-gray-600">{t('Crea el primer usuario con el botón "Nuevo usuario"')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-ink/[0.02] text-gray-500 text-[10px] uppercase font-black tracking-[0.15em]">
                 <tr>
-                  <th className="px-6 py-4">Usuario</th>
-                  <th className="px-6 py-4">Rol</th>
-                  <th className="px-6 py-4 text-right">Acciones</th>
+                  <th className="px-6 py-4">{t('Usuario')}</th>
+                  <th className="px-6 py-4">{t('Rol')}</th>
+                  <th className="px-6 py-4 text-right">{t('Acciones')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/[0.03]">
@@ -185,17 +187,17 @@ export default function Usuarios() {
                           : 'bg-ink/5 text-gray-400 border border-ink/10'
                       }`}>
                         {user.rol === 'admin'
-                          ? <><ShieldCheck size={11} /> Administrador</>
-                          : <><UserCheck size={11} /> Técnico</>}
+                          ? <><ShieldCheck size={11} /> {t('Administrador')}</>
+                          : <><UserCheck size={11} /> {t('Técnico')}</>}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200">
-                        <button onClick={() => abrirEditar(user)} title="Editar usuario"
+                        <button onClick={() => abrirEditar(user)} title={t('Editar usuario')}
                           className="p-2 hover:bg-aqua-cyan/10 rounded-xl text-gray-500 hover:text-aqua-cyan transition-colors border border-transparent hover:border-aqua-cyan/20">
                           <Edit2 size={15} />
                         </button>
-                        <button onClick={() => handleEliminar(user.ID)} title="Eliminar usuario"
+                        <button onClick={() => handleEliminar(user.ID)} title={t('Eliminar usuario')}
                           className="p-2 hover:bg-red-500/10 rounded-xl text-gray-500 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/20">
                           <Trash2 size={15} />
                         </button>
@@ -224,10 +226,10 @@ export default function Usuarios() {
               </div>
               <div>
                 <h3 className="text-lg font-black text-ink tracking-tight">
-                  {editingId ? 'Editar usuario' : 'Nuevo usuario'}
+                  {editingId ? t('Editar usuario') : t('Nuevo usuario')}
                 </h3>
                 <p className="text-[10px] text-gray-500 mt-0.5">
-                  {editingId ? 'Modifica los datos del técnico' : 'Agrega un nuevo técnico o administrador'}
+                  {editingId ? t('Modifica los datos del técnico') : t('Agrega un nuevo técnico o administrador')}
                 </p>
               </div>
             </div>
@@ -235,7 +237,7 @@ export default function Usuarios() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
                 required
-                placeholder="Nombre de usuario"
+                placeholder={t('Nombre de usuario')}
                 value={formData.Usuario}
                 onChange={(e) => setFormData({ ...formData, Usuario: e.target.value })}
                 className="w-full bg-ink/5 border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
@@ -243,14 +245,14 @@ export default function Usuarios() {
               <input
                 required
                 type="email"
-                placeholder="Correo electrónico"
+                placeholder={t('Correo electrónico')}
                 value={formData.Correo}
                 onChange={(e) => setFormData({ ...formData, Correo: e.target.value })}
                 className="w-full bg-ink/5 border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
               />
               <input
                 type="password"
-                placeholder={editingId ? 'Nueva contraseña (opcional)' : 'Contraseña'}
+                placeholder={editingId ? t('Nueva contraseña (opcional)') : t('Contraseña')}
                 onChange={(e) => setFormData({ ...formData, Contra: e.target.value })}
                 required={!editingId}
                 className="w-full bg-ink/5 border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 placeholder-gray-600 transition-colors"
@@ -261,15 +263,15 @@ export default function Usuarios() {
                   onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
                   className="w-full bg-[var(--color-aqua-dark)] border border-ink/10 rounded-xl px-4 py-3 text-ink text-sm outline-none focus:border-aqua-cyan/40 transition-colors"
                 >
-                  <option value="user">Técnico / Usuario</option>
-                  <option value="admin">Administrador</option>
+                  <option value="user">{t('Técnico / Usuario')}</option>
+                  <option value="admin">{t('Administrador')}</option>
                 </select>
-                <p className="text-[10px] text-gray-600 mt-1.5 ml-1">El rol determina los permisos de acceso dentro del sistema.</p>
+                <p className="text-[10px] text-gray-600 mt-1.5 ml-1">{t('El rol determina los permisos de acceso dentro del sistema.')}</p>
               </div>
 
               <button type="submit"
                 className="w-full bg-aqua-cyan text-aqua-dark font-black py-3.5 rounded-2xl mt-2 hover:bg-aqua-cyan/80 transition-all active:scale-[0.98]">
-                {editingId ? 'GUARDAR CAMBIOS' : 'CREAR USUARIO'}
+                {editingId ? t('GUARDAR CAMBIOS') : t('CREAR USUARIO')}
               </button>
             </form>
           </div>

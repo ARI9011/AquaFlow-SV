@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { AlertTriangle, HelpCircle, X } from 'lucide-react';
+import { useLang } from '../context/LanguageContext';
 
 interface ConfirmOptions {
   title?: string;
@@ -20,6 +21,7 @@ export function useConfirm(): ConfirmFn {
 }
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useLang();
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const resolver = useRef<(value: boolean) => void>();
 
@@ -59,7 +61,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
 
             <div className="px-6 pt-4 pb-6">
               <h3 className="font-black text-ink text-base">
-                {options.title ?? (options.danger ? 'Confirmar eliminación' : 'Confirmar acción')}
+                {options.title ?? (options.danger ? t('Confirmar eliminación') : t('Confirmar acción'))}
               </h3>
               <p className="text-sm text-gray-400 leading-relaxed mt-1.5">{options.message}</p>
             </div>
@@ -67,7 +69,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={() => close(false)}
                 className="flex-1 py-2.5 rounded-xl bg-ink/[0.03] border border-ink/10 text-gray-400 font-bold text-sm hover:bg-ink/[0.06] transition-colors">
-                {options.cancelText ?? 'Cancelar'}
+                {options.cancelText ?? t('Cancelar')}
               </button>
               <button onClick={() => close(true)}
                 className={`flex-1 py-2.5 rounded-xl font-black text-sm transition-all ${
@@ -75,7 +77,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                     ? 'bg-red-500 text-ink hover:bg-red-500/80'
                     : 'bg-aqua-cyan text-aqua-dark hover:bg-aqua-cyan/80'
                 }`}>
-                {options.confirmText ?? (options.danger ? 'Eliminar' : 'Confirmar')}
+                {options.confirmText ?? (options.danger ? t('Eliminar') : t('Confirmar'))}
               </button>
             </div>
           </div>

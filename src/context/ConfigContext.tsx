@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from './AuthContext';
 
 type Tema = 'oscuro' | 'claro';
+export type Idioma = 'es' | 'en';
 
 interface SistemaConfig {
   auto_refresh: boolean;
@@ -17,6 +18,7 @@ interface NotificacionesConfig {
   notif_reportes: boolean;
   notif_sensores: boolean;
   tema: Tema;
+  idioma: Idioma;
 }
 
 const SISTEMA_DEFAULT: SistemaConfig = {
@@ -31,9 +33,11 @@ const NOTIFICACIONES_DEFAULT: NotificacionesConfig = {
   notif_reportes: true,
   notif_sensores: false,
   tema: 'oscuro',
+  idioma: 'es',
 };
 
 const TEMA_STORAGE_KEY = 'aquaflow_tema';
+const IDIOMA_STORAGE_KEY = 'aquaflow_idioma';
 
 function aplicarTemaAlDOM(tema: Tema) {
   document.documentElement.setAttribute('data-theme', tema === 'claro' ? 'light' : 'dark');
@@ -49,6 +53,8 @@ interface ConfigContextType {
   tiempoReal: boolean;
   tema: Tema;
   setTema: (tema: Tema) => Promise<void>;
+  idioma: Idioma;
+  setIdioma: (idioma: Idioma) => Promise<void>;
   refreshConfig: () => void;
   updateNotificaciones: (partial: Partial<Omit<NotificacionesConfig, 'tema'>>) => Promise<void>;
   updateSistema: (partial: Partial<SistemaConfig>) => Promise<void>;
@@ -76,6 +82,7 @@ function normalizeNotificaciones(raw: any): NotificacionesConfig {
     notif_reportes: !!raw.notif_reportes,
     notif_sensores: !!raw.notif_sensores,
     tema: raw.tema === 'claro' ? 'claro' : 'oscuro',
+    idioma: raw.idioma === 'en' ? 'en' : 'es',
   };
 }
 
@@ -83,9 +90,10 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [sistema, setSistema] = useState<SistemaConfig>(SISTEMA_DEFAULT);
   const [notificaciones, setNotificaciones] = useState<NotificacionesConfig>(() => {
-    // usa el tema cacheado mientras carga el backend, para que no parpadee
-    const cache = (typeof localStorage !== 'undefined' && localStorage.getItem(TEMA_STORAGE_KEY) === 'claro') ? 'claro' : 'oscuro';
-    return { ...NOTIFICACIONES_DEFAULT, tema: cache };
+    // usa el tema/idioma cacheados mientras carga el backend, para que no parpadee
+    const temaCache = (typeof localStorage !== 'undefined' && localStorage.getItem(TEMA_STORAGE_KEY) === 'claro') ? 'claro' : 'oscuro';
+    const idiomaCache = (typeof localStorage !== 'undefined' && localStorage.getItem(IDIOMA_STORAGE_KEY) === 'en') ? 'en' : 'es';
+    return { ...NOTIFICACIONES_DEFAULT, tema: temaCache, idioma: idiomaCache };
   });
   const [configLoading, setConfigLoading] = useState(true);
 
@@ -94,7 +102,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const fetchConfig = useCallback(() => {
     if (!user) {
       setSistema(SISTEMA_DEFAULT);
-      setNotificaciones(prev => ({ ...NOTIFICACIONES_DEFAULT, tema: prev.tema }));
+      setNotificaciones(prev => ({ ...NOTIFICACIONES_DEFAULT, tema: prev.tema, idioma: prev.idioma }));
       setConfigLoading(false);
       return;
     }
@@ -105,6 +113,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         const notif = normalizeNotificaciones(data.notificaciones || {});
         setNotificaciones(notif);
         localStorage.setItem(TEMA_STORAGE_KEY, notif.tema);
+        localStorage.setItem(IDIOMA_STORAGE_KEY, notif.idioma);
       })
       .catch(() => { /* se quedan los valores por defecto / cacheados */ })
       .finally(() => setConfigLoading(false));
@@ -134,6 +143,16 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setIdioma = async (idioma: Idioma) => {
+    setNotificaciones(prev => ({ ...prev, idioma }));
+    localStorage.setItem(IDIOMA_STORAGE_KEY, idioma);
+    try {
+      await axios.put('/api/configuracion/idioma', { idioma });
+    } catch {
+      // ya se aplicó visualmente y quedó cacheado, se reintenta guardar en el próximo cambio
+    }
+  };
+
   const tiempoReal = sistema.auto_refresh && sistema.intervalo === 0;
   const pollingMs = sistema.auto_refresh && !tiempoReal ? sistema.intervalo * 1000 : 0;
 
@@ -141,6 +160,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     <ConfigContext.Provider value={{
       sistema, notificaciones, configLoading, pollingMs, tiempoReal,
       tema: notificaciones.tema, setTema,
+      idioma: notificaciones.idioma, setIdioma,
       refreshConfig: fetchConfig, updateNotificaciones, updateSistema,
     }}>
       {children}

@@ -6,6 +6,7 @@ import {
   Waves, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import ParticleFlowHero from '../components/ParticleFlowHero';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import AdminCrown from '../components/AdminCrown';
@@ -122,6 +123,7 @@ export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLang();
   const isAdmin = user?.rol === 'admin';
   const features = FEATURES.filter(f => !f.adminOnly || isAdmin);
 
@@ -164,20 +166,19 @@ export default function Home() {
         <div className="relative h-full flex flex-col justify-center px-6 sm:px-10 lg:px-14 max-w-3xl">
           <div className="inline-flex w-fit items-center gap-2 bg-ink/[0.05] border border-aqua-cyan/25 rounded-full pl-2.5 pr-3.5 py-1.5 mb-5">
             <Sparkles size={12} className="text-aqua-cyan" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-aqua-cyan">Nuevo</span>
-            <span className="text-[10px] font-bold text-ink/80">Alertas de presión en tiempo real</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-aqua-cyan">{t('Nuevo')}</span>
+            <span className="text-[10px] font-bold text-ink/80">{t('Alertas de presión en tiempo real')}</span>
           </div>
 
           <p className="text-aqua-cyan/70 text-[11px] uppercase tracking-[0.3em] font-bold mb-2 flex items-center gap-1.5">
-            {saludoActual()}{user ? `, ${user.Usuario.split(' ')[0]}` : ''}
+            {t(saludoActual())}{user ? `, ${user.Usuario.split(' ')[0]}` : ''}
             {user?.rol === 'admin' && <AdminCrown size={12} />}
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter text-ink leading-[1.05] mb-4">
-            El agua del Gran San Salvador,<span className="gradient-text"> monitoreada en vivo.</span>
+            {t('El agua del Gran San Salvador,')}<span className="gradient-text"> {t('monitoreada en vivo.')}</span>
           </h1>
           <p className="text-gray-400 text-sm sm:text-base font-medium max-w-xl mb-8 leading-relaxed">
-            AquaFlow SV conecta sensores IoT, mapas en vivo y reportes ciudadanos en una sola plataforma
-            para anticipar fallas, optimizar el flujo y proteger el agua de miles de familias.
+            {t('AquaFlow SV conecta sensores IoT, mapas en vivo y reportes ciudadanos en una sola plataforma para anticipar fallas, optimizar el flujo y proteger el agua de miles de familias.')}
           </p>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -185,26 +186,26 @@ export default function Home() {
               onClick={() => irA('/dashboard', 'Dashboard')}
               className="group flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/85 text-aqua-dark font-black px-6 py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-aqua-cyan/10 active:scale-[0.98]"
             >
-              Ir al Dashboard
+              {t('Ir al Dashboard')}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={() => irA('/mapa', 'Mapa de zonas')}
               className="flex items-center gap-2 bg-ink/[0.04] hover:bg-ink/[0.08] border border-ink/10 text-ink font-bold px-6 py-3.5 rounded-2xl transition-all duration-300"
             >
-              Explorar el mapa
+              {t('Explorar el mapa')}
             </button>
           </div>
 
           <div className="flex items-center gap-3 mt-8 flex-wrap">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Datos en vivo</span>
+              <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">{t('Datos en vivo')}</span>
             </div>
             <span className="text-[10px] text-gray-600">·</span>
-            <span className="text-[10px] text-gray-500 font-bold">4 zonas activas</span>
+            <span className="text-[10px] text-gray-500 font-bold">4 {t('zonas activas')}</span>
             <span className="text-[10px] text-gray-600">·</span>
-            <span className="text-[10px] text-gray-500 font-bold">5/6 sensores en línea</span>
+            <span className="text-[10px] text-gray-500 font-bold">5/6 {t('sensores en línea')}</span>
           </div>
         </div>
       </div>
@@ -213,13 +214,10 @@ export default function Home() {
       <Reveal>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-stretch">
           <div className="lg:col-span-3 portal-card p-6 sm:p-8 flex flex-col justify-center">
-            <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">Nuestra misión</p>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink mb-3">Tecnología al servicio del agua</h2>
+            <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">{t('Nuestra misión')}</p>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink mb-3">{t('Tecnología al servicio del agua')}</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
-              AquaFlow SV nace para cerrar la brecha entre la infraestructura hídrica del Gran San Salvador y los
-              datos que la mantienen funcionando. Unimos sensores IoT, mapas en vivo y la voz de la ciudadanía en
-              un solo lugar, para que técnicos y autoridades detecten fallas antes de que se conviertan en cortes
-              de agua.
+              {t('AquaFlow SV nace para cerrar la brecha entre la infraestructura hídrica del Gran San Salvador y los datos que la mantienen funcionando. Unimos sensores IoT, mapas en vivo y la voz de la ciudadanía en un solo lugar, para que técnicos y autoridades detecten fallas antes de que se conviertan en cortes de agua.')}
             </p>
           </div>
           <div className="lg:col-span-2 portal-card p-6 sm:p-8 flex flex-col justify-center gap-4">
@@ -232,7 +230,7 @@ export default function Home() {
                 <div className="w-9 h-9 rounded-lg bg-aqua-cyan/10 flex items-center justify-center flex-shrink-0">
                   <i.icon size={16} className="text-aqua-cyan" />
                 </div>
-                <p className="text-xs text-ink/80 font-semibold">{i.text}</p>
+                <p className="text-xs text-ink/80 font-semibold">{t(i.text)}</p>
               </div>
             ))}
           </div>
@@ -242,8 +240,8 @@ export default function Home() {
       {/* FUNCIONALIDADES */}
       <Reveal>
         <div className="mb-1">
-          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Explora la plataforma</p>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink">Todo lo que necesitas, en un solo panel</h2>
+          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">{t('Explora la plataforma')}</p>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink">{t('Todo lo que necesitas, en un solo panel')}</h2>
         </div>
       </Reveal>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -257,11 +255,11 @@ export default function Home() {
                 <f.icon size={20} className={f.accent} />
               </div>
               <div>
-                <h3 className="text-sm font-black text-ink mb-1">{f.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+                <h3 className="text-sm font-black text-ink mb-1">{t(f.title)}</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">{t(f.desc)}</p>
               </div>
               <span className="flex items-center gap-1 text-[10px] font-bold text-gray-600 group-hover:text-aqua-cyan transition-colors mt-auto pt-1">
-                Explorar <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                {t('Explorar')} <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
               </span>
             </button>
           </Reveal>
@@ -271,9 +269,9 @@ export default function Home() {
       {/* CÓMO FUNCIONA */}
       <Reveal>
         <div className="text-center max-w-xl mx-auto pt-4 mb-1">
-          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">Proceso</p>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink">¿Cómo funciona AquaFlow?</h2>
-          <p className="text-gray-500 text-sm mt-2">De la gota de agua al dato, en cuatro pasos.</p>
+          <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">{t('Proceso')}</p>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-ink">{t('¿Cómo funciona AquaFlow?')}</h2>
+          <p className="text-gray-500 text-sm mt-2">{t('De la gota de agua al dato, en cuatro pasos.')}</p>
         </div>
       </Reveal>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -284,8 +282,8 @@ export default function Home() {
               <div className="w-10 h-10 rounded-xl bg-aqua-cyan/10 flex items-center justify-center mb-4 relative z-10">
                 <p.icon size={18} className="text-aqua-cyan" />
               </div>
-              <h3 className="text-sm font-black text-ink mb-1.5 relative z-10">{p.title}</h3>
-              <p className="text-xs text-gray-500 leading-relaxed relative z-10">{p.desc}</p>
+              <h3 className="text-sm font-black text-ink mb-1.5 relative z-10">{t(p.title)}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed relative z-10">{t(p.desc)}</p>
             </div>
           </Reveal>
         ))}
@@ -300,7 +298,7 @@ export default function Home() {
                 <p className="text-3xl sm:text-4xl font-black gradient-text">
                   <Counter target={s.value} suffix={s.suffix} />
                 </p>
-                <p className="text-[11px] text-gray-500 font-bold mt-1.5 uppercase tracking-wide">{s.label}</p>
+                <p className="text-[11px] text-gray-500 font-bold mt-1.5 uppercase tracking-wide">{t(s.label)}</p>
               </div>
             ))}
           </div>
@@ -315,15 +313,15 @@ export default function Home() {
           </div>
           <div className="relative">
             <Waves size={28} className="text-aqua-cyan mx-auto mb-4 float-slow" />
-            <h2 className="text-xl sm:text-2xl font-black text-ink mb-2">¿Listo para revisar tus datos?</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-ink mb-2">{t('¿Listo para revisar tus datos?')}</h2>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-              Entra al panel de control y visualiza el estado del agua en Gran San Salvador en tiempo real.
+              {t('Entra al panel de control y visualiza el estado del agua en Gran San Salvador en tiempo real.')}
             </p>
             <button
               onClick={() => irA('/dashboard', 'Dashboard')}
               className="inline-flex items-center gap-2 bg-aqua-cyan hover:bg-aqua-cyan/85 text-aqua-dark font-black px-7 py-3.5 rounded-2xl transition-all duration-300 shadow-lg shadow-aqua-cyan/10 active:scale-[0.98]"
             >
-              Ir al Dashboard <ArrowRight size={16} />
+              {t('Ir al Dashboard')} <ArrowRight size={16} />
             </button>
           </div>
         </div>

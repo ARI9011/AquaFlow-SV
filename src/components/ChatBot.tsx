@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useA11y } from '../context/AccessibilityContext';
+import { useLang } from '../context/LanguageContext';
 
 type Role = 'user' | 'assistant';
 interface Message { role: Role; content: string; }
@@ -45,6 +46,7 @@ export default function ChatBot() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setChatAbierto } = useA11y();
+  const { t, lang } = useLang();
   const [open, setOpen]     = useState(false);
   const [saludoBoton] = useState(() => SALUDOS_BOTON[Math.floor(Math.random() * SALUDOS_BOTON.length)]);
 
@@ -52,7 +54,7 @@ export default function ChatBot() {
   useEffect(() => { setChatAbierto(open); }, [open, setChatAbierto]);
   useEffect(() => () => setChatAbierto(false), [setChatAbierto]);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '¡Hola! Soy AquaBot, tu asistente de AquaFlow SV. ¿En qué puedo ayudarte hoy?' },
+    { role: 'assistant', content: t('¡Hola! Soy AquaBot, tu asistente de AquaFlow SV. ¿En qué puedo ayudarte hoy?') },
   ]);
   const [input, setInput]   = useState('');
   const [loading, setLoading] = useState(false);
@@ -87,6 +89,7 @@ export default function ChatBot() {
     try {
       const { data } = await axios.post('/api/chat', {
         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        lang,
       });
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (err: any) {
@@ -95,7 +98,7 @@ export default function ChatBot() {
       } else {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: 'Ocurrió un error al conectar con el servidor. Intenta de nuevo.',
+          content: t('Ocurrió un error al conectar con el servidor. Intenta de nuevo.'),
         }]);
       }
     } finally {
@@ -121,12 +124,12 @@ export default function ChatBot() {
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2 select-none">
         {!open && (
           <span className="hidden sm:block text-[10px] font-bold tracking-widest text-aqua-cyan/70 uppercase max-w-[160px] text-right">
-            {saludoBoton}
+            {t(saludoBoton)}
           </span>
         )}
         <button
           onClick={() => setOpen(v => !v)}
-          aria-label={open ? 'Cerrar AquaBot' : 'Abrir AquaBot'}
+          aria-label={open ? t('Cerrar AquaBot') : t('Abrir AquaBot')}
           className={`flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan rounded-2xl ${
             open
               ? 'w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-aqua-cyan to-teal-600 text-ink shadow-xl hover:shadow-aqua-cyan/30'
@@ -149,11 +152,11 @@ export default function ChatBot() {
             <BotAvatar size="sm" />
             <div>
               <p className="font-black text-sm text-ink leading-none">AquaBot</p>
-              <p className="text-[10px] text-aqua-cyan/80 font-medium">Asistente IA · AquaFlow SV</p>
+              <p className="text-[10px] text-aqua-cyan/80 font-medium">{t('Asistente IA')} · AquaFlow SV</p>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[10px] text-green-400 font-medium">En línea</span>
+              <span className="text-[10px] text-green-400 font-medium">{t('En línea')}</span>
             </div>
           </div>
 
@@ -194,13 +197,13 @@ export default function ChatBot() {
                 <div className="mt-1"><BotAvatar size="xs" pose="alerta-detectada" /></div>
                 <div className="max-w-[85%] px-3.5 py-3 rounded-2xl rounded-bl-sm bg-amber-500/10 border border-amber-500/25 space-y-2.5">
                   <p className="text-sm text-ink/90 leading-relaxed">
-                    Alcanzaste el límite de mensajes gratuitos de AquaBot. Inicia sesión o regístrate para seguir chateando sin límite.
+                    {t('Alcanzaste el límite de mensajes gratuitos de AquaBot. Inicia sesión o regístrate para seguir chateando sin límite.')}
                   </p>
                   <button
                     onClick={irALogin}
                     className="w-full py-2 rounded-lg bg-aqua-cyan text-aqua-dark text-xs font-black uppercase tracking-wide hover:bg-aqua-cyan/80 transition-colors"
                   >
-                    Iniciar sesión / Registrarme
+                    {t('Iniciar sesión / Registrarme')}
                   </button>
                 </div>
               </div>
@@ -216,7 +219,7 @@ export default function ChatBot() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={limiteAlcanzado ? 'Inicia sesión para continuar...' : 'Escribe tu pregunta...'}
+              placeholder={limiteAlcanzado ? t('Inicia sesión para continuar...') : t('Escribe tu pregunta...')}
               disabled={loading || limiteAlcanzado}
               className="flex-1 bg-ink/5 border border-ink/10 rounded-xl px-3 py-2 text-sm text-ink placeholder-gray-600 outline-none focus:border-aqua-cyan/40 disabled:opacity-50 transition-colors"
             />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { MailCheck } from 'lucide-react';
+import { useLang } from '../context/LanguageContext';
 
 interface VerifyModalProps {
   email: string;
@@ -9,6 +10,7 @@ interface VerifyModalProps {
 }
 
 export default function VerifyModal({ email, onVerified, onClose }: VerifyModalProps) {
+  const { t } = useLang();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -17,7 +19,7 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
 
   const verificar = async () => {
     if (code.trim().length !== 6) {
-      setError('Ingresa el código de 6 dígitos.');
+      setError(t('Ingresa el código de 6 dígitos.'));
       return;
     }
     setError(''); setInfo(''); setLoading(true);
@@ -25,7 +27,7 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
       await axios.post('/auth/verify-code', { email, code: code.trim() });
       onVerified();
     } catch (err: any) {
-      setError(err.response?.data?.error ?? 'No se pudo verificar el código.');
+      setError(err.response?.data?.error ?? t('No se pudo verificar el código.'));
     } finally {
       setLoading(false);
     }
@@ -35,9 +37,9 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
     setError(''); setInfo(''); setResending(true);
     try {
       await axios.post('/auth/resend-code', { email });
-      setInfo('Te enviamos un nuevo código a tu correo.');
+      setInfo(t('Te enviamos un nuevo código a tu correo.'));
     } catch {
-      setError('No se pudo reenviar el código.');
+      setError(t('No se pudo reenviar el código.'));
     } finally {
       setResending(false);
     }
@@ -51,9 +53,9 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
             <MailCheck className="text-aqua-cyan" size={28} />
           </div>
         </div>
-        <h2 className="text-2xl font-black text-ink text-center tracking-tight">Verifica tu cuenta</h2>
+        <h2 className="text-2xl font-black text-ink text-center tracking-tight">{t('Verifica tu cuenta')}</h2>
         <p className="text-sm text-gray-400 text-center mt-2">
-          Enviamos un código de 6 dígitos a<br />
+          {t('Enviamos un código de 6 dígitos a')}<br />
           <span className="text-aqua-cyan font-semibold">{email}</span>
         </p>
 
@@ -73,7 +75,7 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
           disabled={loading}
           className="mt-6 w-full bg-aqua-cyan text-[#052] font-black rounded-2xl py-3.5 text-sm uppercase tracking-widest hover:brightness-110 transition disabled:opacity-60"
         >
-          {loading ? 'Verificando…' : 'Verificar'}
+          {loading ? t('Verificando…') : t('Verificar')}
         </button>
 
         <div className="flex items-center justify-between mt-4 text-[11px] font-bold uppercase tracking-widest">
@@ -82,10 +84,10 @@ export default function VerifyModal({ email, onVerified, onClose }: VerifyModalP
             disabled={resending}
             className="text-gray-400 hover:text-aqua-cyan transition disabled:opacity-60"
           >
-            {resending ? 'Reenviando…' : 'Reenviar código'}
+            {resending ? t('Reenviando…') : t('Reenviar código')}
           </button>
           <button onClick={onClose} className="text-gray-500 hover:text-ink transition">
-            Verificar después
+            {t('Verificar después')}
           </button>
         </div>
       </div>

@@ -6,18 +6,19 @@ import { useLang } from '../context/LanguageContext';
 import AdminCrown from './AdminCrown';
 import { useToast } from './Toast';
 
-// Mapa de rutas -> clave de traducción (los textos viven en src/i18n.ts)
-const PAGE_KEYS: Record<string, string> = {
-  '/inicio':         'inicio',
-  '/dashboard':      'dashboard',
-  '/mapa':           'mapa',
-  '/sensores':       'sensores',
-  '/sobre-nosotros': 'sobreNosotros',
-  '/usuarios':       'usuarios',
-  '/reportes':       'reportes',
-  '/alertas':        'alertas',
-  '/configuracion':  'config',
+// Mapa de rutas -> título/subtítulo en español; t() se encarga de traducirlos si hace falta
+const PAGE_INFO: Record<string, { title: string; sub: string }> = {
+  '/inicio':         { title: 'Inicio',              sub: 'Bienvenido a AquaFlow SV' },
+  '/dashboard':      { title: 'Dashboard',           sub: 'Resumen general del sistema' },
+  '/mapa':           { title: 'Mapa de Zonas',       sub: 'Gran San Salvador' },
+  '/sensores':       { title: 'Sensores IoT',        sub: 'Dispositivos de medición en tiempo real' },
+  '/sobre-nosotros': { title: 'Sobre Nosotros',      sub: 'Conoce nuestra historia, misión y equipo' },
+  '/usuarios':       { title: 'Gestión de Usuarios', sub: 'Control de acceso y administración de roles' },
+  '/reportes':       { title: 'Reportes Ciudadanos', sub: 'Gestión de incidencias y comentarios' },
+  '/alertas':        { title: 'Alertas del Sistema', sub: 'Notificaciones críticas e incidencias activas' },
+  '/configuracion':  { title: 'Configuración',       sub: 'Preferencias del sistema y umbrales' },
 };
+const PAGE_DEFAULT = { title: 'AquaFlow SV', sub: 'Monitoreo Hídrico IoT' };
 
 interface AlertaResumen {
   id: number;
@@ -45,15 +46,15 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
   const { user, logout } = useAuth();
   const { t, lang, toggleLang } = useLang();
   const showToast = useToast();
-  const key = PAGE_KEYS[location.pathname] ?? 'default';
-  const page = { title: t(`page.${key}.title`), sub: t(`page.${key}.sub`) };
+  const pageInfo = PAGE_INFO[location.pathname] ?? PAGE_DEFAULT;
+  const page = { title: t(pageInfo.title), sub: t(pageInfo.sub) };
   const alertsCount = alertas.length;
 
   const handleLogout = () => {
     setDropdownOpen(false);
     logout(); // limpia el usuario de inmediato; el POST de logout sigue en segundo plano
     navigate('/', { replace: true });
-    showToast('Sesión cerrada correctamente');
+    showToast(t('Sesión cerrada correctamente'));
   };
 
   const closeAll = () => { setDropdownOpen(false); setBellOpen(false); };
@@ -66,7 +67,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
       <button
         onClick={onMenuClick}
         className="lg:hidden w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-ink/15 transition-all text-gray-400 hover:text-ink"
-        aria-label="Abrir menú"
+        aria-label={t('Abrir menú')}
       >
         <Menu size={17} />
       </button>
@@ -79,7 +80,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
           {location.pathname === '/dashboard' && (
             <div className="flex items-center gap-1 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">En vivo</span>
+              <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">{t('En vivo')}</span>
             </div>
           )}
         </div>
@@ -105,7 +106,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
         <div className="relative">
           <button
             onClick={() => { setBellOpen(v => !v); setDropdownOpen(false); }}
-            aria-label={`Notificaciones, ${alertsCount} alertas`}
+            aria-label={`${t('Notificaciones')}, ${alertsCount} ${t('alertas')}`}
             className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-ink/15 transition-all text-gray-400 hover:text-ink"
           >
             <Bell size={16} aria-hidden="true" />
@@ -119,11 +120,11 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
           {bellOpen && (
             <div className="absolute right-0 mt-2 w-72 bg-[var(--color-aqua-panel)] border border-ink/10 rounded-2xl shadow-2xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-ink/[0.06] flex items-center justify-between">
-                <span className="text-sm font-black text-ink">Alertas recientes</span>
-                <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black">{alertsCount} activas</span>
+                <span className="text-sm font-black text-ink">{t('Alertas recientes')}</span>
+                <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black">{alertsCount} {t('activas')}</span>
               </div>
               {alertsCount === 0 && (
-                <div className="px-4 py-6 text-center text-xs text-gray-500 font-medium">Sin alertas activas</div>
+                <div className="px-4 py-6 text-center text-xs text-gray-500 font-medium">{t('Sin alertas activas')}</div>
               )}
               {alertas.slice(0, 3).map((a) => (
                 <div key={a.id} className="px-4 py-3 flex items-start gap-3 hover:bg-ink/[0.03] border-b border-ink/[0.04] last:border-0 transition-colors cursor-pointer">
@@ -137,7 +138,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
               <div className="p-3">
                 <button onClick={() => { navigate('/alertas'); closeAll(); }}
                   className="w-full py-2 text-[11px] font-bold text-aqua-cyan hover:bg-aqua-cyan/5 rounded-lg transition-colors">
-                  Ver todas las alertas →
+                  {t('Ver todas las alertas →')}
                 </button>
               </div>
             </div>
@@ -151,7 +152,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
         {user ? (
         <div className="relative">
           <button
-            aria-label="Menú de usuario"
+            aria-label={t('Menú de usuario')}
             onClick={() => { setDropdownOpen(v => !v); setBellOpen(false); }}
             className="flex items-center gap-2 md:gap-2.5 bg-ink/[0.03] hover:bg-ink/[0.07] border border-ink/[0.06] hover:border-ink/15 p-1.5 pr-3 rounded-xl transition-all"
           >
@@ -160,10 +161,10 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
             </div>
             <div className="hidden sm:block text-left">
               <p className="text-xs font-black text-ink leading-none flex items-center gap-1">
-                {user?.Usuario ?? 'Usuario'}
+                {user?.Usuario ?? t('Usuario')}
                 {user?.rol === 'admin' && <AdminCrown size={10} />}
               </p>
-              <p className="text-[9px] text-gray-500 mt-0.5">{user?.rol === 'admin' ? 'Admin' : 'Técnico'}</p>
+              <p className="text-[9px] text-gray-500 mt-0.5">{user?.rol === 'admin' ? 'Admin' : t('Técnico')}</p>
             </div>
             <ChevronDown size={13} className={`text-gray-500 transition-transform flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -176,13 +177,13 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-black text-ink truncate flex items-center gap-1">
-                    {user?.Usuario ?? 'Usuario'}
+                    {user?.Usuario ?? t('Usuario')}
                     {user?.rol === 'admin' && <AdminCrown size={11} />}
                   </p>
                   <div className="flex items-center gap-1 mt-0.5">
                     {user?.rol === 'admin'
-                      ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">Administrador</span></>
-                      : <span className="text-[9px] text-gray-500 font-bold">Técnico</span>}
+                      ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">{t('Administrador')}</span></>
+                      : <span className="text-[9px] text-gray-500 font-bold">{t('Técnico')}</span>}
                   </div>
                 </div>
               </div>
@@ -190,7 +191,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
               <button onClick={handleLogout}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors text-xs font-bold">
                 <LogOut size={14} />
-                Cerrar Sesión
+                {t('Cerrar sesión')}
               </button>
             </div>
           )}
@@ -198,10 +199,10 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
         ) : (
           <button
             onClick={() => navigate('/login')}
-            aria-label="Iniciar sesión"
+            aria-label={t('Iniciar sesión')}
             className="flex items-center gap-2 h-9 px-4 rounded-xl bg-aqua-cyan text-[#052] font-bold text-xs uppercase tracking-wide hover:brightness-110 transition-all"
           >
-            <LogIn size={15} /> Iniciar sesión
+            <LogIn size={15} /> {t('Iniciar sesión')}
           </button>
         )}
       </div>

@@ -19,7 +19,7 @@ import AccessibilityPanel from './components/AccessibilityPanel';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ConfigProvider } from './context/ConfigContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLang } from './context/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import { ToastProvider } from './components/Toast';
@@ -51,6 +51,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
+  const { t } = useLang();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [alertasActivas, setAlertasActivas] = useState<AlertaResumen[]>([]);
 
@@ -86,7 +87,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       />
       <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0" style={{ position: 'relative', zIndex: 1 }}>
         {/* Skip link: primer elemento tabulable, permite saltar el menú */}
-        <a href="#contenido-principal" className="skip-link">Saltar al contenido principal</a>
+        <a href="#contenido-principal" className="skip-link">{t('Saltar al contenido principal')}</a>
         <Topbar onMenuClick={() => setMobileNavOpen(true)} alertas={alertasActivas} />
         <main id="contenido-principal" tabIndex={-1} role="main"
           className="flex-1 p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar">
@@ -103,9 +104,9 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <LanguageProvider>
       <AccessibilityProvider>
       <ConfigProvider>
+      <LanguageProvider>
       <ConfirmProvider>
       <ToastProvider>
       {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
@@ -153,9 +154,9 @@ export default function App() {
       </Router>
       </ToastProvider>
       </ConfirmProvider>
+      </LanguageProvider>
       </ConfigProvider>
       </AccessibilityProvider>
-      </LanguageProvider>
     </AuthProvider>
   );
 }

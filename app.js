@@ -2,6 +2,7 @@ try { require('dotenv').config(); } catch { /* dotenvx maneja las variables en p
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const crypto = require('crypto');
 const db = require('./db');
 const dbp = db.promise(); // solo para el arranque, para que los logs salgan en orden
 const cors = require('cors');
@@ -9,6 +10,7 @@ const Groq = require('groq-sdk');
 const bcrypt = require('bcryptjs');
 const sensoresArduino = require('./sensores-arduino');
 const eventos = require('./eventos');
+const traduccionesSeed = require('./traducciones-seed');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
@@ -447,8 +449,11 @@ const TABLAS_SISTEMA = [
             tema           VARCHAR(10) NOT NULL DEFAULT 'oscuro',
             actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
-        // por si la tabla es vieja y no tiene la columna 'tema'
-        despues: () => ensureColumnAdded('configuracion_notificaciones', 'tema', "tema VARCHAR(10) NOT NULL DEFAULT 'oscuro'"),
+        // por si la tabla es vieja y no tiene las columnas 'tema' / 'idioma'
+        despues: async () => {
+            await ensureColumnAdded('configuracion_notificaciones', 'tema', "tema VARCHAR(10) NOT NULL DEFAULT 'oscuro'");
+            await ensureColumnAdded('configuracion_notificaciones', 'idioma', "idioma VARCHAR(5) NOT NULL DEFAULT 'es'");
+        },
     },
     {
         nombre: 'lecturas_sensores',
@@ -460,6 +465,27 @@ const TABLAS_SISTEMA = [
             rele        TINYINT(1) NULL,
             creado_en   DATETIME DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+    },
+    {
+        // caché compartida entre todos los usuarios: cada texto en español se traduce
+        // una sola vez con DeepL y se reutiliza siempre — así el costo/latencia real
+        // solo se paga la primera vez que aparece cada texto en la app.
+        nombre: 'traducciones_cache',
+        sql: `CREATE TABLE IF NOT EXISTS traducciones_cache (
+            hash            CHAR(32) NOT NULL,
+            idioma_destino  VARCHAR(5) NOT NULL DEFAULT 'en',
+            texto_original  TEXT NOT NULL,
+            texto_traducido TEXT NOT NULL,
+            creado_en       DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (hash, idioma_destino)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+        despues: async () => {
+            const filas = traduccionesSeed.map(([es, en]) => [hashTexto(es), 'en', es, en]);
+            await dbp.query(
+                `INSERT IGNORE INTO traducciones_cache (hash, idioma_destino, texto_original, texto_traducido) VALUES ?`,
+                [filas]
+            );
+        },
     },
 ];
 
@@ -650,13 +676,13 @@ app.get('/api/configuracion', requireAuth, (req, res) => {
     db.query('SELECT auto_refresh, intervalo, umbral_presion, umbral_flujo FROM configuracion_sistema WHERE id = 1', (err, sisRows) => {
         if (err) return res.status(500).json({ error: 'Error al cargar configuración' });
         db.query(
-            'SELECT notif_alertas, notif_reportes, notif_sensores, tema FROM configuracion_notificaciones WHERE usuario_id = ?',
+            'SELECT notif_alertas, notif_reportes, notif_sensores, tema, idioma FROM configuracion_notificaciones WHERE usuario_id = ?',
             [userId],
             (err2, notifRows) => {
                 if (err2) return res.status(500).json({ error: 'Error al cargar configuración' });
                 res.json({
                     sistema: sisRows[0] || { auto_refresh: 1, intervalo: 30, umbral_presion: 25, umbral_flujo: 8 },
-                    notificaciones: notifRows[0] || { notif_alertas: 1, notif_reportes: 1, notif_sensores: 0, tema: 'oscuro' },
+                    notificaciones: notifRows[0] || { notif_alertas: 1, notif_reportes: 1, notif_sensores: 0, tema: 'oscuro', idioma: 'es' },
                 });
             }
         );
@@ -694,6 +720,21 @@ app.put('/api/configuracion/tema', requireAuth, (req, res) => {
     );
 });
 
+// idioma de la interfaz, se aplica al toque igual que el tema
+app.put('/api/configuracion/idioma', requireAuth, (req, res) => {
+    const userId = req.session.user.id || req.session.user.ID;
+    const idioma = req.body.idioma === 'en' ? 'en' : 'es';
+    db.query(
+        `INSERT INTO configuracion_notificaciones (usuario_id, idioma) VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE idioma = VALUES(idioma)`,
+        [userId, idioma],
+        (err) => {
+            if (err) return res.status(500).json({ error: 'Error al guardar el idioma' });
+            res.json({ success: true, idioma });
+        }
+    );
+});
+
 // PUT: configuración del sistema (solo admin) — afecta a todos los usuarios
 app.put('/api/configuracion/sistema', requireAdmin, (req, res) => {
     const { auto_refresh, intervalo, umbral_presion, umbral_flujo } = req.body;
@@ -716,7 +757,7 @@ app.put('/api/configuracion/sistema', requireAdmin, (req, res) => {
 });
 
 // chat con IA
-const SYSTEM_PROMPT = `Eres AquaBot, el asistente inteligente de AquaFlow SV, un sistema de monitoreo de redes de agua potable para el Gran San Salvador, El Salvador.
+const construirSystemPrompt = (lang) => `Eres AquaBot, el asistente inteligente de AquaFlow SV, un sistema de monitoreo de redes de agua potable para el Gran San Salvador, El Salvador.
 
 Tu rol es ayudar a operadores y administradores a entender el sistema, interpretar datos y resolver dudas.
 
@@ -728,7 +769,8 @@ Contexto del sistema:
 - Los usuarios con rol "admin" gestionan usuarios, zonas y configuraciones.
 
 Instrucciones:
-- Responde siempre en español, de forma clara y concisa.
+- Responde siempre en ${lang === 'en' ? 'inglés (English)' : 'español'}, de forma clara y concisa,
+  sin importar en qué idioma te escriba la persona — la interfaz de la página está en ${lang === 'en' ? 'inglés' : 'español'}.
 - Si te preguntan sobre datos en tiempo real, explica que los datos se actualizan desde los sensores.
 - Sé amable, profesional y útil.
 - Si no sabes algo específico del sistema, indícalo honestamente.
@@ -744,6 +786,7 @@ const CHAT_PROMPTS_GRATIS = 5;
 
 app.post('/api/chat', async (req, res) => {
     const { messages } = req.body;
+    const lang = req.body.lang === 'en' ? 'en' : 'es';
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
         return res.status(400).json({ error: 'Se requiere el array de mensajes' });
@@ -765,7 +808,7 @@ app.post('/api/chat', async (req, res) => {
         const result = await groq.chat.completions.create({
             model: 'openai/gpt-oss-120b',
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'system', content: construirSystemPrompt(lang) },
                 ...messages.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
             ],
             max_tokens: 1024,
@@ -776,6 +819,74 @@ app.post('/api/chat', async (req, res) => {
     } catch (err) {
         console.error('Error Groq:', err.message);
         res.status(500).json({ error: err.message || 'Error desconocido' });
+    }
+});
+
+// traducción de la interfaz (ES -> EN) vía DeepL, con caché en BD compartida
+// entre todos los usuarios: cada texto se traduce una sola vez, para siempre.
+const hashTexto = (t) => crypto.createHash('md5').update(t).digest('hex');
+const TRADUCCION_MAX_TEXTOS = 300; // tope defensivo por solicitud
+
+async function traducirConDeepL(textos) {
+    const key = process.env.DEEPL_API_KEY;
+    const host = key.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
+    const resp = await fetch(`https://${host}/v2/translate`, {
+        method: 'POST',
+        headers: {
+            Authorization: `DeepL-Auth-Key ${key}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: textos, source_lang: 'ES', target_lang: 'EN-US' }),
+    });
+    if (!resp.ok) throw new Error(`DeepL respondió ${resp.status}`);
+    const data = await resp.json();
+    return data.translations.map((t) => t.text);
+}
+
+app.post('/api/translate', async (req, res) => {
+    const { textos } = req.body;
+    if (!Array.isArray(textos) || textos.length === 0) {
+        return res.status(400).json({ error: 'Se requiere un array de textos' });
+    }
+    if (textos.length > TRADUCCION_MAX_TEXTOS) {
+        return res.status(400).json({ error: `Máximo ${TRADUCCION_MAX_TEXTOS} textos por solicitud` });
+    }
+    if (!process.env.DEEPL_API_KEY) {
+        return res.status(503).json({ error: 'Traducción no configurada (falta DEEPL_API_KEY en el servidor)' });
+    }
+
+    const idioma = 'en';
+    const limpios = [...new Set(textos.map((t) => String(t).trim()).filter(Boolean))];
+    if (limpios.length === 0) return res.json({});
+    const porHash = new Map(limpios.map((t) => [hashTexto(t), t]));
+
+    try {
+        const [filas] = await dbp.query(
+            'SELECT hash, texto_traducido FROM traducciones_cache WHERE idioma_destino = ? AND hash IN (?)',
+            [idioma, [...porHash.keys()]]
+        );
+        const resultado = {};
+        for (const fila of filas) {
+            resultado[porHash.get(fila.hash)] = fila.texto_traducido;
+            porHash.delete(fila.hash);
+        }
+
+        const faltantes = [...porHash.values()];
+        if (faltantes.length > 0) {
+            const traducidos = await traducirConDeepL(faltantes);
+            const filasNuevas = faltantes.map((original, i) => [hashTexto(original), idioma, original, traducidos[i]]);
+            await dbp.query(
+                `INSERT INTO traducciones_cache (hash, idioma_destino, texto_original, texto_traducido) VALUES ?
+                 ON DUPLICATE KEY UPDATE texto_traducido = VALUES(texto_traducido)`,
+                [filasNuevas]
+            );
+            faltantes.forEach((original, i) => { resultado[original] = traducidos[i]; });
+        }
+
+        res.json(resultado);
+    } catch (err) {
+        console.error('Error al traducir:', err.message);
+        res.status(502).json({ error: 'No se pudo traducir en este momento' });
     }
 });
 

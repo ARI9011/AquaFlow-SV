@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AquaFlowLogo from './AquaFlowLogo';
+import { useLang } from '../context/LanguageContext';
 
 const CX         = 50;
 const GLASS_TOP  = 10;
@@ -37,6 +38,7 @@ const getLabel = (p: number) =>
              '¡Sistema listo!';
 
 export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
+  const { t } = useLang();
   const [fillPct, setFillPct] = useState(0);
   const [exiting, setExiting] = useState(false);
 
@@ -90,7 +92,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
           className="text-[10px] uppercase tracking-[0.45em] font-bold mt-1"
           style={{ color: 'rgba(0,242,234,0.4)' }}
         >
-          Sistema de Monitoreo Hídrico
+          {t('Sistema de Monitoreo Hídrico')}
         </p>
       </div>
 
@@ -187,7 +189,7 @@ export default function LoadingScreen({ onFinish }: { onFinish: () => void }) {
           className="text-[11px] uppercase tracking-[0.28em] font-bold mt-3"
           style={{ color: 'rgba(255,255,255,0.26)' }}
         >
-          {getLabel(fillPct)}
+          {t(getLabel(fillPct))}
         </p>
       </div>
     </div>

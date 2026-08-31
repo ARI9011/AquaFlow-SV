@@ -72,7 +72,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
     onCloseMobile?.();
     logout(); // limpia el usuario de inmediato; el POST de logout sigue en segundo plano
     navigate('/', { replace: true });
-    showToast('Sesión cerrada correctamente');
+    showToast(t('Sesión cerrada correctamente'));
   };
 
   const go = (path: string) => {
@@ -109,7 +109,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
             <AquaFlowLogo size={32} variant="cyan" />
             <div className="min-w-0">
               <p className="text-sm font-black text-ink tracking-tight leading-none">AquaFlow</p>
-              <p className="text-[9px] text-aqua-cyan/70 font-bold uppercase tracking-widest mt-0.5">SV · Monitoreo</p>
+              <p className="text-[9px] text-aqua-cyan/70 font-bold uppercase tracking-widest mt-0.5">SV · {t('Monitoreo')}</p>
             </div>
           </div>
         )}
@@ -142,35 +142,35 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
 
         <div>
           {!effectiveCollapsed && (
-            <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Principal</p>
+            <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">{t('Principal')}</p>
           )}
           <div className="space-y-0.5">
-            <NavItem icon={HomeIcon}        label={t('nav.inicio')}        active={location.pathname === '/inicio'}        onClick={() => go('/inicio')}        collapsed={effectiveCollapsed} />
-            <NavItem icon={LayoutDashboard} label={t('nav.dashboard')}     active={location.pathname === '/dashboard'}     onClick={() => go('/dashboard')}     collapsed={effectiveCollapsed} />
-            <NavItem icon={MapIcon}         label={t('nav.mapa')}          active={location.pathname === '/mapa'}          onClick={() => go('/mapa')}          collapsed={effectiveCollapsed} />
-            <NavItem icon={Droplets}        label={t('nav.sensores')}      active={location.pathname === '/sensores'}      onClick={() => go('/sensores')}      collapsed={effectiveCollapsed} />
-            <NavItem icon={Info}            label={t('nav.sobreNosotros')} active={location.pathname === '/sobre-nosotros'} onClick={() => go('/sobre-nosotros')} collapsed={effectiveCollapsed} />
+            <NavItem icon={HomeIcon}        label={t('Inicio')}        active={location.pathname === '/inicio'}        onClick={() => go('/inicio')}        collapsed={effectiveCollapsed} />
+            <NavItem icon={LayoutDashboard} label={t('Dashboard')}     active={location.pathname === '/dashboard'}     onClick={() => go('/dashboard')}     collapsed={effectiveCollapsed} />
+            <NavItem icon={MapIcon}         label={t('Mapa de zonas')}          active={location.pathname === '/mapa'}          onClick={() => go('/mapa')}          collapsed={effectiveCollapsed} />
+            <NavItem icon={Droplets}        label={t('Sensores IoT')}      active={location.pathname === '/sensores'}      onClick={() => go('/sensores')}      collapsed={effectiveCollapsed} />
+            <NavItem icon={Info}            label={t('Sobre nosotros')} active={location.pathname === '/sobre-nosotros'} onClick={() => go('/sobre-nosotros')} collapsed={effectiveCollapsed} />
           </div>
         </div>
 
         <div>
           {!effectiveCollapsed && (
-            <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Ciudadano</p>
+            <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">{t('Ciudadano')}</p>
           )}
           <div className="space-y-0.5">
-            <NavItem icon={FileText}  label={t('nav.reportes')}      active={location.pathname === '/reportes'}     onClick={() => go('/reportes')}     collapsed={effectiveCollapsed} />
-            <NavItem icon={Bell}      label={t('nav.alertas')}       badge={alertCount} active={location.pathname === '/alertas'} onClick={() => go('/alertas')} collapsed={effectiveCollapsed} />
-            <NavItem icon={Settings}  label={t('nav.configuracion')} active={location.pathname === '/configuracion'} onClick={() => go('/configuracion')} collapsed={effectiveCollapsed} />
+            <NavItem icon={FileText}  label={t('Reportes')}      active={location.pathname === '/reportes'}     onClick={() => go('/reportes')}     collapsed={effectiveCollapsed} />
+            <NavItem icon={Bell}      label={t('Alertas')}       badge={alertCount} active={location.pathname === '/alertas'} onClick={() => go('/alertas')} collapsed={effectiveCollapsed} />
+            <NavItem icon={Settings}  label={t('Configuración')} active={location.pathname === '/configuracion'} onClick={() => go('/configuracion')} collapsed={effectiveCollapsed} />
           </div>
         </div>
 
         {isAdmin && (
           <div>
             {!effectiveCollapsed && (
-              <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">Administración</p>
+              <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">{t('Administración')}</p>
             )}
             <div className="space-y-0.5">
-              <NavItem icon={Users} label={t('nav.usuarios')} active={location.pathname === '/usuarios'} onClick={() => go('/usuarios')} collapsed={effectiveCollapsed} />
+              <NavItem icon={Users} label={t('Usuarios')} active={location.pathname === '/usuarios'} onClick={() => go('/usuarios')} collapsed={effectiveCollapsed} />
             </div>
           </div>
         )}
@@ -190,8 +190,8 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
               </p>
               <div className="flex items-center gap-1 mt-0.5">
                 {user.rol === 'admin'
-                  ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">Administrador</span></>
-                  : <><UserIcon size={10} className="text-gray-500" /><span className="text-[9px] text-gray-500 font-bold">Técnico</span></>
+                  ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">{t('Administrador')}</span></>
+                  : <><UserIcon size={10} className="text-gray-500" /><span className="text-[9px] text-gray-500 font-bold">{t('Técnico')}</span></>
                 }
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
           <button onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-gray-500 hover:bg-red-500/10 hover:text-red-400 transition-all text-xs font-bold border border-transparent hover:border-red-500/15">
             <LogOut size={13} />
-            Cerrar Sesión
+            {t('Cerrar sesión')}
           </button>
         </div>
       )}
@@ -208,7 +208,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
       {effectiveCollapsed && (
         <div className="p-2 border-t border-ink/[0.04]">
           <button onClick={handleLogout}
-            title="Cerrar sesión"
+            title={t('Cerrar sesión')}
             className="w-full flex items-center justify-center p-2.5 rounded-xl text-gray-600 hover:bg-red-500/10 hover:text-red-400 transition-all group">
             <LogOut size={17} className="group-hover:rotate-12 transition-transform" />
           </button>

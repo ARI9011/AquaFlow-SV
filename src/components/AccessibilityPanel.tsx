@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Volume2, VolumeX, Contrast, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { useA11y } from '../context/AccessibilityContext';
-
+import { useLang } from '../context/LanguageContext';
 
 export default function AccessibilityPanel() {
   const [abierto, setAbierto] = useState(false);
   const { fontScale, highContrast, aumentarTexto, reducirTexto, resetTexto, toggleContraste, chatAbierto } = useA11y();
+  const { t } = useLang();
 
   const [narrador, setNarrador] = useState(false);
   const [soportaVoz, setSoportaVoz] = useState(true);
@@ -66,33 +67,29 @@ export default function AccessibilityPanel() {
   if (chatAbierto) return null;
 
   return (
-<<<<<<< HEAD
-    <div data-a11y-panel className="fixed bottom-24 sm:bottom-32 right-6 z-[900] flex flex-col items-end gap-3">
-=======
-    <div data-a11y-panel className="fixed bottom-32 right-4 sm:right-6 z-[900] flex flex-col items-end gap-3">
->>>>>>> f5ae1705d57b4f770a191ba65d7b5845b47f7be5
+    <div data-a11y-panel className="fixed bottom-24 sm:bottom-32 right-4 sm:right-6 z-[900] flex flex-col items-end gap-3">
       {/* Panel expandible */}
       {abierto && (
         <div
           role="dialog"
-          aria-label="Opciones de accesibilidad"
+          aria-label={t('Opciones de accesibilidad')}
           className="w-64 bg-[var(--color-aqua-panel,#0d2137)] border border-ink/15 rounded-2xl shadow-2xl p-4 text-ink"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="font-bold text-sm">Accesibilidad</span>
-            <button onClick={() => setAbierto(false)} aria-label="Cerrar panel de accesibilidad"
+            <span className="font-bold text-sm">{t('Accesibilidad')}</span>
+            <button onClick={() => setAbierto(false)} aria-label={t('Cerrar panel de accesibilidad')}
               className="text-gray-400 hover:text-ink"><X size={16} /></button>
           </div>
 
           {/* Tamaño de texto */}
-          <p className="text-[11px] uppercase tracking-wide text-gray-400 font-bold mb-1.5">Tamaño de texto</p>
+          <p className="text-[11px] uppercase tracking-wide text-gray-400 font-bold mb-1.5">{t('Tamaño de texto')}</p>
           <div className="flex items-center gap-2 mb-4">
-            <button onClick={reducirTexto} aria-label="Reducir tamaño del texto"
+            <button onClick={reducirTexto} aria-label={t('Reducir tamaño del texto')}
               className="flex-1 h-10 rounded-xl bg-ink/[0.05] border border-ink/10 hover:border-aqua-cyan/40 flex items-center justify-center"><Minus size={16} /></button>
             <span className="w-12 text-center text-sm font-bold" aria-live="polite">{Math.round(fontScale * 100)}%</span>
-            <button onClick={aumentarTexto} aria-label="Aumentar tamaño del texto"
+            <button onClick={aumentarTexto} aria-label={t('Aumentar tamaño del texto')}
               className="flex-1 h-10 rounded-xl bg-ink/[0.05] border border-ink/10 hover:border-aqua-cyan/40 flex items-center justify-center"><Plus size={16} /></button>
-            <button onClick={resetTexto} aria-label="Restablecer tamaño del texto"
+            <button onClick={resetTexto} aria-label={t('Restablecer tamaño del texto')}
               className="h-10 w-10 rounded-xl bg-ink/[0.05] border border-ink/10 hover:border-aqua-cyan/40 flex items-center justify-center"><RotateCcw size={15} /></button>
           </div>
 
@@ -100,7 +97,7 @@ export default function AccessibilityPanel() {
           <button onClick={toggleContraste} aria-pressed={highContrast}
             className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 font-bold text-sm mb-2.5 transition
               ${highContrast ? 'bg-aqua-cyan text-[#052]' : 'bg-ink/[0.05] border border-ink/10 hover:border-aqua-cyan/40'}`}>
-            <Contrast size={17} /> Alto contraste
+            <Contrast size={17} /> {t('Alto contraste')}
           </button>
 
           {/* Narrador por cursor */}
@@ -109,11 +106,11 @@ export default function AccessibilityPanel() {
               className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 font-bold text-sm transition
                 ${narrador ? 'bg-aqua-cyan text-[#052] animate-pulse' : 'bg-ink/[0.05] border border-ink/10 hover:border-aqua-cyan/40'}`}>
               {narrador ? <Volume2 size={17} /> : <VolumeX size={17} />}
-              {narrador ? 'Narrador activo' : 'Narrador por cursor'}
+              {narrador ? t('Narrador activo') : t('Narrador por cursor')}
             </button>
           )}
           {narrador && (
-            <p className="text-[11px] text-gray-400 mt-2 text-center">Señala un texto con el mouse para escucharlo.</p>
+            <p className="text-[11px] text-gray-400 mt-2 text-center">{t('Señala un texto con el mouse para escucharlo.')}</p>
           )}
         </div>
       )}
@@ -121,9 +118,9 @@ export default function AccessibilityPanel() {
       {/* Botón principal */}
       <button
         onClick={() => setAbierto((v) => !v)}
-        aria-label="Abrir opciones de accesibilidad"
+        aria-label={t('Abrir opciones de accesibilidad')}
         aria-expanded={abierto}
-        title="Accesibilidad"
+        title={t('Accesibilidad')}
         className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg bg-aqua-cyan text-[#052] hover:brightness-110 transition-all"
       >
         <Accessibility size={24} />

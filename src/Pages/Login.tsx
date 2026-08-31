@@ -7,6 +7,7 @@ import VerifyModal from '../components/VerifyModal';
 import BubbleBackground from '../components/BubbleBackground';
 import ParticleFlowHero from '../components/ParticleFlowHero';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import { ShieldAlert, Clock } from 'lucide-react';
 
 const MAX_ATTEMPTS = 3;
@@ -26,6 +27,7 @@ function GoogleIcon({ size = 16 }: { size?: number }) {
 export default function Login() {
   const navigate = useNavigate();
   const { setUser, user, authLoading } = useAuth();
+  const { t } = useLang();
 
   // Si ya hay sesión activa, redirigir a la página de inicio
   useEffect(() => {
@@ -120,12 +122,12 @@ export default function Login() {
           navigate('/inicio');
         }
       } catch {
-        setError('No se pudo iniciar sesión con Google. Intenta de nuevo.');
+        setError(t('No se pudo iniciar sesión con Google. Intenta de nuevo.'));
       } finally {
         setLoading(false);
       }
     },
-    onError: () => setError('Inicio de sesión con Google cancelado.'),
+    onError: () => setError(t('Inicio de sesión con Google cancelado.')),
   });
 
   // Cuenta admin autoreclamada pendiente de verificar (ver /auth/login -> requiresAdminVerification)
@@ -153,7 +155,7 @@ export default function Login() {
         const retryAfter = data.retryAfter ?? LOCKOUT_SECONDS;
         setLockedUntil(Date.now() + retryAfter * 1000);
         setAttempts(MAX_ATTEMPTS);
-        setError(data.error ?? `Cuenta bloqueada. Espera ${retryAfter} segundos.`);
+        setError(data.error ?? `${t('Cuenta bloqueada. Espera')} ${retryAfter} ${t('segundos.')}`);
       } else {
         // Credenciales incorrectas: manejar cuenta del lado cliente
         const newAttempts = attempts + 1;
@@ -161,12 +163,12 @@ export default function Login() {
 
         if (newAttempts >= MAX_ATTEMPTS) {
           setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
-          setError(`Demasiados intentos fallidos. Espera ${LOCKOUT_SECONDS} segundos.`);
+          setError(`${t('Demasiados intentos fallidos. Espera')} ${LOCKOUT_SECONDS} ${t('segundos.')}`);
         } else {
           const left = MAX_ATTEMPTS - newAttempts;
           setError(
-            (data.error ?? 'Credenciales incorrectas') +
-            ` — Intentos restantes: ${left}`
+            (data.error ?? t('Credenciales incorrectas')) +
+            ` — ${t('Intentos restantes')}: ${left}`
           );
         }
       }
@@ -185,13 +187,13 @@ export default function Login() {
     setError(''); setSuccess('');
 
     if (!registerEmail.includes('@')) {
-      return setError('Por favor ingresa un email válido.');
+      return setError(t('Por favor ingresa un email válido.'));
     }
     if (registerPassword.length < 6) {
-      return setError('La contraseña debe tener al menos 6 caracteres.');
+      return setError(t('La contraseña debe tener al menos 6 caracteres.'));
     }
     if (registerPassword !== registerConfirmPassword) {
-      return setError('Las contraseñas no coinciden.');
+      return setError(t('Las contraseñas no coinciden.'));
     }
 
     setLoading(true);
@@ -201,12 +203,12 @@ export default function Login() {
         email:  registerEmail,
         password: registerPassword,
       });
-      setSuccess(data.message ?? '¡Cuenta creada exitosamente!');
+      setSuccess(t(data.message ?? '¡Cuenta creada exitosamente!'));
       setRegisterName(''); setRegisterEmail('');
       setRegisterPassword(''); setRegisterConfirmPassword('');
       setTimeout(() => { setIsLogin(true); setSuccess(''); }, data.isAdmin ? 4000 : 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error ?? 'Error al registrar. Intenta de nuevo.');
+      setError(t(err.response?.data?.error ?? 'Error al registrar. Intenta de nuevo.'));
     } finally {
       setLoading(false);
     }
@@ -264,7 +266,7 @@ export default function Login() {
               <AquaFlowLogo size={46} variant="cyan" />
               <div>
                 <h1 className="text-2xl font-black tracking-tighter text-ink leading-none">AquaFlow <span className="text-aqua-cyan">SV</span></h1>
-                <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-1">Monitoreo Hídrico</p>
+                <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-gray-500 mt-1">{t('Monitoreo Hídrico')}</p>
               </div>
             </div>
 
@@ -273,8 +275,8 @@ export default function Login() {
               {isLogin ? (
                 <div className="space-y-6">
                   <div className="text-center mb-2">
-                    <h2 className="text-2xl font-black text-ink tracking-tight">Bienvenido</h2>
-                    <p className="text-gray-500 text-sm mt-1 font-medium">Ingresa tu email y contraseña</p>
+                    <h2 className="text-2xl font-black text-ink tracking-tight">{t('Bienvenido')}</h2>
+                    <p className="text-gray-500 text-sm mt-1 font-medium">{t('Ingresa tu email y contraseña')}</p>
                   </div>
 
                   {/* Login social */}
@@ -283,14 +285,14 @@ export default function Login() {
                     onClick={() => loginConGoogle()}
                     className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-ink/80 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
-                    <GoogleIcon /> Continuar con Google
+                    <GoogleIcon /> {t('Continuar con Google')}
                   </button>
                   {/* Inicio social manejado por el botón "Continuar con Google" */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-ink/5" /></div>
                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                      <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">o con tu email</span>
+                      <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">{t('o con tu email')}</span>
                     </div>
                   </div>
 
@@ -299,14 +301,14 @@ export default function Login() {
                     <div className="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-4 py-4 rounded-2xl text-sm font-semibold flex flex-col items-center gap-2 transition-all duration-300">
                       <div className="flex items-center gap-2">
                         <ShieldAlert size={16} />
-                        <span>Cuenta bloqueada temporalmente</span>
+                        <span>{t('Cuenta bloqueada temporalmente')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-orange-300 text-lg font-black">
                         <Clock size={18} />
                         <span>{secondsLeft}s</span>
                       </div>
                       <p className="text-[11px] text-orange-400/70 text-center">
-                        Demasiados intentos fallidos. Espera antes de intentar de nuevo.
+                        {t('Demasiados intentos fallidos. Espera antes de intentar de nuevo.')}
                       </p>
                     </div>
                   )}
@@ -339,12 +341,12 @@ export default function Login() {
                         className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 focus:bg-ink/[0.05] transition-all duration-300 disabled:opacity-40"
                       />
                       {isAdminEmail(loginEmail) && loginEmail && (
-                        <p className="text-[10px] text-aqua-cyan font-bold mt-1">🔑 Acceso Admin detectado</p>
+                        <p className="text-[10px] text-aqua-cyan font-bold mt-1">🔑 {t('Acceso Admin detectado')}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Contraseña</label>
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">{t('Contraseña')}</label>
                       <input
                         type="password" required
                         placeholder="••••••••"
@@ -361,8 +363,8 @@ export default function Login() {
                       className="w-full bg-aqua-cyan hover:bg-aqua-cyan/80 disabled:bg-gray-600 text-aqua-dark font-black py-4 rounded-2xl transition-all duration-300 shadow-lg shadow-aqua-cyan/10 active:scale-[0.98] mt-4"
                     >
                       {isLocked
-                        ? `Bloqueado (${secondsLeft}s)`
-                        : loading ? 'Verificando...' : 'INICIAR SESIÓN'}
+                        ? `${t('Bloqueado')} (${secondsLeft}s)`
+                        : loading ? t('Verificando...') : t('INICIAR SESIÓN')}
                     </button>
                   </form>
                 </div>
@@ -371,8 +373,8 @@ export default function Login() {
                 /* FORMULARIO REGISTRO */
                 <div className="space-y-6">
                   <div className="text-center mb-2">
-                    <h2 className="text-2xl font-black text-ink tracking-tight">Crear Cuenta</h2>
-                    <p className="text-gray-500 text-sm mt-1 font-medium">Regístrate para acceder al sistema</p>
+                    <h2 className="text-2xl font-black text-ink tracking-tight">{t('Crear Cuenta')}</h2>
+                    <p className="text-gray-500 text-sm mt-1 font-medium">{t('Regístrate para acceder al sistema')}</p>
                   </div>
 
                   {/* Registro social */}
@@ -381,14 +383,14 @@ export default function Login() {
                     onClick={() => loginConGoogle()}
                     className="w-full flex items-center justify-center gap-2 bg-ink/[0.03] border border-ink/10 rounded-2xl py-3 text-sm font-bold text-ink/80 hover:border-aqua-cyan/40 hover:bg-ink/[0.06] transition-all duration-300 active:scale-[0.98]"
                   >
-                    <GoogleIcon /> Continuar con Google
+                    <GoogleIcon /> {t('Continuar con Google')}
                   </button>
                   {/* Inicio social manejado por el botón "Continuar con Google" */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-ink/5" /></div>
                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                      <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">o con tu email</span>
+                      <span className="backdrop-blur-md bg-black/30 px-4 rounded-full py-1 text-gray-500">{t('o con tu email')}</span>
                     </div>
                   </div>
 
@@ -405,10 +407,10 @@ export default function Login() {
 
                   <form className="space-y-4 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar" onSubmit={handleRegister}>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Nombre Completo</label>
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">{t('Nombre Completo')}</label>
                       <input
                         type="text" required
-                        placeholder="Tu nombre"
+                        placeholder={t('Tu nombre')}
                         value={registerName}
                         onChange={e => setRegisterName(e.target.value)}
                         className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
@@ -425,15 +427,15 @@ export default function Login() {
                         className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
                       />
                       {isAdminEmail(registerEmail) && registerEmail && (
-                        <p className="text-[10px] text-aqua-cyan font-bold">🔑 Se registrará como ADMINISTRADOR</p>
+                        <p className="text-[10px] text-aqua-cyan font-bold">🔑 {t('Se registrará como ADMINISTRADOR')}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Contraseña</label>
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">{t('Contraseña')}</label>
                       <input
                         type="password" required
-                        placeholder="Mínimo 6 caracteres"
+                        placeholder={t('Mínimo 6 caracteres')}
                         value={registerPassword}
                         onChange={e => setRegisterPassword(e.target.value)}
                         className="w-full bg-ink/[0.03] border border-ink/10 rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none focus:border-aqua-cyan/50 transition-all duration-300"
@@ -441,10 +443,10 @@ export default function Login() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Confirmar Contraseña</label>
+                      <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">{t('Confirmar Contraseña')}</label>
                       <input
                         type="password" required
-                        placeholder="Repite tu contraseña"
+                        placeholder={t('Repite tu contraseña')}
                         value={registerConfirmPassword}
                         onChange={e => setRegisterConfirmPassword(e.target.value)}
                         className={`w-full bg-ink/[0.03] border rounded-2xl px-5 py-3 text-sm text-ink focus:outline-none transition-all duration-300 ${
@@ -456,10 +458,10 @@ export default function Login() {
                         }`}
                       />
                       {registerConfirmPassword && registerPassword !== registerConfirmPassword && (
-                        <p className="text-[10px] text-red-400 font-bold ml-1">Las contraseñas no coinciden</p>
+                        <p className="text-[10px] text-red-400 font-bold ml-1">{t('Las contraseñas no coinciden')}</p>
                       )}
                       {registerConfirmPassword && registerPassword === registerConfirmPassword && (
-                        <p className="text-[10px] text-green-400 font-bold ml-1">✓ Las contraseñas coinciden</p>
+                        <p className="text-[10px] text-green-400 font-bold ml-1">✓ {t('Las contraseñas coinciden')}</p>
                       )}
                     </div>
 
@@ -468,7 +470,7 @@ export default function Login() {
                       disabled={loading || (!!registerConfirmPassword && registerPassword !== registerConfirmPassword)}
                       className="w-full bg-white hover:bg-gray-200 disabled:bg-gray-400 disabled:cursor-not-allowed text-black font-black py-4 rounded-2xl transition-all duration-300 active:scale-[0.98] mt-4"
                     >
-                      {loading ? 'Registrando...' : 'CREAR CUENTA'}
+                      {loading ? t('Registrando...') : t('CREAR CUENTA')}
                     </button>
                   </form>
                 </div>
@@ -488,7 +490,7 @@ export default function Login() {
               onClick={toggleForm}
               className="w-full text-[11px] font-bold text-gray-400 hover:text-aqua-cyan transition-colors duration-300 uppercase tracking-widest"
             >
-              {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia Sesión'}
+              {isLogin ? t('¿No tienes cuenta? Regístrate') : t('¿Ya tienes cuenta? Inicia Sesión')}
             </button>
           </div>
         </div>
