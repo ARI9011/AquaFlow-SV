@@ -710,7 +710,13 @@ Instrucciones:
 - Responde siempre en español, de forma clara y concisa.
 - Si te preguntan sobre datos en tiempo real, explica que los datos se actualizan desde los sensores.
 - Sé amable, profesional y útil.
-- Si no sabes algo específico del sistema, indícalo honestamente.`;
+- Si no sabes algo específico del sistema, indícalo honestamente.
+- Escribe en texto normal, como si hablaras con la persona: el chat no interpreta formato, así
+  que NO uses markdown ni HTML (nada de #, ##, **negritas**, tablas con |, <br>, viñetas con *).
+  Si necesitas listar algo, usa líneas separadas con un guion simple ("- ") o numeradas ("1. "),
+  cada punto en su propia línea (con un salto de línea real entre ellos) — nunca los pegues
+  todos seguidos en el mismo párrafo. Usa caracteres especiales solo cuando de verdad aporten
+  (unidades como °C o %, o un guion), no como decoración.`;
 
 // Visitantes sin sesión pueden probar el chat, pero con un límite; para uso ilimitado deben iniciar sesión.
 const CHAT_PROMPTS_GRATIS = 5;

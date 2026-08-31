@@ -161,12 +161,14 @@ export default function ChatBot() {
                     <BotAvatar size="xs" />
                   </div>
                 )}
-                <div className={`max-w-[78%] px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                <div className={`max-w-[78%] px-3 py-2 rounded-2xl text-sm leading-relaxed space-y-1.5 ${
                   msg.role === 'user'
                     ? 'bg-aqua-cyan text-aqua-dark font-semibold rounded-br-sm'
                     : 'bg-ink/5 text-ink rounded-bl-sm border border-ink/5'
                 }`}>
-                  {msg.content}
+                  {msg.content.split('\n').map((linea, li) => linea.trim() && (
+                    <p key={li} className="whitespace-pre-wrap">{linea}</p>
+                  ))}
                 </div>
               </div>
             ))}

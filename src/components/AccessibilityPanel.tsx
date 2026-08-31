@@ -63,7 +63,7 @@ export default function AccessibilityPanel() {
   }, [narrador]);
 
   return (
-    <div data-a11y-panel className="fixed bottom-24 right-6 z-[900] flex flex-col items-end gap-3">
+    <div data-a11y-panel className="fixed bottom-24 sm:bottom-32 right-6 z-[900] flex flex-col items-end gap-3">
       {/* Panel expandible */}
       {abierto && (
         <div
