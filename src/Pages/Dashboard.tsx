@@ -10,7 +10,7 @@ import { useLang } from '../context/LanguageContext';
 import axios from '../api/axiosConfig';
 import { ZONAS_VERDADERAS, ESTADO_STYLES } from '../data/zonas';
 
-/* ── Datos Dinámicos derivados de ZONAS_VERDADERAS ────────────────── */
+/* Datos Dinámicos derivados de ZONAS_VERDADERAS */
 const PRESSURE_DATA = [
   { hora: '08h', Cuscatancingo: 45, Soyapango: 40, 'Plan del Pino': 16, 'Ciudad Delgado': 32 },
   { hora: '09h', Cuscatancingo: 46, Soyapango: 41, 'Plan del Pino': 17, 'Ciudad Delgado': 33 },
@@ -38,7 +38,7 @@ const FLOW_DATA = ZONAS_VERDADERAS.map(z => ({
   fill: z.color,
 }));
 
-/* ── Tooltips personalizados ─────────────────────────────────────── */
+/* Tooltips personalizados */
 const PressureTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -67,7 +67,7 @@ const FlowTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-/* ── Página ──────────────────────────────────────────────────────── */
+/* Página */
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLang();

@@ -2,7 +2,7 @@ export type Lang = 'es' | 'en';
 
 export const translations: Record<Lang, Record<string, string>> = {
   es: {
-    // ── Menú Lateral (Sidebar) & Categorías ───────────────────────────
+    // Menú Lateral (Sidebar) & Categorías
     'nav.inicio': 'Inicio',
     'nav.dashboard': 'Dashboard',
     'nav.mapa': 'Mapa de zonas',
@@ -16,7 +16,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'nav.ciudadano': 'Ciudadano',
     'nav.administracion': 'Administración',
 
-    // ── Títulos y Subtítulos de Página (Topbar) ──────────────────────
+    // Títulos y Subtítulos de Página (Topbar)
     'page.inicio.title': 'Inicio',                 'page.inicio.sub': 'Bienvenido a AquaFlow SV',
     'page.dashboard.title': 'Dashboard',           'page.dashboard.sub': 'Resumen general del sistema',
     'page.mapa.title': 'Mapa de Zonas',            'page.mapa.sub': 'Gran San Salvador',
@@ -28,7 +28,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'page.config.title': 'Configuración',          'page.config.sub': 'Preferencias del sistema y umbrales',
     'page.default.title': 'AquaFlow SV',           'page.default.sub': 'Monitoreo Hídrico IoT',
 
-    // ── Dashboard ────────────────────────────────────────────────────
+    // Dashboard
     'dash.region': 'Gran San Salvador · El Salvador',
     'dash.title': 'Sistema de Monitoreo Hídrico',
     'dash.live': 'Datos en vivo',
@@ -57,7 +57,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'dash.table.flujo': 'Flujo',
     'dash.table.estado': 'Estado',
 
-    // ── Mapa de Zonas ────────────────────────────────────────────────
+    // Mapa de Zonas
     'map.region': 'Gran San Salvador',
     'map.title': 'Mapa de Zonas',
     'map.sub': 'Ubicación y estado en tiempo real de todas las zonas de monitoreo',
@@ -77,7 +77,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'map.table.coordinates': 'Coordenadas',
     'map.legend.title': 'Leyenda de estados',
 
-    // ── Sensores IoT ─────────────────────────────────────────────────
+    // Sensores IoT
     'sensor.subtitle': 'Dispositivos IoT',
     'sensor.title': 'Sensores de Medición',
     'sensor.desc': 'Monitoreo en tiempo real de la red de sensores',
@@ -99,7 +99,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'sensor.battery': 'Batería',
     'sensor.noSensors': 'No hay sensores con este filtro.',
 
-    // ── Sobre Nosotros ───────────────────────────────────────────────
+    // Sobre Nosotros
     'about.tag': 'Sobre Nosotros',
     'about.hero.title': 'Transformando el monitoreo hídrico en El Salvador',
     'about.hero.desc': 'AquaFlow SV es una plataforma tecnológica concebida para brindar supervisión en tiempo real, alertas preventivas y control inteligente del suministro de agua potable en los municipios del Gran San Salvador.',
@@ -116,7 +116,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'about.team.title': 'Equipo de Desarrollo',
     'about.team.sub': 'Estudiantes detrás de la creación de AquaFlow SV',
 
-    // ── Reportes Ciudadanos ──────────────────────────────────────────
+    // Reportes Ciudadanos
     'report.title': 'Reportes Ciudadanos',
     'report.desc': 'Registro y seguimiento de incidencias de agua potable',
     'report.btn.new': 'Crear Reporte',
@@ -130,7 +130,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'report.form.desc': 'Comentario / Descripción del problema',
     'report.form.submit': 'Enviar Reporte',
 
-    // ── Alertas del Sistema ──────────────────────────────────────────
+    // Alertas del Sistema
     'alert.title': 'Alertas del Sistema',
     'alert.desc': 'Notificaciones críticas e incidencias activas en la red',
     'alert.kpi.active': 'Alertas Activas',
@@ -138,7 +138,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'alert.btn.resolve': 'Resolver Alerta',
     'alert.btn.read': 'Marcar como leída',
 
-    // ── Configuración & Usuarios ─────────────────────────────────────
+    // Configuración & Usuarios
     'config.title': 'Configuración del Sistema',
     'config.desc': 'Personaliza las preferencias y umbrales de AquaFlow SV',
     'config.theme': 'Tema del sistema',
@@ -151,7 +151,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'user.table.status': 'Estado de Verificación',
     'user.table.actions': 'Acciones',
 
-    // ── Comunes & Modales ─────────────────────────────────────────────
+    // Comunes & Modales
     'common.login': 'Iniciar sesión',
     'common.logout': 'Cerrar sesión',
     'common.save': 'Guardar cambios',
@@ -168,7 +168,7 @@ export const translations: Record<Lang, Record<string, string>> = {
   },
 
   en: {
-    // ── Sidebar Menu & Categories ────────────────────────────────────
+    // Sidebar Menu & Categories
     'nav.inicio': 'Home',
     'nav.dashboard': 'Dashboard',
     'nav.mapa': 'Zone Map',
@@ -182,7 +182,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'nav.ciudadano': 'Citizen',
     'nav.administracion': 'Administration',
 
-    // ── Page Titles and Subtitles (Topbar) ───────────────────────────
+    // Page Titles and Subtitles (Topbar)
     'page.inicio.title': 'Home',                 'page.inicio.sub': 'Welcome to AquaFlow SV',
     'page.dashboard.title': 'Dashboard',         'page.dashboard.sub': 'System overview & real-time telemetry',
     'page.mapa.title': 'Zone Map',               'page.mapa.sub': 'Greater San Salvador area',
@@ -194,7 +194,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'page.config.title': 'Settings',             'page.config.sub': 'System preferences & thresholds',
     'page.default.title': 'AquaFlow SV',         'page.default.sub': 'Water Monitoring IoT',
 
-    // ── Dashboard ────────────────────────────────────────────────────
+    // Dashboard
     'dash.region': 'Greater San Salvador · El Salvador',
     'dash.title': 'Water Monitoring System',
     'dash.live': 'Live Data',
@@ -223,7 +223,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'dash.table.flujo': 'Flow Rate',
     'dash.table.estado': 'Status',
 
-    // ── Zone Map ─────────────────────────────────────────────────────
+    // Zone Map
     'map.region': 'Greater San Salvador',
     'map.title': 'Zone Map',
     'map.sub': 'Real-time location and status of all monitoring zones',
@@ -243,7 +243,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'map.table.coordinates': 'Coordinates',
     'map.legend.title': 'Status Legend',
 
-    // ── IoT Sensors ──────────────────────────────────────────────────
+    // IoT Sensors
     'sensor.subtitle': 'IoT Devices',
     'sensor.title': 'Measurement Sensors',
     'sensor.desc': 'Real-time monitoring of the sensor network',
@@ -265,7 +265,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'sensor.battery': 'Battery',
     'sensor.noSensors': 'No sensors found with this filter.',
 
-    // ── About Us ─────────────────────────────────────────────────────
+    // About Us
     'about.tag': 'About Us',
     'about.hero.title': 'Transforming water monitoring in El Salvador',
     'about.hero.desc': 'AquaFlow SV is a technology platform designed to provide real-time supervision, preventive alerts, and intelligent control of drinking water supply in Greater San Salvador.',
@@ -282,7 +282,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'about.team.title': 'Development Team',
     'about.team.sub': 'Students behind the creation of AquaFlow SV',
 
-    // ── Citizen Reports ──────────────────────────────────────────────
+    // Citizen Reports
     'report.title': 'Citizen Reports',
     'report.desc': 'Tracking and management of drinking water incidents',
     'report.btn.new': 'Create Report',
@@ -296,7 +296,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'report.form.desc': 'Comment / Description of issue',
     'report.form.submit': 'Submit Report',
 
-    // ── System Alerts ────────────────────────────────────────────────
+    // System Alerts
     'alert.title': 'System Alerts',
     'alert.desc': 'Critical notifications and active network issues',
     'alert.kpi.active': 'Active Alerts',
@@ -304,7 +304,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'alert.btn.resolve': 'Resolve Alert',
     'alert.btn.read': 'Mark as read',
 
-    // ── Settings & Users ─────────────────────────────────────────────
+    // Settings & Users
     'config.title': 'System Settings',
     'config.desc': 'Customize system preferences and AquaFlow SV thresholds',
     'config.theme': 'System Theme',
@@ -317,7 +317,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     'user.table.status': 'Verification Status',
     'user.table.actions': 'Actions',
 
-    // ── Common & Modals ──────────────────────────────────────────────
+    // Common & Modals
     'common.login': 'Log in',
     'common.logout': 'Log out',
     'common.save': 'Save changes',

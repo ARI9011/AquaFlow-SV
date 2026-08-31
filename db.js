@@ -20,16 +20,7 @@ const pool = mysql.createPool(dbConfig);
 // Sin este listener, un error a nivel de pool (p. ej. la BD se reinicia y tira
 // una conexión inactiva) es una excepción no capturada que tumba todo el proceso.
 pool.on('error', (err) => {
-    console.error('❌ Error en el pool de MySQL:', err.message);
-});
-
-pool.getConnection((err, connection) => {
-    if (err) {
-        console.error('❌ Error de conexión: ' + err.stack);
-        return;
-    }
-    console.log('✅ Conectado a la base de datos MySQL con pool');
-    connection.release();
+    console.error('Error en el pool de MySQL:', err.message);
 });
 
 module.exports = pool;

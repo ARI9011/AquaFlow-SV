@@ -3,24 +3,11 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useA11y } from '../context/AccessibilityContext';
 
 type Role = 'user' | 'assistant';
 interface Message { role: Role; content: string; }
 
-/* ─── Ícono del botón flotante ─── */
-const ChatBubbleIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden="true">
-    <path
-      d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-      fill="currentColor"
-    />
-    <circle cx="8"  cy="11" r="1.1" fill="white" />
-    <circle cx="12" cy="11" r="1.1" fill="white" />
-    <circle cx="16" cy="11" r="1.1" fill="white" />
-  </svg>
-);
-
-/* ─── Iconos ─── */
 const SendIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
     strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -34,24 +21,36 @@ const CloseIcon = () => (
   </svg>
 );
 
-/* ─── Avatar IA para mensajes y header ─── */
-const BotAvatar = ({ size = 'sm' }: { size?: 'sm' | 'xs' }) => (
-  <div className={`${size === 'sm' ? 'w-8 h-8' : 'w-6 h-6'} rounded-xl bg-aqua-cyan/15 border border-aqua-cyan/25 flex items-center justify-center text-aqua-cyan flex-shrink-0`}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}
-      strokeLinecap="round" strokeLinejoin="round"
-      className={size === 'sm' ? 'w-4 h-4' : 'w-3.5 h-3.5'}>
-      <rect x="5" y="8" width="14" height="12" rx="2" />
-      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-      <path d="M9 13h.01M15 13h.01" />
-      <path d="M9 17h6" />
-    </svg>
-  </div>
+// avatar de AquaBot, sin fondo, solo la imagen
+const BotAvatar = ({ size = 'sm', pose = 'principal' }: { size?: 'sm' | 'xs'; pose?: 'principal' | 'sin-datos' | 'alerta-detectada' }) => (
+  <img
+    src={`/aquabot-${pose}.png`}
+    alt="AquaBot"
+    className={`${size === 'sm' ? 'w-14 h-14' : 'w-7 h-7'} object-contain flex-shrink-0`}
+  />
 );
+
+// saludos del botón, se elige uno random
+const SALUDOS_BOTON = [
+  '¡Hola! 👋',
+  '¿Te ayudo?',
+  '¿Alguna duda?',
+  'Pregúntame algo',
+  '¡Aquí estoy!',
+  '¿Cómo va tu día?',
+  '¡Hablemos!',
+];
 
 export default function ChatBot() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setChatAbierto } = useA11y();
   const [open, setOpen]     = useState(false);
+  const [saludoBoton] = useState(() => SALUDOS_BOTON[Math.floor(Math.random() * SALUDOS_BOTON.length)]);
+
+  // avisamos si está abierto para esconder el botón de accesibilidad
+  useEffect(() => { setChatAbierto(open); }, [open, setChatAbierto]);
+  useEffect(() => () => setChatAbierto(false), [setChatAbierto]);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: '¡Hola! Soy AquaBot, tu asistente de AquaFlow SV. ¿En qué puedo ayudarte hoy?' },
   ]);
@@ -61,7 +60,7 @@ export default function ChatBot() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
 
-  // Si el usuario inicia sesión mientras el chat está abierto, se levanta el límite.
+  // si inicia sesión con el chat abierto, se quita el límite
   useEffect(() => {
     if (user) setLimiteAlcanzado(false);
   }, [user]);
@@ -110,7 +109,7 @@ export default function ChatBot() {
 
   const ui = (
     <>
-      {/* ── Animación slide-up para el panel ── */}
+      {/* animación de entrada del panel */}
       <style>{`
         @keyframes slide-up-panel {
           from { opacity: 0; transform: translateY(12px) scale(0.98); }
@@ -118,23 +117,29 @@ export default function ChatBot() {
         }
       `}</style>
 
-      {/* ── Botón flotante profesional ── */}
+      {/* botón flotante con la mascota */}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2 select-none">
         {!open && (
-          <span className="hidden sm:block text-[10px] font-bold tracking-widest text-aqua-cyan/70 uppercase">
-            AquaBot
+          <span className="hidden sm:block text-[10px] font-bold tracking-widest text-aqua-cyan/70 uppercase max-w-[160px] text-right">
+            {saludoBoton}
           </span>
         )}
         <button
           onClick={() => setOpen(v => !v)}
           aria-label={open ? 'Cerrar AquaBot' : 'Abrir AquaBot'}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-aqua-cyan to-teal-600 text-ink flex items-center justify-center shadow-xl hover:shadow-aqua-cyan/30 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan"
+          className={`flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan rounded-2xl ${
+            open
+              ? 'w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-aqua-cyan to-teal-600 text-ink shadow-xl hover:shadow-aqua-cyan/30'
+              : 'w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_6px_14px_rgba(0,242,234,0.35)]'
+          }`}
         >
-          {open ? <CloseIcon /> : <ChatBubbleIcon />}
+          {open
+            ? <CloseIcon />
+            : <img src="/aquabot-principal.png" alt="AquaBot" className="w-full h-full object-contain" />}
         </button>
       </div>
 
-      {/* ── Panel de chat ── */}
+      {/* panel de chat */}
       {open && (
         <div className="fixed bottom-[4.5rem] right-4 left-4 sm:left-auto sm:bottom-24 sm:right-6 z-50 w-auto sm:w-[360px] max-h-[70vh] sm:max-h-[540px] flex flex-col rounded-2xl border border-ink/10 bg-[var(--color-aqua-panel)] shadow-2xl shadow-black/70 overflow-hidden"
           style={{ animation: 'slide-up-panel .22s ease' }}>
@@ -175,7 +180,7 @@ export default function ChatBot() {
 
             {loading && (
               <div className="flex gap-2 justify-start">
-                <div className="mt-1"><BotAvatar size="xs" /></div>
+                <div className="mt-1"><BotAvatar size="xs" pose="sin-datos" /></div>
                 <div className="bg-ink/5 border border-ink/5 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1.5 items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-aqua-cyan animate-bounce [animation-delay:0ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-aqua-cyan animate-bounce [animation-delay:150ms]" />
@@ -186,7 +191,7 @@ export default function ChatBot() {
 
             {limiteAlcanzado && (
               <div className="flex gap-2 justify-start">
-                <div className="mt-1"><BotAvatar size="xs" /></div>
+                <div className="mt-1"><BotAvatar size="xs" pose="alerta-detectada" /></div>
                 <div className="max-w-[85%] px-3.5 py-3 rounded-2xl rounded-bl-sm bg-amber-500/10 border border-amber-500/25 space-y-2.5">
                   <p className="text-sm text-ink/90 leading-relaxed">
                     Alcanzaste el límite de mensajes gratuitos de AquaBot. Inicia sesión o regístrate para seguir chateando sin límite.

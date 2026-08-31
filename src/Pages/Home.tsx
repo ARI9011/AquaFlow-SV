@@ -156,7 +156,7 @@ export default function Home() {
       )}
 
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <div className="relative rounded-3xl overflow-hidden border border-ink/10 h-[460px] md:h-[500px]">
         <ParticleFlowHero />
         <div className="absolute inset-0 bg-gradient-to-t from-aqua-dark via-aqua-dark/75 to-aqua-dark/10" />
@@ -209,7 +209,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── MISIÓN ── */}
+      {/* MISIÓN */}
       <Reveal>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-stretch">
           <div className="lg:col-span-3 portal-card p-6 sm:p-8 flex flex-col justify-center">
@@ -239,7 +239,7 @@ export default function Home() {
         </div>
       </Reveal>
 
-      {/* ── FUNCIONALIDADES ── */}
+      {/* FUNCIONALIDADES */}
       <Reveal>
         <div className="mb-1">
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-1">Explora la plataforma</p>
@@ -268,7 +268,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* ── CÓMO FUNCIONA ── */}
+      {/* CÓMO FUNCIONA */}
       <Reveal>
         <div className="text-center max-w-xl mx-auto pt-4 mb-1">
           <p className="text-[10px] text-aqua-cyan/60 uppercase tracking-[0.25em] font-bold mb-2">Proceso</p>
@@ -291,7 +291,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* ── IMPACTO ── */}
+      {/* IMPACTO */}
       <Reveal>
         <div className="portal-card portal-grid-bg p-6 sm:p-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
@@ -307,7 +307,7 @@ export default function Home() {
         </div>
       </Reveal>
 
-      {/* ── CTA FINAL ── */}
+      {/* CTA FINAL */}
       <Reveal>
         <div className="relative portal-card p-8 sm:p-10 text-center overflow-hidden">
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
