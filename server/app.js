@@ -1,4 +1,4 @@
-try { require('dotenv').config(); } catch { /* dotenvx maneja las variables en producción */ }
+try { require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }); } catch { /* dotenvx maneja las variables en producción */ }
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -71,7 +71,7 @@ async function enviarCorreoVerificacion(email, nombre, codigo) {
         html,
         attachments: [{
             filename: 'aquabot.png',
-            path: path.join(__dirname, 'Public', 'aquabot-principal.png'),
+            path: path.join(__dirname, '..', 'Public', 'aquabot-principal.png'),
             cid: 'aquabot-mascota', // referenciado en el <img src="cid:..."> de arriba
             contentType: 'image/png',
             contentDisposition: 'inline', // sin esto, algunos clientes de correo lo muestran como adjunto en vez de incrustado
@@ -130,7 +130,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-app.use(express.static(path.join(__dirname, 'Public')));
+app.use(express.static(path.join(__dirname, '..', 'Public')));
 
 
 app.get('/api/usuarios', requireAuth, requireAdmin, (req, res) => {
@@ -380,6 +380,11 @@ const TABLAS_SISTEMA = [
     {
         nombre: 'reportes',
         antes: migrarReportesEsquemaViejo,
+        despues: async () => {
+            await ensureColumnAdded('reportes', 'latitud', 'latitud DECIMAL(9,6) NULL');
+            await ensureColumnAdded('reportes', 'longitud', 'longitud DECIMAL(9,6) NULL');
+            await ensureColumnAdded('reportes', 'solicitud_id', 'solicitud_id VARCHAR(64) NULL UNIQUE');
+        },
         sql: `CREATE TABLE IF NOT EXISTS reportes (
             id          INT AUTO_INCREMENT PRIMARY KEY,
             tipo        VARCHAR(100) NOT NULL,
@@ -571,16 +576,16 @@ async function reconciliarAlertasExistentes() {
     }
 }
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, async () => {
     console.log(`AquaFlow SV corriendo en http://localhost:${PORT}`);
     const key = process.env.GROQ_API_KEY;
-    console.log(`GROQ_API_KEY: ${key ? key.substring(0, 10) + '...' : 'NO ENCONTRADA'}`);
+    console.log(`Asistente: ${key ? 'configurado' : 'sin configurar'}`);
 
     await prepararBaseDeDatos();
 
     // arranca el puente con el Arduino
-    sensoresArduino.iniciar();
+    if (process.env.AQUAFLOW_DISABLE_ARDUINO !== '1') sensoresArduino.iniciar();
 });
 
 app.get('/api/user-info', (req, res) => {
@@ -1100,36 +1105,49 @@ app.delete('/api/alertas/:id', requireAdmin, (req, res) => {
 
 // reportes
 
+const { validarReporte } = require('./reportes-validacion');
+const REPORTE_SELECT = `
+    SELECT r.id, r.tipo, r.zona, r.sector, r.descripcion, r.estado, r.prioridad,
+           r.latitud, r.longitud, r.usuario_id, r.usuario, r.creado_en, u.rol AS usuario_rol,
+           (SELECT COUNT(*) FROM comentarios_reportes cr WHERE cr.reporte_id = r.id) AS total_comentarios
+    FROM reportes r LEFT JOIN usuarios u ON u.id = r.usuario_id`;
+
+function serializarReporte(row) {
+    return { ...row, latitud: row.latitud == null ? null : Number(row.latitud),
+        longitud: row.longitud == null ? null : Number(row.longitud) };
+}
+
 app.get('/api/reportes', requireAuth, (req, res) => {
-    const sql = `
-        SELECT r.id, r.tipo, r.zona, r.sector, r.descripcion, r.estado, r.prioridad,
-               r.usuario_id, r.usuario, r.creado_en, u.rol AS usuario_rol,
-               (SELECT COUNT(*) FROM comentarios_reportes cr WHERE cr.reporte_id = r.id) AS total_comentarios
-        FROM reportes r
-        LEFT JOIN usuarios u ON u.id = r.usuario_id
-        ORDER BY r.creado_en DESC
-    `;
+    const sql = `${REPORTE_SELECT} ORDER BY r.creado_en DESC, r.id DESC`;
     db.query(sql, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+        res.json(rows.map(serializarReporte));
     });
 });
 
 app.post('/api/reportes', requireAuth, (req, res) => {
-    const { tipo, zona, sector, descripcion, prioridad } = req.body;
-    if (!tipo || !zona || !sector || !descripcion)
-        return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    const validacion = validarReporte(req.body);
+    if (validacion.error) return res.status(400).json({ error: validacion.error });
+    const { tipo, zona, sector, descripcion, prioridad, latitud, longitud } = validacion.data;
     const userId  = req.session.user.id || req.session.user.ID;
     const usuario = req.session.user.Usuario;
-    const validPrioridad = ['alta', 'media', 'baja'].includes(prioridad) ? prioridad : 'media';
+    // El identificador pertenece al usuario: reintentar un envío no duplica el reporte.
+    const solicitudId = req.body.solicitud_id ? `${userId}:${req.body.solicitud_id}` : null;
     db.query(
-        'INSERT INTO reportes (tipo, zona, sector, descripcion, prioridad, usuario_id, usuario) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [tipo, zona, sector, descripcion, validPrioridad, userId, usuario],
+        `INSERT INTO reportes (tipo, zona, sector, descripcion, prioridad, usuario_id, usuario, latitud, longitud, solicitud_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)`,
+        [tipo, zona, sector, descripcion, prioridad, userId, usuario, latitud, longitud, solicitudId],
         (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
+            if (err) {
+                console.error('Error al guardar reporte:', err.message);
+                return res.status(500).json({ error: 'No se pudo guardar el reporte. Intenta nuevamente.' });
+            }
             verificarUmbralAlerta(zona, sector, descripcion, usuario);
             eventos.emitir('reportes');
-            res.json({ id: result.insertId });
+            db.query(`${REPORTE_SELECT} WHERE r.id = ?`, [result.insertId], (readError, rows) => {
+                if (readError || !rows.length) return res.status(500).json({ error: 'No se pudo confirmar el reporte. Puedes reintentar el envío.' });
+                res.status(201).json(serializarReporte(rows[0]));
+            });
         }
     );
 });

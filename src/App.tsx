@@ -1,19 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import axios from './api/axiosConfig';
 import Login from './Pages/Login';
 import Home from './Pages/Home';
-import Dashboard from './Pages/Dashboard';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
-import Usuarios from './Pages/Usuarios';
-import Mapa from './Pages/Mapa';
-import Sensores from './Pages/Sensores';
-import LoadingScreen from './components/LoadingScreen';
 import BubbleBackground from './components/BubbleBackground';
-import Reportes from './Pages/Reportes';
-import Alertas from './Pages/Alertas';
-import Configuracion from './Pages/Configuracion';
 import ChatBot from './components/ChatBot';
 import AccessibilityPanel from './components/AccessibilityPanel';
 import { AccessibilityProvider } from './context/AccessibilityContext';
@@ -24,7 +16,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { ConfirmProvider } from './components/ConfirmDialog';
 import { ToastProvider } from './components/Toast';
 import SensorNotificationBanner from './components/SensorNotificationBanner';
-import SobreNosotros from './Pages/SobreNosotros';
+const Dashboard = lazy(() => import('./Pages/Dashboard'));
+const Usuarios = lazy(() => import('./Pages/Usuarios'));
+const Mapa = lazy(() => import('./Pages/Mapa'));
+const Sensores = lazy(() => import('./Pages/Sensores'));
+const Reportes = lazy(() => import('./Pages/Reportes'));
+const Alertas = lazy(() => import('./Pages/Alertas'));
+const Configuracion = lazy(() => import('./Pages/Configuracion'));
+const SobreNosotros = lazy(() => import('./Pages/SobreNosotros'));
 
 interface AlertaResumen {
   id: number;
@@ -76,7 +75,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   return (
-    <div className="flex min-h-screen bg-aqua-dark text-ink font-sans">
+    <div className="app-shell flex min-h-screen bg-aqua-dark text-ink font-sans">
       <BubbleBackground />
       <SensorNotificationBanner />
       <Sidebar
@@ -85,13 +84,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         onCloseMobile={() => setMobileNavOpen(false)}
         alertCount={alertasActivas.length}
       />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex-1 flex flex-col h-dvh overflow-hidden min-w-0" style={{ position: 'relative', zIndex: 1 }}>
         {/* Skip link: primer elemento tabulable, permite saltar el menú */}
         <a href="#contenido-principal" className="skip-link">{t('Saltar al contenido principal')}</a>
         <Topbar onMenuClick={() => setMobileNavOpen(true)} alertas={alertasActivas} />
         <main id="contenido-principal" tabIndex={-1} role="main"
-          className="flex-1 p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar">
-          {children}
+          className="flex-1 p-4 md:p-6 lg:p-7 overflow-y-auto custom-scrollbar">
+          <Suspense fallback={<div className="p-12 text-center text-sm text-ink/60" role="status">{t('Cargando...')}</div>}>{children}</Suspense>
         </main>
       </div>
       <AccessibilityPanel />
@@ -100,8 +99,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-
   return (
     <AuthProvider>
       <AccessibilityProvider>
@@ -109,7 +106,6 @@ export default function App() {
       <LanguageProvider>
       <ConfirmProvider>
       <ToastProvider>
-      {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
       <Router>
         <ChatBotGuard />
         <Routes>

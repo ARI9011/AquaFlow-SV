@@ -1,4 +1,4 @@
-try { require('dotenv').config(); } catch { /* dotenvx maneja las variables en producción */ }
+try { require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }); } catch { /* dotenvx maneja las variables en producción */ }
 const mysql = require('mysql2');
 
 // Configuración de la BD

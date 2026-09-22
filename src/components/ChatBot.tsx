@@ -157,17 +157,18 @@ export default function ChatBot() {
       {/* botón flotante con la mascota */}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2 select-none">
         {!open && (
-          <span className="hidden sm:block text-[10px] font-bold tracking-widest text-aqua-cyan/70 uppercase max-w-[160px] text-right">
+          <span className="sr-only">
             {t(saludoBoton)}
           </span>
         )}
         <button
           onClick={() => setOpen(v => !v)}
           aria-label={open ? t('Cerrar AquaBot') : t('Abrir AquaBot')}
+          title={open ? t('Cerrar AquaBot') : t('Abrir AquaBot')}
           className={`flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-aqua-cyan rounded-2xl ${
             open
-              ? 'w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-aqua-cyan to-teal-600 text-ink shadow-xl hover:shadow-aqua-cyan/30'
-              : 'w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_6px_14px_rgba(0,242,234,0.35)]'
+              ? 'w-11 h-11 bg-aqua-cyan text-aqua-dark shadow-lg'
+              : 'w-11 h-11 bg-[var(--color-aqua-panel)] border border-ink/15 p-1 shadow-lg'
           }`}
         >
           {open

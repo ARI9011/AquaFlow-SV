@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  publicDir: 'Public',
   plugins: [
     react(),
     tailwindcss(),
@@ -15,12 +16,12 @@ export default defineConfig({
     },
     proxy: {
       '/auth': {
-        target: 'http://localhost:3000',
+        target: process.env.AQUAFLOW_API_TARGET || 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       },
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.AQUAFLOW_API_TARGET || 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       },
