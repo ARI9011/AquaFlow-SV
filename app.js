@@ -1,16 +1,16 @@
-try { require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }); } catch { /* dotenvx maneja las variables en producción */ }
+try { require('dotenv').config({ path: require('path').join(__dirname, '.env') }); } catch { /* dotenvx maneja las variables en producción */ }
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const crypto = require('crypto');
-const db = require('./db');
+const db = require('./server/db');
 const dbp = db.promise(); // solo para el arranque, para que los logs salgan en orden
 const cors = require('cors');
 const Groq = require('groq-sdk');
 const bcrypt = require('bcryptjs');
-const sensoresArduino = require('./sensores-arduino');
-const eventos = require('./eventos');
-const traduccionesSeed = require('./traducciones-seed');
+const sensoresArduino = require('./server/sensores-arduino');
+const eventos = require('./server/eventos');
+const traduccionesSeed = require('./server/traducciones-seed');
 
 const isBcryptHash = (value) => /^\$2[aby]\$/.test(value);
 
@@ -71,7 +71,7 @@ async function enviarCorreoVerificacion(email, nombre, codigo) {
         html,
         attachments: [{
             filename: 'aquabot.png',
-            path: path.join(__dirname, '..', 'Public', 'aquabot-principal.png'),
+            path: path.join(__dirname, 'Public', 'aquabot-principal.png'),
             cid: 'aquabot-mascota', // referenciado en el <img src="cid:..."> de arriba
             contentType: 'image/png',
             contentDisposition: 'inline', // sin esto, algunos clientes de correo lo muestran como adjunto en vez de incrustado
@@ -130,7 +130,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-app.use(express.static(path.join(__dirname, '..', 'Public')));
+app.use(express.static(path.join(__dirname, 'Public')));
 
 
 app.get('/api/usuarios', requireAuth, requireAdmin, (req, res) => {
@@ -1105,7 +1105,7 @@ app.delete('/api/alertas/:id', requireAdmin, (req, res) => {
 
 // reportes
 
-const { validarReporte } = require('./reportes-validacion');
+const { validarReporte } = require('./server/reportes-validacion');
 const REPORTE_SELECT = `
     SELECT r.id, r.tipo, r.zona, r.sector, r.descripcion, r.estado, r.prioridad,
            r.latitud, r.longitud, r.usuario_id, r.usuario, r.creado_en, u.rol AS usuario_rol,
