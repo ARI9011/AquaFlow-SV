@@ -14,9 +14,15 @@ let ultimaLectura = null; // { caudal, estado, rele, recibidoEn }
 let ultimoEstadoEmitido = null; // para no repetir el mismo JSON a los clientes SSE
 const clientesSSE = new Set(); // res de Express con la conexión abierta
 
+// 2341 = Arduino oficial; los Mega 2560 "clon" (muy comunes) traen chips
+// USB-serie de terceros con otro VID: CH340 (1a86), CP210x (10c4), FTDI (0403).
+const VENDOR_IDS_ARDUINO = ['2341', '1a86', '10c4', '0403'];
+
 async function encontrarPuertoArduino() {
     const puertos = await SerialPort.list();
-    const arduino = puertos.find(p => (p.vendorId || '').toLowerCase() === '2341');
+    let arduino = puertos.find(p => VENDOR_IDS_ARDUINO.includes((p.vendorId || '').toLowerCase()));
+    // Si no se reconoce el VID pero solo hay un puerto serie disponible, se asume que es el Arduino.
+    if (!arduino && puertos.length === 1) arduino = puertos[0];
     return arduino || null;
 }
 
@@ -42,16 +48,23 @@ function emitirEstadoSiCambio() {
 }
 
 function procesarLinea(linea) {
-    if (!linea.startsWith('DATA:')) return; // resto de líneas son texto humano para el Monitor Serie
+    if (!linea.startsWith('DATA:')) {
+        console.log('[Arduino]', linea); // texto humano para el Monitor Serie, útil para depurar
+        return;
+    }
     try {
         const datos = JSON.parse(linea.slice('DATA:'.length));
-        if (typeof datos.caudal !== 'number') return;
+        if (typeof datos.caudal !== 'number') {
+            console.error('Línea DATA: del Arduino sin "caudal" numérico:', linea);
+            return;
+        }
         ultimaLectura = {
             caudal: datos.caudal,
             estado: datos.estado || null,
             rele: !!datos.rele,
             recibidoEn: Date.now(),
         };
+        console.log('[Arduino] lectura OK:', ultimaLectura);
         emitirEstadoSiCambio();
     } catch {
         console.error('Línea de datos del Arduino con formato inválido:', linea);

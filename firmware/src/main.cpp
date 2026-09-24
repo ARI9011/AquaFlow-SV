@@ -2,8 +2,25 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <avr/wdt.h>
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+// Los módulos I2C para LCD traen el expansor PCF8574 (direcciones 0x20-0x27)
+// o PCF8574A (0x38-0x3F) según el lote; se escanea todo ese rango en vez de
+// asumir 0x27 fijo (causa típica de "la LCD no muestra nada" o se queda en
+// recuadros en blanco sin inicializar: dirección equivocada).
+LiquidCrystal_I2C* lcd = nullptr;
+
+uint8_t detectarDireccionLCD() {
+  for (uint8_t addr = 0x20; addr <= 0x27; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) return addr;
+  }
+  for (uint8_t addr = 0x38; addr <= 0x3F; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) return addr;
+  }
+  return 0x00; // ningún dispositivo respondió: problema de cableado/alimentación, no de dirección
+}
 
 const byte SENSOR = 2;
 const byte RELE = 3;
@@ -19,8 +36,10 @@ const float PULSOS_POR_LITRO = 450.0;
 const float UMBRAL_MEDIO  = 7.0;    // por debajo = DEBIL
 const float UMBRAL_FUERTE = 16.0;   // por encima = FUERTE
 
-// Ventana de medición en ms
-const unsigned long VENTANA = 1000;
+// Ventana de medición en ms. Antes 1000ms: recalculaba una vez por segundo,
+// lo que se sentía lento al abrir/cerrar el agua. Con 400ms reacciona más
+// rápido a costa de un poco más de ruido entre lecturas.
+const unsigned long VENTANA = 400;
 
 volatile unsigned long pulsos = 0;
 volatile unsigned long ultimoPulsoMicros = 0;
@@ -30,9 +49,10 @@ volatile unsigned long ultimoPulsoMicros = 0;
 // cada ~4.4 ms; cualquier pulso más rápido que esto es ruido, no agua.
 const unsigned long PULSO_MIN_INTERVALO_US = 1000;
 
-// Con pocos pulsos en la ventana (1-2) el caudal calculado ya es casi cero,
-// pero para que el estado no oscile por ruido residual, se ignoran del todo.
-const unsigned long PULSOS_MIN_VALIDOS = 3;
+// Mínimo de pulsos por ventana para no confundir ruido residual con flujo
+// real. Se mantiene igual en pulsos/segundo que antes (3 en 1000ms) pero
+// ajustado a la ventana más corta de 400ms.
+const unsigned long PULSOS_MIN_VALIDOS = 2;
 
 unsigned long tiempoVentana = 0;
 float caudal = 0.0;   // L/min
@@ -48,15 +68,33 @@ void lcdLinea(uint8_t fila, String texto);
 void contarPulsos();
 
 void setup() {
+  wdt_disable(); // por si el reinicio anterior lo dejó activo, evita un bucle de reinicios
+
   Serial.begin(9600);
 
-  lcd.init();
-  lcd.backlight();
+  Wire.begin();
+  // Sin esto, un cuelgue del bus I2C (ruido eléctrico, cable suelto) deja a
+  // Wire.endTransmission() esperando para siempre y congela todo el sketch
+  // -incluido el envío por Serial-, que es justo el síntoma de "deja de
+  // mandar datos y no se recupera solo". Con el timeout, el bus se resetea
+  // en vez de bloquear.
+  Wire.setWireTimeout(3000, true);
+  uint8_t direccionLCD = detectarDireccionLCD();
+  if (direccionLCD == 0x00) {
+    Serial.println("LCD I2C: ningun dispositivo respondio en el bus (revisar cableado SDA/SCL/VCC/GND del modulo)");
+    direccionLCD = 0x27; // se sigue con la más común para no dejar el puntero nulo
+  } else {
+    Serial.print("LCD I2C detectada en 0x");
+    Serial.println(direccionLCD, HEX);
+  }
+  lcd = new LiquidCrystal_I2C(direccionLCD, 20, 4);
+  lcd->init();
+  lcd->backlight();
 
-  lcd.setCursor(2, 0);
-  lcd.print("ELECTROALL");
+  lcd->setCursor(2, 0);
+  lcd->print("ELECTROALL");
   delay(1500);
-  lcd.clear();
+  lcd->clear();
 
   pinMode(SENSOR, INPUT_PULLUP);
   pinMode(PULSADOR, INPUT_PULLUP);
@@ -67,9 +105,15 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(SENSOR), contarPulsos, RISING);
 
   tiempoVentana = millis();
+
+  // Red de seguridad: si loop() se llega a colgar por cualquier motivo
+  // (I2C, lo que sea) y no se llama a wdt_reset() en 4s, el watchdog
+  // reinicia la placa solo en vez de quedarse muerta hasta desenchufarla.
+  wdt_enable(WDTO_4S);
 }
 
 void loop() {
+  wdt_reset();
 
   // --- Lectura del pulsador (toggle con antirrebote) ---
   bool lectura = digitalRead(PULSADOR);
@@ -143,8 +187,8 @@ void loop() {
 void lcdLinea(uint8_t fila, String texto) {
   while (texto.length() < 20) texto += " ";
   if (texto.length() > 20) texto = texto.substring(0, 20);
-  lcd.setCursor(0, fila);
-  lcd.print(texto);
+  lcd->setCursor(0, fila);
+  lcd->print(texto);
 }
 
 void contarPulsos() {
