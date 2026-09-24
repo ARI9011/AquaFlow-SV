@@ -2,6 +2,18 @@
 
 Sistema de monitoreo de redes de agua potable para el Gran San Salvador, El Salvador. Permite a operadores y administradores visualizar presión y flujo por zona, reportar incidencias, gestionar alertas automáticas y leer datos en vivo de un sensor de caudal físico (Arduino).
 
+## Reportes desde el mapa
+
+La vista ciudadana de `/reportes` permite seleccionar un punto del mapa, describir la incidencia y enviarla. `/mapa` comparte los mismos reportes; el monitoreo anterior de zonas sigue disponible en `/mapa?vista=zonas`. Se mantienen los colores originales del proyecto.
+
+Los reportes enviados se guardan en MySQL con `latitud` y `longitud`, y se recuperan al volver a abrir la página o iniciar sesión desde otro navegador. Los borradores se conservan localmente por usuario hasta enviarlos o descartarlos. Un identificador de solicitud evita duplicados al reintentar un envío. Los reportes anteriores sin coordenadas siguen en la lista como "Sin ubicación".
+
+Al arrancar `node app.js`, la migración añade las columnas necesarias a la tabla existente. No hace falta volver a importar el archivo SQL. El formulario administrativo anterior sigue siendo compatible. El mapa usa el mismo proveedor Esri del proyecto; requiere conexión para cargar su cartografía.
+
+Validación: `npm run build` comprueba TypeScript y genera la aplicación para producción. El `package.json` declara un script `npm test` (`node --test tests/*.test.cjs`), pero la carpeta `tests/` todavía no existe en el repositorio, así que por ahora no hay pruebas automatizadas para ejecutar; queda pendiente como trabajo futuro.
+
+Para una vista previa en otro puerto se pueden usar `PORT` en el backend y `AQUAFLOW_API_TARGET` en Vite. `AQUAFLOW_DISABLE_ARDUINO=1` evita que una segunda instancia de prueba intente abrir el puerto serie.
+
 ## Arquitectura
 
 El proyecto tiene tres partes independientes que corren por separado:
@@ -9,18 +21,18 @@ El proyecto tiene tres partes independientes que corren por separado:
 | Parte | Tecnología | Carpeta |
 |---|---|---|
 | Frontend | React 18 + TypeScript + Vite 6 + Tailwind 4 | `src/` |
-| Backend | Express 5 + MySQL (mysql2) + sesiones | `app.js`, `db.js`, `eventos.js` |
+| Backend | Express 5 + MySQL (mysql2) + sesiones | `app.js`, `server/db.js`, `server/eventos.js` |
 | Firmware | Arduino Mega 2560 (PlatformIO) | `firmware/` |
 
 El frontend nunca habla directo con MySQL: llama al backend (`/api/...`, `/auth/...`), y Vite proxea esas rutas a `http://localhost:3000` en desarrollo (ver `vite.config.ts`).
 
-El backend, a su vez, se conecta por puerto serie a un Arduino (`sensores-arduino.js`) que mide un sensor de flujo piloto; esa lectura se expone a la app vía Server-Sent Events (`eventos.js`).
+El backend, a su vez, se conecta por puerto serie a un Arduino (`server/sensores-arduino.js`) que mide un sensor de flujo piloto; esa lectura se expone a la app vía Server-Sent Events (`server/eventos.js`).
 
 ## Requisitos previos
 
 - **Node.js** 18+ y **pnpm** (el repo trae `pnpm-lock.yaml`; también sirve npm/yarn si prefieres).
-- **MySQL** corriendo en `localhost:3306`, usuario `root` sin contraseña (configuración por defecto de WAMP — ver `db.js`). Ajusta `db.js` si tu entorno es distinto.
-- Base de datos `aquaflow_sv` importada desde [aquaflow_sv.sql](aquaflow_sv.sql).
+- **MySQL** corriendo en `localhost:3306`, usuario `root` sin contraseña (configuración por defecto de WAMP — ver `server/db.js`). Ajusta ese archivo si tu entorno es distinto.
+- Base de datos `aquaflow_sv` importada desde [aquaflow_sv.sql](database/aquaflow_sv.sql).
 - (Opcional) **PlatformIO** si vas a compilar/subir el firmware del Arduino Mega 2560.
 - (Opcional) Un Arduino con el sensor de flujo conectado por USB — si no está presente, el backend sigue funcionando: la tarjeta "Sensor de Flujo" en `/sensores` simplemente se muestra como "Desconectado" y reintenta la conexión solo cada 5 s.
 
@@ -51,7 +63,7 @@ Si `SMTP_USER`/`SMTP_PASS` faltan, el servidor arranca igual pero avisa por cons
    ```
 2. Importa el esquema en MySQL (por ejemplo con phpMyAdmin de WAMP, o):
    ```bash
-   mysql -u root aquaflow_sv < aquaflow_sv.sql
+   mysql -u root aquaflow_sv < database/aquaflow_sv.sql
    ```
    El backend también crea/actualiza automáticamente algunas tablas y columnas al arrancar (ver "Migraciones" abajo), así que no hace falta que el `.sql` esté 100% al día.
 3. Arranca el backend (puerto **3000**):
@@ -94,7 +106,7 @@ Cuando una misma zona acumula **5 o más reportes activos** del mismo `tipo`, el
 
 ## Firmware (Arduino)
 
-`firmware/src/main.cpp` corre en un Arduino Mega 2560 con un sensor de flujo por interrupción, un relé con pulsador y una pantalla LCD I2C 20x4. Envía lecturas por el puerto serie como una línea `DATA:{"caudal":...,"estado":"...","rele":true|false}`, que `sensores-arduino.js` detecta automáticamente por el VID del fabricante (`2341`) sin necesidad de configurar el puerto COM a mano.
+`firmware/src/main.cpp` corre en un Arduino Mega 2560 con un sensor de flujo por interrupción, un relé con pulsador y una pantalla LCD I2C 20x4. Envía lecturas por el puerto serie como una línea `DATA:{"caudal":...,"estado":"...","rele":true|false}`, que `server/sensores-arduino.js` detecta automáticamente por el VID del fabricante (`2341`) sin necesidad de configurar el puerto COM a mano.
 
 Para compilar y subir el firmware:
 ```bash
@@ -105,22 +117,28 @@ pio run --target upload
 ## Estructura del proyecto
 
 ```
-├── app.js                  # Backend Express: auth, CRUD, chat IA, configuración
-├── db.js                   # Pool de conexión MySQL
-├── eventos.js               # Hub de Server-Sent Events (canales "reportes"/"alertas")
-├── sensores-arduino.js      # Puente serie con el Arduino (autodetección + reconexión)
-├── aquaflow_sv.sql          # Esquema y datos iniciales de la base de datos
+├── app.js                   # Backend Express: auth, CRUD, chat IA, configuración
+│                             # (arranca aquí con `node app.js`; el resto del backend vive en server/)
+├── server/                  # Resto del backend Express
+│   ├── db.js                # Pool de conexión MySQL
+│   ├── eventos.js           # Hub de Server-Sent Events (canales "reportes"/"alertas")
+│   ├── sensores-arduino.js  # Puente serie con el Arduino (autodetección + reconexión)
+│   ├── reportes-validacion.js # Validación de payloads de /api/reportes
+│   └── traducciones-seed.js # Semilla de traducciones
+├── database/
+│   └── aquaflow_sv.sql      # Esquema y datos iniciales de la base de datos
 ├── firmware/                # Proyecto PlatformIO del Arduino Mega 2560
 │   └── src/main.cpp
-└── src/
+└── src/                     # Frontend (React + TypeScript)
     ├── Pages/                # Dashboard, Sensores, Mapa, Reportes, Alertas, Usuarios, Configuración...
-    ├── components/           # Sidebar, Topbar, ChatBot, AccessibilityPanel...
+    ├── components/           # Sidebar, Topbar, ChatBot, AccessibilityPanel, ReportWorkspace, ReportMap...
     ├── context/              # Auth, Config, Language, Accessibility
+    ├── data/                 # zonas.ts, reportes.ts (modelos y datos de dominio)
     └── api/axiosConfig.ts    # Cliente Axios compartido (withCredentials + manejo de 401)
 ```
 
 ## Notas para quien retome el proyecto
 
-- La conexión a MySQL en `db.js` está hardcodeada para desarrollo local con WAMP (`root` sin contraseña). Antes de desplegar a producción hay que moverla a variables de entorno.
-- Existen contraseñas sin cifrar en `aquaflow_sv.sql` (cuentas de prueba históricas); el backend las acepta por compatibilidad (`isBcryptHash()` en `app.js`), pero no deberían usarse como referencia de buenas prácticas.
+- La conexión a MySQL en `server/db.js` está hardcodeada para desarrollo local con WAMP (`root` sin contraseña). Antes de desplegar a producción hay que moverla a variables de entorno.
+- Existen contraseñas sin cifrar en `database/aquaflow_sv.sql` (cuentas de prueba históricas); el backend las acepta por compatibilidad (`isBcryptHash()` en `app.js`), pero no deberían usarse como referencia de buenas prácticas.
 - El `secret` de la sesión (`express-session`) está hardcodeado en `app.js` — mover a `.env` antes de producción.

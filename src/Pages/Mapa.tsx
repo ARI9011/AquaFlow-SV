@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { Globe, AlertTriangle, CheckCircle, Activity, MapPin } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import ReportWorkspace from '../components/ReportWorkspace';
 import 'leaflet/dist/leaflet.css';
 import { ZONAS_VERDADERAS, ESTADO_STYLES, type ZonaMonitoreada } from '../data/zonas';
 import { useLang } from '../context/LanguageContext';
@@ -66,6 +67,11 @@ const ZonaCard = ({ zona, onClick }: { zona: ZonaMonitoreada; onClick?: () => vo
 };
 
 export default function Mapa() {
+  const [params] = useSearchParams();
+  return params.get('vista') === 'zonas' ? <MapaZonas /> : <ReportWorkspace mapPage />;
+}
+
+function MapaZonas() {
   const { t } = useLang();
   const [mapMounted, setMapMounted] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'operativas' | 'incidencias'>('todos');
@@ -102,6 +108,7 @@ export default function Mapa() {
           <p className="text-sm text-gray-500 mt-1">{t('Ubicación y estado en tiempo real de todas las zonas de monitoreo')}</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/mapa')} className="px-3 py-2 text-sm text-aqua-cyan">{t('Mapa de reportes')}</button>
           <button
             onClick={() => navigate('/sensores')}
             className="px-3.5 py-2 rounded-xl bg-aqua-cyan/10 border border-aqua-cyan/20 hover:bg-aqua-cyan/20 text-aqua-cyan text-xs font-bold transition-all flex items-center gap-1.5"
@@ -315,4 +322,3 @@ export default function Mapa() {
     </div>
   );
 }
-

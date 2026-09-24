@@ -120,11 +120,21 @@ CREATE TABLE IF NOT EXISTS `lecturas_sensores` (
 DROP TABLE IF EXISTS `reportes`;
 CREATE TABLE IF NOT EXISTS `reportes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `Usuario` varchar(50) NOT NULL,
-  `Zona` varchar(500) NOT NULL,
-  `Cometario` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `tipo` varchar(100) NOT NULL,
+  `zona` varchar(100) NOT NULL,
+  `sector` varchar(100) NOT NULL,
+  `descripcion` text NOT NULL,
+  `estado` enum('pendiente','en proceso','resuelto') DEFAULT 'pendiente',
+  `prioridad` enum('alta','media','baja') DEFAULT 'media',
+  `usuario_id` int NOT NULL,
+  `usuario` varchar(100) NOT NULL,
+  `latitud` decimal(9,6) DEFAULT NULL,
+  `longitud` decimal(9,6) DEFAULT NULL,
+  `solicitud_id` varchar(64) DEFAULT NULL,
+  `creado_en` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `solicitud_id` (`solicitud_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 --
 -- Estructura de tabla para la tabla `usuarios`
 --

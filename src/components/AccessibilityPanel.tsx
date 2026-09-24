@@ -67,7 +67,7 @@ export default function AccessibilityPanel() {
   if (chatAbierto) return null;
 
   return (
-    <div data-a11y-panel className="fixed bottom-24 sm:bottom-32 right-4 sm:right-6 z-[900] flex flex-col items-end gap-3">
+    <div data-a11y-panel className="fixed bottom-4 sm:bottom-6 right-[72px] sm:right-[80px] z-[900] flex flex-col items-end gap-3">
       {/* Panel expandible */}
       {abierto && (
         <div

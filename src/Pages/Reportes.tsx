@@ -11,6 +11,7 @@ import {
   ChevronDown, ChevronUp, Send, X,
 } from 'lucide-react';
 import AdminCrown from '../components/AdminCrown';
+import ReportWorkspace from '../components/ReportWorkspace';
 
 // tipos
 interface Reporte {
@@ -312,6 +313,11 @@ function ComentariosSection({ reporteId, userId, userRol, onCountChange }: Comme
 
 export default function Reportes() {
   const { user } = useAuth();
+  return user?.rol === 'admin' ? <ReportesAdmin /> : <ReportWorkspace key={user?.id} />;
+}
+
+function ReportesAdmin() {
+  const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
   const confirmDialog = useConfirm();
   const { pollingMs, tiempoReal } = useConfig();
@@ -326,7 +332,7 @@ export default function Reportes() {
   const [reportes,   setReportes]   = useState<Reporte[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [filtro,     setFiltro]     = useState('todos');
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(() => Number(searchParams.get('reporte')) || null);
   const [showModal,  setShowModal]  = useState(false);
   const [editingR,   setEditingR]   = useState<Reporte | null>(null);
   const [saving,     setSaving]     = useState(false);
@@ -363,6 +369,7 @@ export default function Reportes() {
   const enProceso  = reportes.filter(r => r.estado === 'en proceso').length;
   const resueltos  = reportes.filter(r => r.estado === 'resuelto').length;
   const filtrados  = reportes
+    .filter(r => !searchParams.get('reporte') || r.id === Number(searchParams.get('reporte')))
     .filter(r => filtro === 'todos' || r.estado === filtro)
     .filter(r => !zonaRelacionada || r.zona === zonaRelacionada)
     .filter(r => !tipoRelacionado || r.tipo === tipoRelacionado);
@@ -468,7 +475,7 @@ export default function Reportes() {
       </div>
 
       {/* Filtro heredado de una alerta */}
-      {zonaRelacionada && (
+      {(zonaRelacionada || searchParams.get('reporte')) && (
         <div className="bg-aqua-cyan/10 border border-aqua-cyan/30 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
           <p className="text-xs text-gray-400">
             {t('Mostrando reportes')} {tipoRelacionado && <>{t('de')} <strong className="text-aqua-cyan">{tipoRelacionado}</strong> </>}

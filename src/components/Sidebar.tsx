@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Home as HomeIcon, LayoutDashboard, Map as MapIcon, Droplets, FileText,
   Settings, Bell, Users, LogOut, Menu, X, ShieldCheck, User as UserIcon, Info,
@@ -20,10 +20,10 @@ interface NavItemProps {
 }
 
 const NavItem = ({ icon: Icon, label, active = false, badge, onClick, collapsed = false }: NavItemProps) => (
-  <div
+  <button type="button" aria-label={label} aria-current={active ? 'page' : undefined}
     onClick={onClick}
     className={`
-      flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 group relative
+      w-full text-left flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer transition-all duration-200 group relative
       ${active
         ? 'bg-aqua-cyan/10 text-aqua-cyan border border-aqua-cyan/15 shadow-[0_0_20px_rgba(0,242,234,0.06)]'
         : 'text-gray-500 hover:bg-ink/[0.04] hover:text-ink border border-transparent'}
@@ -35,12 +35,12 @@ const NavItem = ({ icon: Icon, label, active = false, badge, onClick, collapsed 
       />
       {!collapsed && <span className="font-semibold text-sm tracking-wide whitespace-nowrap">{label}</span>}
     </div>
-    {badge && !collapsed && (
+    {!!badge && !collapsed && (
       <span className="bg-red-500 text-ink text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg animate-pulse min-w-[18px] text-center">
         {badge}
       </span>
     )}
-    {badge && collapsed && (
+    {!!badge && collapsed && (
       <span className="absolute -top-1 -right-1 bg-red-500 text-ink text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-lg">
         {badge}
       </span>
@@ -50,7 +50,7 @@ const NavItem = ({ icon: Icon, label, active = false, badge, onClick, collapsed 
         {label}
       </div>
     )}
-  </div>
+  </button>
 );
 
 interface SidebarProps {
@@ -67,6 +67,13 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
   const { t } = useLang();
   const showToast = useToast();
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') onCloseMobile?.(); };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [mobileOpen, onCloseMobile]);
 
   const handleLogout = () => {
     onCloseMobile?.();
@@ -108,20 +115,16 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
           <div className="flex items-center gap-2.5 min-w-0 cursor-pointer" onClick={() => go('/inicio')}>
             <AquaFlowLogo size={32} variant="cyan" />
             <div className="min-w-0">
-              <p className="text-sm font-black text-ink tracking-tight leading-none">AquaFlow</p>
+              <p className="text-base font-bold text-ink leading-none">AquaFlow SV</p>
               <p className="text-[9px] text-aqua-cyan/70 font-bold uppercase tracking-widest mt-0.5">SV · {t('Monitoreo')}</p>
             </div>
-          </div>
-        )}
-        {effectiveCollapsed && (
-          <div className="cursor-pointer" onClick={() => go('/inicio')} title="AquaFlow SV">
-            <AquaFlowLogo size={28} variant="cyan" />
           </div>
         )}
         {/* Cerrar drawer (solo móvil) */}
         {!effectiveCollapsed && (
           <button
             onClick={() => (mobileOpen ? onCloseMobile?.() : setCollapsed(true))}
+            aria-label={t(mobileOpen ? 'Cerrar menú' : 'Contraer menú')} title={t(mobileOpen ? 'Cerrar menú' : 'Contraer menú')}
             className="p-1.5 hover:bg-ink/[0.06] rounded-lg transition-colors text-gray-600 hover:text-ink flex-shrink-0"
           >
             <X size={16} />
@@ -130,7 +133,8 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
         {effectiveCollapsed && (
           <button
             onClick={() => setCollapsed(false)}
-            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-[var(--color-aqua-panel)] border border-ink/10 rounded-full items-center justify-center shadow-lg text-gray-400 hover:text-ink hover:border-aqua-cyan/30 transition-all z-10"
+            aria-label={t('Expandir menú')} title={t('Expandir menú')}
+            className="hidden lg:flex w-7 h-7 items-center justify-center text-gray-400 hover:text-ink transition-all"
           >
             <Menu size={12} />
           </button>
@@ -145,9 +149,9 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
             <p className="text-[9px] uppercase font-black text-gray-600 tracking-[0.22em] mb-2 px-3">{t('Principal')}</p>
           )}
           <div className="space-y-0.5">
-            <NavItem icon={HomeIcon}        label={t('Inicio')}        active={location.pathname === '/inicio'}        onClick={() => go('/inicio')}        collapsed={effectiveCollapsed} />
+            <NavItem icon={HomeIcon}        label={t('Inicio')}        active={location.pathname === '/inicio' || location.pathname === '/'}        onClick={() => go('/inicio')}        collapsed={effectiveCollapsed} />
             <NavItem icon={LayoutDashboard} label={t('Dashboard')}     active={location.pathname === '/dashboard'}     onClick={() => go('/dashboard')}     collapsed={effectiveCollapsed} />
-            <NavItem icon={MapIcon}         label={t('Mapa de zonas')}          active={location.pathname === '/mapa'}          onClick={() => go('/mapa')}          collapsed={effectiveCollapsed} />
+            <NavItem icon={MapIcon}         label={t('Mapa de la comunidad')} active={location.pathname === '/mapa'} onClick={() => go('/mapa')} collapsed={effectiveCollapsed} />
             <NavItem icon={Droplets}        label={t('Sensores IoT')}      active={location.pathname === '/sensores'}      onClick={() => go('/sensores')}      collapsed={effectiveCollapsed} />
             <NavItem icon={Info}            label={t('Sobre nosotros')} active={location.pathname === '/sobre-nosotros'} onClick={() => go('/sobre-nosotros')} collapsed={effectiveCollapsed} />
           </div>
@@ -191,7 +195,7 @@ export default function Sidebar({ isAdmin = false, mobileOpen = false, onCloseMo
               <div className="flex items-center gap-1 mt-0.5">
                 {user.rol === 'admin'
                   ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">{t('Administrador')}</span></>
-                  : <><UserIcon size={10} className="text-gray-500" /><span className="text-[9px] text-gray-500 font-bold">{t('Técnico')}</span></>
+                  : <><UserIcon size={10} className="text-gray-500" /><span className="text-[9px] text-gray-500 font-bold">{t('Ciudadano')}</span></>
                 }
               </div>
             </div>

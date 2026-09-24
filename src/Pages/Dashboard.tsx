@@ -21,9 +21,9 @@ const PRESSURE_DATA = [
 ];
 
 const ZONE_COLORS: Record<string, string> = {
-  Cuscatancingo:    '#22c55e',
-  Soyapango:        '#00f2ea',
-  'Plan del Pino':  '#ef4444',
+  Cuscatancingo: '#22c55e',
+  Soyapango: '#00f2ea',
+  'Plan del Pino': '#ef4444',
   'Ciudad Delgado': '#f59e0b',
 };
 
@@ -71,8 +71,8 @@ const FlowTooltip = ({ active, payload, label }: any) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLang();
-  const [reportesInfo, setReportesInfo] = useState({ total: 12, pendientes: 2 });
-  const [alertasInfo, setAlertasInfo]   = useState({ total: 1 });
+  const [reportesInfo, setReportesInfo] = useState<{ total: number | null; pendientes: number | null }>({ total: null, pendientes: null });
+  const [alertasInfo, setAlertasInfo] = useState<{ total: number | null }>({ total: null });
 
   useEffect(() => {
     // Cargar datos de reportes reales
@@ -98,7 +98,7 @@ export default function Dashboard() {
   }, []);
 
   const operativasCount = ZONAS_VERDADERAS.filter(z => z.estado === 'Óptimo' || z.estado === 'Estable').length;
-  const alertasCount    = ZONAS_VERDADERAS.filter(z => z.estado === 'Alerta' || z.estado === 'Crítico').length;
+  const alertasCount = ZONAS_VERDADERAS.filter(z => z.estado === 'Alerta' || z.estado === 'Crítico').length;
 
   const KPIS = [
     {
@@ -123,8 +123,8 @@ export default function Dashboard() {
     },
     {
       label: t('Reportes Ciudadanos'),
-      value: String(reportesInfo.total),
-      sub: `${reportesInfo.pendientes} ${t('pendientes')}`,
+      value: String(reportesInfo.total ?? '—'),
+      sub: reportesInfo.pendientes == null ? t('Sin datos disponibles') : `${reportesInfo.pendientes} ${t('pendientes')}`,
       icon: FileText,
       accent: 'text-blue-400',
       bg: 'bg-blue-500/10',
@@ -133,8 +133,8 @@ export default function Dashboard() {
     },
     {
       label: t('Alertas Activas'),
-      value: String(alertasInfo.total),
-      sub: alertasInfo.total > 0 ? `${alertasInfo.total} ${t('requieren revisión')}` : t('Sin alertas críticas'),
+      value: String(alertasInfo.total ?? '—'),
+      sub: alertasInfo.total == null ? t('Sin datos disponibles') : alertasInfo.total > 0 ? `${alertasInfo.total} ${t('requieren revisión')}` : t('Sin alertas críticas'),
       icon: AlertTriangle,
       accent: 'text-amber-400',
       bg: 'bg-amber-500/10',
@@ -160,7 +160,7 @@ export default function Dashboard() {
           <Clock />
           <div className="flex items-center justify-end gap-1.5 mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-[10px] text-green-400 font-bold tracking-widest uppercase">{t('Datos en vivo')}</span>
+            <span className="text-[10px] text-green-400 font-bold">{t('Vista general')}</span>
           </div>
         </div>
       </div>
@@ -168,8 +168,8 @@ export default function Dashboard() {
       {/* KPI Cards (Interactivas y conectadas a sus rutas) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {KPIS.map((k) => (
-          <div 
-            key={k.label} 
+          <div
+            key={k.label}
             onClick={() => navigate(k.route)}
             className={`portal-card ${k.top} p-5 flex items-start gap-3 hover:scale-[1.02] cursor-pointer transition-all duration-200 group`}
             title={`${t('Ir a')} ${k.label}`}
@@ -194,7 +194,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">{t('Tendencia de Presión')}</p>
-              <h3 className="text-sm font-black text-ink mt-0.5">{t('Últimas 6 horas · PSI por zona real')}</h3>
+              <h3 className="text-sm font-black text-ink mt-0.5">{t('Presión por zona · datos de demostración')}</h3>
             </div>
             <div className="flex items-center gap-1.5 bg-ink/[0.03] border border-ink/[0.06] px-3 py-1.5 rounded-full flex-shrink-0">
               <Gauge size={11} className="text-aqua-cyan" />
@@ -206,7 +206,7 @@ export default function Dashboard() {
               <defs>
                 {Object.entries(ZONE_COLORS).map(([name, color]) => (
                   <linearGradient key={name} id={`pg-${idZona(name)}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={color} stopOpacity={0.28} />
+                    <stop offset="5%" stopColor={color} stopOpacity={0.28} />
                     <stop offset="95%" stopColor={color} stopOpacity={0.02} />
                   </linearGradient>
                 ))}
@@ -362,4 +362,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

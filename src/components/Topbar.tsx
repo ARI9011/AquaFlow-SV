@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu, LogIn } from 'lucide-react';
+import { Bell, User, ChevronDown, LogOut, ShieldCheck, Menu, LogIn, Sun, Moon } from 'lucide-react';
+import { useConfig } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import AdminCrown from './AdminCrown';
@@ -10,7 +11,7 @@ import { useToast } from './Toast';
 const PAGE_INFO: Record<string, { title: string; sub: string }> = {
   '/inicio':         { title: 'Inicio',              sub: 'Bienvenido a AquaFlow SV' },
   '/dashboard':      { title: 'Dashboard',           sub: 'Resumen general del sistema' },
-  '/mapa':           { title: 'Mapa de Zonas',       sub: 'Gran San Salvador' },
+  '/mapa':           { title: 'Mapa de la comunidad', sub: 'Gran San Salvador' },
   '/sensores':       { title: 'Sensores IoT',        sub: 'Dispositivos de medición en tiempo real' },
   '/sobre-nosotros': { title: 'Sobre Nosotros',      sub: 'Conoce nuestra historia, misión y equipo' },
   '/usuarios':       { title: 'Gestión de Usuarios', sub: 'Control de acceso y administración de roles' },
@@ -41,6 +42,19 @@ function timeAgo(iso: string) {
 export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: () => void; alertas?: AlertaResumen[] }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bellOpen, setBellOpen]         = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const { tema, setTema } = useConfig();
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) { setDropdownOpen(false); setBellOpen(false); }
+    };
+    const closeEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setDropdownOpen(false); setBellOpen(false); }
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeEscape);
+    return () => { document.removeEventListener('pointerdown', closeOutside); document.removeEventListener('keydown', closeEscape); };
+  }, []);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -60,7 +74,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
   const closeAll = () => { setDropdownOpen(false); setBellOpen(false); };
 
   return (
-    <header className="h-16 bg-[var(--color-aqua-shell)] border-b border-ink/[0.05] flex items-center justify-between px-3 md:px-6 shadow-lg flex-shrink-0 relative z-[800] gap-2"
+    <header ref={headerRef} className="app-topbar h-16 bg-[var(--color-aqua-shell)] border-b border-ink/[0.08] flex items-center justify-between px-3 md:px-6 flex-shrink-0 relative z-[800] gap-2"
       onClick={(e) => { if (e.target === e.currentTarget) closeAll(); }}>
 
       {/* BOTÓN MENÚ MÓVIL */}
@@ -80,7 +94,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
           {location.pathname === '/dashboard' && (
             <div className="flex items-center gap-1 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">{t('En vivo')}</span>
+              <span className="text-[9px] font-black text-green-400 uppercase tracking-wide">{t('Resumen')}</span>
             </div>
           )}
         </div>
@@ -89,6 +103,13 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
 
       {/* ACCIONES DERECHAS */}
       <div className="flex items-center gap-2">
+
+        <button type="button" onClick={() => void setTema(tema === 'oscuro' ? 'claro' : 'oscuro')}
+          aria-label={t(tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro')}
+          title={t(tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro')}
+          className="w-9 h-9 flex items-center justify-center rounded-md text-ink/70 hover:bg-ink/5 flex-shrink-0">
+          {tema === 'oscuro' ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
 
         {/* SELECTOR DE IDIOMA (ES / EN) */}
         <button
@@ -106,6 +127,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
         <div className="relative">
           <button
             onClick={() => { setBellOpen(v => !v); setDropdownOpen(false); }}
+            aria-expanded={bellOpen}
             aria-label={`${t('Notificaciones')}, ${alertsCount} ${t('alertas')}`}
             className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-ink/[0.03] border border-ink/[0.06] hover:bg-ink/[0.07] hover:border-ink/15 transition-all text-gray-400 hover:text-ink"
           >
@@ -118,7 +140,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
           </button>
 
           {bellOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-[var(--color-aqua-panel)] border border-ink/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+            <div className="topbar-alerts absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-[var(--color-aqua-panel)] border border-ink/10 rounded-lg shadow-2xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-ink/[0.06] flex items-center justify-between">
                 <span className="text-sm font-black text-ink">{t('Alertas recientes')}</span>
                 <span className="text-[10px] bg-red-500/15 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-black">{alertsCount} {t('activas')}</span>
@@ -127,13 +149,13 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
                 <div className="px-4 py-6 text-center text-xs text-gray-500 font-medium">{t('Sin alertas activas')}</div>
               )}
               {alertas.slice(0, 3).map((a) => (
-                <div key={a.id} className="px-4 py-3 flex items-start gap-3 hover:bg-ink/[0.03] border-b border-ink/[0.04] last:border-0 transition-colors cursor-pointer">
+                <button type="button" key={a.id} onClick={() => { navigate(`/reportes?zona=${encodeURIComponent(a.zona)}`); closeAll(); }} className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-ink/[0.03] border-b border-ink/[0.04] last:border-0 transition-colors cursor-pointer">
                   <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5 bg-red-500" />
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-ink/90 truncate">{a.descripcion || `${a.tipo} en ${a.zona}`}</p>
                     <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(a.creado_en)}</p>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="p-3">
                 <button onClick={() => { navigate('/alertas'); closeAll(); }}
@@ -153,6 +175,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
         <div className="relative">
           <button
             aria-label={t('Menú de usuario')}
+            aria-expanded={dropdownOpen}
             onClick={() => { setDropdownOpen(v => !v); setBellOpen(false); }}
             className="flex items-center gap-2 md:gap-2.5 bg-ink/[0.03] hover:bg-ink/[0.07] border border-ink/[0.06] hover:border-ink/15 p-1.5 pr-3 rounded-xl transition-all"
           >
@@ -164,7 +187,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
                 {user?.Usuario ?? t('Usuario')}
                 {user?.rol === 'admin' && <AdminCrown size={10} />}
               </p>
-              <p className="text-[9px] text-gray-500 mt-0.5">{user?.rol === 'admin' ? 'Admin' : t('Técnico')}</p>
+              <p className="text-[9px] text-gray-500 mt-0.5">{user?.rol === 'admin' ? 'Admin' : t('Ciudadano')}</p>
             </div>
             <ChevronDown size={13} className={`text-gray-500 transition-transform flex-shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -183,7 +206,7 @@ export default function Topbar({ onMenuClick, alertas = [] }: { onMenuClick?: ()
                   <div className="flex items-center gap-1 mt-0.5">
                     {user?.rol === 'admin'
                       ? <><ShieldCheck size={10} className="text-aqua-cyan" /><span className="text-[9px] text-aqua-cyan font-bold">{t('Administrador')}</span></>
-                      : <span className="text-[9px] text-gray-500 font-bold">{t('Técnico')}</span>}
+                      : <span className="text-[9px] text-gray-500 font-bold">{t('Ciudadano')}</span>}
                   </div>
                 </div>
               </div>
